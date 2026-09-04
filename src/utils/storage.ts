@@ -10,20 +10,14 @@ import { migrateListSchema } from './schemaUtils';
 // CONFIGURAÇÕES DO APP
 // ===========================
 
-export type DeleteAfterPolicy = 'never' | '1day' | '1week' | '1month';
-
 export interface AppSettings {
   theme?: string; // 'auto' | 'claro' | 'escuro'
   language?: string; // 'pt' | 'en' | 'es'
   sharingEnabled?: boolean;
   onboardingDone?: boolean;
   displayName?: string; // nome visível para outros usuários
-  deleteCompletedListsAfter?: DeleteAfterPolicy;
-  completedListsAction?: 'excluir' | 'arquivar';
   // Perfil
   birthDate?: string; // 'DD/MM/AAAA'
-  // Backup
-  lastBackupAt?: string; // ISO timestamp do último backup bem-sucedido
   // Termos de uso
   termsAccepted?: boolean;
   termsAcceptedAt?: string; // ISO timestamp

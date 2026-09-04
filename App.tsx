@@ -24,11 +24,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ScreenName, ShoppingList } from './src/types';
-import { cleanupCompletedLists } from './src/utils/migrationUtils';
-import {
-  loadLists, loadSettings, saveLists, saveSettings,
-  DeleteAfterPolicy,
-} from './src/utils/storage';
+import { loadLists, loadSettings, saveLists, saveSettings } from './src/utils/storage';
 import {
   listenToSharedListsWithMe, listenToMySharedLists,
   updateSharedList, deleteSharedListDoc,
@@ -71,7 +67,6 @@ function AppContent() {
   const [showSearch, setShowSearch] = useState(false);
   const [navigateToListId, setNavigateToListId] = useState<number | undefined>(undefined);
   const [userName, setUserName] = useState('');
-  const [deleteCompletedListsAfter, setDeleteCompletedListsAfter] = useState<DeleteAfterPolicy>('never');
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null); // null = ainda carregando
   const [birthDate, setBirthDate] = useState('');
 
@@ -83,27 +78,11 @@ function AppContent() {
       const settings = await loadSettings();
       setUserName(settings.displayName ?? '');
       setOnboardingDone(settings.onboardingDone ?? false);
-      if (settings.deleteCompletedListsAfter) setDeleteCompletedListsAfter(settings.deleteCompletedListsAfter);
       if (settings.birthDate) setBirthDate(settings.birthDate);
-
-      const loadedLists = await loadLists();
-      const processedLists = cleanupCompletedLists(loadedLists, settings);
-      if (JSON.stringify(processedLists) !== JSON.stringify(loadedLists)) {
-        await saveLists(processedLists);
-      }
-      setLists(processedLists);
+      setLists(await loadLists());
     };
     init();
   }, []);
-
-  // ─── Recarrega todos os dados após restore de backup ─────────────────────
-  const reloadAllData = async () => {
-    const settings = await loadSettings();
-    setUserName(settings.displayName ?? '');
-    if (settings.deleteCompletedListsAfter) setDeleteCompletedListsAfter(settings.deleteCompletedListsAfter);
-    if (settings.birthDate) setBirthDate(settings.birthDate);
-    setLists(await loadLists());
-  };
 
   // ===========================
   // LISTENERS: ITENS COMPARTILHADOS COMIGO
@@ -220,24 +199,6 @@ function AppContent() {
   // ===========================
   // CONFIGURAÇÕES
   // ===========================
-  const handleClearData = async (opts: { lists: boolean; archivedLists: boolean }) => {
-    let newLists = lists;
-    if (opts.lists && opts.archivedLists) {
-      newLists = [];
-    } else if (opts.lists) {
-      newLists = newLists.filter(l => l.isArchived);
-    } else if (opts.archivedLists) {
-      newLists = newLists.filter(l => !l.isArchived);
-    }
-    setLists(newLists);
-    await saveLists(newLists);
-  };
-
-  const handleSetDeleteCompletedListsAfter = async (policy: DeleteAfterPolicy) => {
-    setDeleteCompletedListsAfter(policy);
-    await saveSettings({ deleteCompletedListsAfter: policy });
-  };
-
   const handleSetBirthDate = async (date: string) => {
     setBirthDate(date);
     await saveSettings({ birthDate: date });
@@ -264,15 +225,9 @@ function AppContent() {
       case 'config':
         return (
           <SettingsScreen
-            onClearData={handleClearData}
-            lists={lists}
-            onDeleteList={handleDeleteList}
-            deleteCompletedListsAfter={deleteCompletedListsAfter}
-            onSetDeleteCompletedListsAfter={handleSetDeleteCompletedListsAfter}
             birthDate={birthDate}
             onSetBirthDate={handleSetBirthDate}
             onChangeUserName={(name) => setUserName(name)}
-            onRestoreComplete={reloadAllData}
           />
         );
     }
