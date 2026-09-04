@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Appearance } from 'react-native';
-import { createGlobalStyles, darkColors, lightColors } from '../styles/theme';
+import { AccentColor, applyAccent, createGlobalStyles, darkColors, lightColors } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
 
 export type ThemeType = 'auto' | 'claro' | 'escuro';
@@ -16,6 +16,8 @@ interface ThemeContextValue {
   globalStyles: AppGlobalStyles;
   theme: ThemeType;
   setTheme: (t: ThemeType) => void;
+  accentColor: AccentColor;
+  setAccentColor: (a: AccentColor) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
@@ -23,16 +25,20 @@ const ThemeContext = createContext<ThemeContextValue>({
   globalStyles: createGlobalStyles(darkColors),
   theme: 'escuro',
   setTheme: () => {},
+  accentColor: 'roxo',
+  setAccentColor: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeType>('escuro');
+  const [accentColor, setAccentColorState] = useState<AccentColor>('roxo');
   const [systemScheme, setSystemScheme] = useState(Appearance.getColorScheme());
 
   // Carrega preferência salva
   useEffect(() => {
     loadSettings().then(s => {
       if (s.theme) setThemeState(s.theme as ThemeType);
+      if (s.accentColor) setAccentColorState(s.accentColor as AccentColor);
     });
   }, []);
 
@@ -49,14 +55,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     saveSettings({ theme: t } as any);
   };
 
+  const setAccentColor = (a: AccentColor) => {
+    setAccentColorState(a);
+    saveSettings({ accentColor: a });
+  };
+
   // Resolve o tema efetivo: auto usa preferência do sistema
   const resolvedDark = theme === 'auto'
     ? systemScheme !== 'light'
     : theme === 'escuro';
 
   const colors = useMemo(
-    () => resolvedDark ? darkColors : lightColors,
-    [resolvedDark]
+    () => applyAccent(resolvedDark ? darkColors : lightColors, accentColor, resolvedDark),
+    [resolvedDark, accentColor]
   );
 
   const globalStyles = useMemo(
@@ -65,7 +76,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeContext.Provider value={{ colors, globalStyles, theme, setTheme }}>
+    <ThemeContext.Provider value={{ colors, globalStyles, theme, setTheme, accentColor, setAccentColor }}>
       {children}
     </ThemeContext.Provider>
   );

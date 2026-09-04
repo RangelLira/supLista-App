@@ -16,7 +16,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
-import { HEADER_TOP_PADDING } from '../styles/theme';
+import { AccentColor, ACCENT_PRESETS, HEADER_TOP_PADDING } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
 import SharingScreen from './SharingScreen';
 
@@ -29,7 +29,7 @@ interface Props {
 }
 
 export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
-  const { colors, globalStyles, theme, setTheme } = useTheme();
+  const { colors, globalStyles, theme, setTheme, accentColor, setAccentColor } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
@@ -259,6 +259,30 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
                 </TouchableOpacity>
               ))}
             </View>
+
+            <Text style={[styles.sectionTitle, { marginTop: 18, marginBottom: 4 }]}>{t.settings.accentColorTitle}</Text>
+            <View style={styles.accentRow}>
+              {([
+                { value: 'roxo' as AccentColor, label: t.settings.accentRoxo },
+                { value: 'vermelho' as AccentColor, label: t.settings.accentVermelho },
+                { value: 'azul' as AccentColor, label: t.settings.accentAzul },
+                { value: 'verde' as AccentColor, label: t.settings.accentVerde },
+              ]).map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={styles.accentSwatchWrap}
+                  onPress={() => setAccentColor(opt.value)}>
+                  <View style={[
+                    styles.accentSwatch,
+                    { backgroundColor: ACCENT_PRESETS[opt.value].dark.primary },
+                    accentColor === opt.value && styles.accentSwatchSelected,
+                  ]}>
+                    {accentColor === opt.value && <Text style={styles.accentSwatchCheck}>✓</Text>}
+                  </View>
+                  <Text style={styles.accentSwatchLabel}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -399,6 +423,39 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   optionButtonTextSelected: {
     color: 'white',
     fontWeight: '700',
+  },
+
+  accentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  accentSwatchWrap: {
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  accentSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  accentSwatchSelected: {
+    borderColor: c.textPrimary,
+  },
+  accentSwatchCheck: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  accentSwatchLabel: {
+    color: c.textSecondary,
+    fontSize: 11,
+    textAlign: 'center',
   },
 
   aboutContainer: {

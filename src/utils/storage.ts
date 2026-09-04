@@ -12,6 +12,7 @@ import { migrateListSchema } from './schemaUtils';
 
 export interface AppSettings {
   theme?: string; // 'auto' | 'claro' | 'escuro'
+  accentColor?: string; // 'roxo' | 'vermelho' | 'azul' | 'verde'
   language?: string; // 'pt' | 'en' | 'es'
   sharingEnabled?: boolean;
   onboardingDone?: boolean;

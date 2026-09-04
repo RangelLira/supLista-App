@@ -57,6 +57,35 @@ export const lightColors: typeof darkColors = {
 };
 
 // ===========================
+// CORES DE DESTAQUE (ACCENT) — substituem primary/primaryLight
+// ===========================
+export type AccentColor = 'roxo' | 'vermelho' | 'azul' | 'verde';
+
+export const ACCENT_PRESETS: Record<AccentColor, { dark: { primary: string; primaryLight: string }; light: { primary: string; primaryLight: string } }> = {
+  roxo: {
+    dark: { primary: '#6c7ce7', primaryLight: '#8b9cf7' },
+    light: { primary: '#5a6fd6', primaryLight: '#7b8ef5' },
+  },
+  vermelho: {
+    dark: { primary: '#d97757', primaryLight: '#e59980' },
+    light: { primary: '#c2603f', primaryLight: '#d97757' },
+  },
+  azul: {
+    dark: { primary: '#3d6690', primaryLight: '#5c85ad' },
+    light: { primary: '#2f5273', primaryLight: '#3d6690' },
+  },
+  verde: {
+    dark: { primary: '#3aa8a0', primaryLight: '#5fc4bc' },
+    light: { primary: '#2b8078', primaryLight: '#3aa8a0' },
+  },
+};
+
+export function applyAccent(base: typeof darkColors, accent: AccentColor, isDark: boolean): typeof darkColors {
+  const preset = ACCENT_PRESETS[accent][isDark ? 'dark' : 'light'];
+  return { ...base, primary: preset.primary, primaryLight: preset.primaryLight };
+}
+
+// ===========================
 // FACTORY DE ESTILOS GLOBAIS
 // ===========================
 export function createGlobalStyles(c: typeof darkColors) {
