@@ -22,7 +22,7 @@ import { useFirebase } from '../contexts/FirebaseContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
-import { darkColors } from '../styles/theme';
+import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
 import { ShoppingList } from '../types';
 import { exitSharedList, shareList, unshareList } from '../utils/firestore';
 import { formatHeaderDate } from '../utils/dateUtils';
@@ -32,12 +32,10 @@ let hasPlayedAnimation = false;
 interface Props {
   userName: string;
   lists: ShoppingList[];
-  initialListId?: number;
   onSaveList: (list: ShoppingList) => void;
   onUpdateList: (list: ShoppingList) => void;
   onDeleteList: (id: number) => void;
-  onSearch?: () => void;
-  resetKey?: number;
+  onOpenSettings?: () => void;
 }
 
 function createStyles(c: typeof darkColors) {
@@ -240,12 +238,23 @@ function createStyles(c: typeof darkColors) {
       color: c.textSecondary,
       opacity: 0.5,
     },
+    menuBtn: {
+      position: 'absolute',
+      right: 20,
+      top: HEADER_TOP_PADDING - 2,
+      padding: 6,
+      gap: 4,
+    },
+    menuBtnBar: {
+      width: 22,
+      height: 2.5,
+      borderRadius: 1.5,
+      backgroundColor: 'white',
+    },
     bottomBar: {
       padding: 16,
       paddingBottom: 16,
       backgroundColor: c.bgMain,
-      borderTopWidth: 1,
-      borderTopColor: c.border,
     },
 
     linkedBadge: {
@@ -264,7 +273,7 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
-export default function ListsScreen({ userName, lists, initialListId, onSaveList, onUpdateList, onDeleteList, onSearch, resetKey }: Props) {
+export default function ListsScreen({ userName, lists, onSaveList, onUpdateList, onDeleteList, onOpenSettings }: Props) {
   const { colors, globalStyles } = useTheme();
   const { t, lang } = useLanguage();
   const { userId } = useFirebase();
@@ -303,13 +312,6 @@ export default function ListsScreen({ userName, lists, initialListId, onSaveList
   const [showMantra, setShowMantra] = useState(isMantraState);
   const prevIsMantraRef = useRef(isMantraState);
 
-  // Abre automaticamente a lista quando navegado via "Ver lista"
-  useEffect(() => {
-    if (initialListId == null) return;
-    const list = lists.find(l => l.id === initialListId);
-    if (list) setSelectedList(list);
-  }, [initialListId]);
-
   // BackHandler para ShoppingListScreen — prioridade LIFO: chamado antes do App.tsx
   useEffect(() => {
     if (!selectedList) return;
@@ -319,13 +321,6 @@ export default function ListsScreen({ userName, lists, initialListId, onSaveList
     });
     return () => handler.remove();
   }, [selectedList]);
-
-  // Botão da navbar pressionado enquanto já está nesta tela → volta à raiz
-  useEffect(() => {
-    if (resetKey === undefined || resetKey === 0) return;
-    setSelectedList(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
 
   // ——— Sequência de animação ———
   useEffect(() => {
@@ -563,6 +558,13 @@ export default function ListsScreen({ userName, lists, initialListId, onSaveList
                 <Text style={styles.headerResetText}>RESET</Text>
               </TouchableOpacity>
             )}
+            {onOpenSettings && (
+              <TouchableOpacity style={styles.menuBtn} onPress={onOpenSettings}>
+                <View style={styles.menuBtnBar} />
+                <View style={styles.menuBtnBar} />
+                <View style={styles.menuBtnBar} />
+              </TouchableOpacity>
+            )}
           </Animated.View>
 
           <ScrollView contentContainerStyle={globalStyles.scrollContent}>
@@ -612,15 +614,8 @@ export default function ListsScreen({ userName, lists, initialListId, onSaveList
           </ScrollView>
 
           {/* BOTÃO FIXO INFERIOR */}
-          <View style={[styles.bottomBar, { flexDirection: 'row', gap: 10 }]}>
-            {onSearch && (
-              <TouchableOpacity
-                style={[globalStyles.buttonSecondary, { width: 52, paddingHorizontal: 0, alignItems: 'center' }]}
-                onPress={onSearch}>
-                <Text style={{ fontSize: 18 }}>🔍</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={[globalStyles.buttonPrimary, { flex: 1 }]} onPress={() => setShowCreateForm(true)}>
+          <View style={styles.bottomBar}>
+            <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowCreateForm(true)}>
               <Text style={globalStyles.buttonPrimaryText}>{t.lists.createBtn}</Text>
             </TouchableOpacity>
           </View>

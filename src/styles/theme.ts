@@ -4,7 +4,7 @@
 
 import { Platform, StatusBar, StyleSheet } from 'react-native';
 
-const HEADER_TOP_PADDING = (Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 44) + 22;
+export const HEADER_TOP_PADDING = (Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 44) + 22;
 
 // ===========================
 // PALETA ESCURA (padrão)
@@ -193,28 +193,6 @@ export function createGlobalStyles(c: typeof darkColors) {
     modalTitle: {
       color: 'white',
       fontSize: 24,
-      fontWeight: '600',
-    },
-    navbar: {
-      flexDirection: 'row',
-      backgroundColor: c.bgInput,
-      paddingBottom: 20,
-      paddingTop: 8,
-      borderTopWidth: 1,
-      borderTopColor: c.border,
-    },
-    navItem: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 8,
-    },
-    navLabel: {
-      fontSize: 10,
-      marginTop: 4,
-      color: c.textSecondary,
-    },
-    navLabelActive: {
-      color: c.primary,
       fontWeight: '600',
     },
   });

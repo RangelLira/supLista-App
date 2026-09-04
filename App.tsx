@@ -6,19 +6,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   BackHandler,
-  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
-import SearchModal from './src/components/SearchModal';
 import { ToastProvider } from './src/components/Toast';
 import { FirebaseProvider, useFirebase } from './src/contexts/FirebaseContext';
-import { LanguageProvider, useLanguage } from './src/contexts/LanguageContext';
+import { LanguageProvider } from './src/contexts/LanguageContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
@@ -30,11 +26,8 @@ import {
   updateSharedList, deleteSharedListDoc,
 } from './src/utils/firestore';
 
-const NAVBAR_BOTTOM_PADDING = Platform.OS === 'android' ? 48 : 8;
-
 function AppContent() {
-  const { colors, globalStyles, theme } = useTheme();
-  const { t } = useLanguage();
+  const { colors, theme } = useTheme();
   const { userId, sharingEnabled } = useFirebase();
 
   // ===========================
@@ -62,10 +55,7 @@ function AppContent() {
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [activeScreen, setActiveScreen] = useState<ScreenName>('listas');
   const [screenHistory, setScreenHistory] = useState<ScreenName[]>([]);
-  const [listsResetKey, setListsResetKey] = useState(0);
 
-  const [showSearch, setShowSearch] = useState(false);
-  const [navigateToListId, setNavigateToListId] = useState<number | undefined>(undefined);
   const [userName, setUserName] = useState('');
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null); // null = ainda carregando
   const [birthDate, setBirthDate] = useState('');
@@ -122,47 +112,32 @@ function AppContent() {
   // BackHandler global — pilha de navegação: sub-telas das screens → screens → sai só de 'listas'
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      // 1. Modais têm prioridade máxima
-      if (showSearch) { setShowSearch(false); return true; }
-      // 2. Desempilha a pilha de telas (sub-telas de ListsScreen registram seus
-      //    próprios handlers de maior prioridade via LIFO — chegam aqui apenas
-      //    quando não há mais sub-tela aberta)
+      // Desempilha a pilha de telas (sub-telas de ListsScreen registram seus
+      // próprios handlers de maior prioridade via LIFO — chegam aqui apenas
+      // quando não há mais sub-tela aberta)
       if (screenHistory.length > 0) {
         const prev = screenHistory[screenHistory.length - 1];
         setScreenHistory(h => h.slice(0, -1));
         setActiveScreen(prev);
         return true;
       }
-      // 3. Fallback: se por algum motivo não há histórico mas não estamos em 'listas'
+      // Fallback: se por algum motivo não há histórico mas não estamos em 'listas'
       if (activeScreen !== 'listas') {
         setActiveScreen('listas');
         return true;
       }
-      // 4. Em 'listas' sem histórico → sai do app
+      // Em 'listas' sem histórico → sai do app
       return false;
     });
     return () => backHandler.remove();
-  }, [showSearch, screenHistory, activeScreen]);
+  }, [screenHistory, activeScreen]);
 
   // ===========================
   // NAVEGAÇÃO
   // ===========================
-  const handleNavPress = (screen: ScreenName) => {
-    if (screen === activeScreen) {
-      // Botão da tela atual: reseta sub-views (volta à raiz da tela)
-      if (screen === 'listas') setListsResetKey(k => k + 1);
-      return;
-    }
+  const openSettings = () => {
     setScreenHistory(prev => [...prev, activeScreen]);
-    setActiveScreen(screen);
-    if (screen !== 'listas') setNavigateToListId(undefined);
-  };
-
-  // Navega para a tela de Listas abrindo uma lista específica, registrando o histórico
-  const navigateToListScreen = (listId: number) => {
-    setNavigateToListId(listId);
-    setScreenHistory(prev => [...prev, activeScreen]);
-    setActiveScreen('listas');
+    setActiveScreen('config');
   };
 
   // ===========================
@@ -214,12 +189,10 @@ function AppContent() {
           <ListsScreen
             userName={userName}
             lists={lists}
-            initialListId={navigateToListId}
             onSaveList={handleSaveList}
             onUpdateList={handleUpdateList}
             onDeleteList={handleDeleteList}
-            onSearch={() => setShowSearch(true)}
-            resetKey={listsResetKey}
+            onOpenSettings={openSettings}
           />
         );
       case 'config':
@@ -233,18 +206,9 @@ function AppContent() {
     }
   };
 
-  // ===========================
-  // NAVBAR
-  // ===========================
-  const NAV_ITEMS: { key: ScreenName; label: string; icon: string }[] = [
-    { key: 'listas', label: t.nav.listas, icon: '📝' },
-    { key: 'config', label: t.nav.config, icon: '⚙️' },
-  ];
-
   const styles = React.useMemo(() => StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: colors.bgMain },
     content: { flex: 1 },
-    navIcon: { fontSize: 22 },
   }), [colors]);
 
   // Aguarda verificação inicial — evita flash
@@ -271,31 +235,7 @@ function AppContent() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bgMain} />
-
       <View style={styles.content}>{renderScreen()}</View>
-
-      {/* NAVBAR INFERIOR */}
-      <View style={[globalStyles.navbar, { paddingBottom: NAVBAR_BOTTOM_PADDING }]}>
-        {NAV_ITEMS.map(item => {
-          const isActive = activeScreen === item.key;
-          return (
-            <TouchableOpacity key={item.key} style={globalStyles.navItem} onPress={() => handleNavPress(item.key)}>
-              <Text style={styles.navIcon}>{item.icon}</Text>
-              <Text style={[globalStyles.navLabel, isActive && globalStyles.navLabelActive]}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* MODAL DE BUSCA */}
-      <SearchModal
-        visible={showSearch}
-        onClose={() => setShowSearch(false)}
-        lists={lists}
-        onSelectList={(list) => navigateToListScreen(list.id)}
-      />
     </SafeAreaView>
   );
 }
