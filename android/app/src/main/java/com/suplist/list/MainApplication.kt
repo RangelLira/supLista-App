@@ -1,4 +1,4 @@
-package com.taskflowv3
+package com.suplist.list
 
 import android.app.Application
 import com.facebook.react.PackageList

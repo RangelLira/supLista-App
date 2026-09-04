@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "TaskFlowV3.app"
-               BlueprintName = "TaskFlowV3"
-               ReferencedContainer = "container:TaskFlowV3.xcodeproj">
+               BuildableName = "supList.app"
+               BlueprintName = "supList"
+               ReferencedContainer = "container:supList.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "TaskFlowV3Tests.xctest"
-               BlueprintName = "TaskFlowV3Tests"
-               ReferencedContainer = "container:TaskFlowV3.xcodeproj">
+               BuildableName = "supListTests.xctest"
+               BlueprintName = "supListTests"
+               ReferencedContainer = "container:supList.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "TaskFlowV3.app"
-            BlueprintName = "TaskFlowV3"
-            ReferencedContainer = "container:TaskFlowV3.xcodeproj">
+            BuildableName = "supList.app"
+            BlueprintName = "supList"
+            ReferencedContainer = "container:supList.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "TaskFlowV3.app"
-            BlueprintName = "TaskFlowV3"
-            ReferencedContainer = "container:TaskFlowV3.xcodeproj">
+            BuildableName = "supList.app"
+            BlueprintName = "supList"
+            ReferencedContainer = "container:supList.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

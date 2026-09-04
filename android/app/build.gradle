@@ -78,9 +78,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.taskflowv3"
+    namespace "com.suplist.list"
     defaultConfig {
-        applicationId "com.taskflowv3"
+        applicationId "com.suplist.list"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 11
@@ -94,10 +94,10 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file('taskflow-release.keystore')
-            storePassword 'taskflow2024'
-            keyAlias 'taskflow-key'
-            keyPassword 'taskflow2024'
+            storeFile file('suplist-release.keystore')
+            storePassword 'CHANGE_ME'
+            keyAlias 'suplist-key'
+            keyPassword 'CHANGE_ME'
         }
     }
     buildTypes {
