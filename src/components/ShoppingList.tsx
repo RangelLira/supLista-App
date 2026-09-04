@@ -195,31 +195,28 @@ function createStyles(c: typeof darkColors) {
       paddingHorizontal: 16,
       paddingTop: 16,
     },
-    gridPanel: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 8,
-      gap: 8,
-    },
     addItemSection: {
       paddingHorizontal: 16,
       paddingTop: 8,
     },
-    actionRow: { flexDirection: 'row', gap: 8 },
-    gridBtn: {
+    actionBarRow: {
+      flexDirection: 'row',
+      gap: 6,
+      paddingHorizontal: 16,
+      marginTop: 12,
+    },
+    actionBarBtn: {
       flex: 1,
-      paddingVertical: 11,
+      paddingVertical: 9,
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    gridBtnText: { color: 'white', fontSize: 12, fontWeight: '600', textAlign: 'center' },
-    gridBtnTextDisabled: { color: c.textSecondary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
+    actionBarBtnText: { color: 'white', fontSize: 11, fontWeight: '600', textAlign: 'center' },
+    gridBtnTextDisabled: { color: c.textSecondary, fontSize: 11, fontWeight: '600', textAlign: 'center' },
     gridBtnPrimary: { backgroundColor: c.primary },
     gridBtnSuccess: { backgroundColor: c.success },
     gridBtnDanger: { backgroundColor: c.danger },
-    gridBtnWarning: { backgroundColor: c.warning },
-    gridBtnNeutral: { backgroundColor: c.bgSecondary },
     gridBtnDisabled: { backgroundColor: c.bgSecondary, opacity: 0.4 },
 
     // Herdar lista
@@ -965,6 +962,42 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         </View>
       )}
 
+      {/* Linha de ações — 4 botões: Anotações/Itens | Compartilhar | Excluir | Concluir/Reabrir */}
+      <View style={styles.actionBarRow}>
+        <TouchableOpacity
+          style={[styles.actionBarBtn, styles.gridBtnPrimary]}
+          onPress={() => setShowNotes(n => !n)}>
+          <Text style={styles.actionBarBtnText}>
+            {showNotes ? t.lists.itemsBtn : t.common.notes}
+          </Text>
+        </TouchableOpacity>
+
+        {isSharedWithMe ? (
+          <TouchableOpacity style={[styles.actionBarBtn, styles.gridBtnDanger]} onPress={onShare}>
+            <Text style={styles.actionBarBtnText}>{t.common.exit}</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={[styles.actionBarBtn, !list.isCompleted ? styles.gridBtnPrimary : styles.gridBtnDisabled]}
+            onPress={!list.isCompleted ? onShare : undefined}>
+            <Text style={!list.isCompleted ? styles.actionBarBtnText : styles.gridBtnTextDisabled}>
+              {sharedWithUid ? t.common.unshare : t.common.share}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity style={[styles.actionBarBtn, styles.gridBtnDanger]} onPress={handleDelete}>
+          <Text style={styles.actionBarBtnText}>{t.common.delete}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionBarBtn, styles.gridBtnSuccess]}
+          onPress={list.isCompleted ? onReopen : onComplete}>
+          <Text style={styles.actionBarBtnText}>
+            {list.isCompleted ? t.common.reopen : t.common.complete}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* CONTEÚDO — notas ou itens */}
       {showNotes ? (
         <TextInput
@@ -1062,10 +1095,9 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         </ScrollView>
       )}
 
-      {/* GRADE DE AÇÕES + BOTÃO VOLTAR (fixo na parte inferior) */}
-      <View style={styles.bottomContainer}>
-        {/* Adicionar item (roxo) — fica acima da grade */}
-        {!list.isCompleted && !showNotes && (
+      {/* Adicionar item (roxo) — única coisa fixa na parte inferior */}
+      {!list.isCompleted && !showNotes && (
+        <View style={styles.bottomContainer}>
           <View style={styles.addItemSection}>
             <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowAddItem(true)}>
               <Text style={globalStyles.buttonPrimaryText}>
@@ -1073,50 +1105,8 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
               </Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {/* Grid 4 botões — posição fixa: sempre imediatamente acima do separador */}
-        <View style={styles.gridPanel}>
-          {/* Linha 1: Anotações/Itens | Compartilhar */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={[styles.gridBtn, styles.gridBtnPrimary]}
-              onPress={() => setShowNotes(n => !n)}>
-              <Text style={styles.gridBtnText}>
-                {showNotes ? t.lists.itemsBtn : t.common.notes}
-              </Text>
-            </TouchableOpacity>
-
-            {isSharedWithMe ? (
-              <TouchableOpacity style={[styles.gridBtn, styles.gridBtnDanger]} onPress={onShare}>
-                <Text style={styles.gridBtnText}>{t.common.exit}</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={[styles.gridBtn, !list.isCompleted ? styles.gridBtnPrimary : styles.gridBtnDisabled]}
-                onPress={!list.isCompleted ? onShare : undefined}>
-                <Text style={!list.isCompleted ? styles.gridBtnText : styles.gridBtnTextDisabled}>
-                  {sharedWithUid ? t.common.unshare : t.common.share}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Linha 2: Excluir | Concluir/Reabrir */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.gridBtn, styles.gridBtnDanger]} onPress={handleDelete}>
-              <Text style={styles.gridBtnText}>{t.common.delete}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.gridBtn, styles.gridBtnSuccess]}
-              onPress={list.isCompleted ? onReopen : onComplete}>
-              <Text style={styles.gridBtnText}>
-                {list.isCompleted ? t.common.reopen : t.common.complete}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </View>
+      )}
 
       <AddItemModal
         visible={showAddItem || !!editingItem}
