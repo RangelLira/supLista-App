@@ -16,6 +16,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
+import { HEADER_TOP_PADDING } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
 import SharingScreen from './SharingScreen';
 
@@ -26,9 +27,11 @@ interface Props {
   birthDate: string;
   onSetBirthDate: (date: string) => void;
   onChangeUserName: (name: string) => void;
+  // Fecha Configurações e volta para a tela de Listas
+  onGoHome?: () => void;
 }
 
-export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUserName }: Props) {
+export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUserName, onGoHome }: Props) {
   const { colors, globalStyles, theme, setTheme } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
@@ -97,6 +100,13 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
         <View style={globalStyles.header}>
           <Text style={globalStyles.headerTitle}>{t.settings.title}</Text>
           <Text style={globalStyles.headerSubtitle}>{t.settings.subtitle}</Text>
+          {onGoHome && (
+            <TouchableOpacity style={styles.menuBtn} onPress={onGoHome}>
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView contentContainerStyle={globalStyles.scrollContent}>
@@ -357,6 +367,20 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   menuInfo: { flex: 1 },
   menuLabel: { color: c.textPrimary, fontSize: 16, fontWeight: '600' },
   menuSubtitle: { color: c.textSecondary, fontSize: 13, marginTop: 2 },
+
+  menuBtn: {
+    position: 'absolute',
+    right: 20,
+    top: HEADER_TOP_PADDING - 2,
+    padding: 6,
+    gap: 4,
+  },
+  menuBtnBar: {
+    width: 22,
+    height: 2.5,
+    borderRadius: 1.5,
+    backgroundColor: 'white',
+  },
 
   section: {
     backgroundColor: c.bgCard,

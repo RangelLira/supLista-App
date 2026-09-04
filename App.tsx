@@ -140,6 +140,17 @@ function AppContent() {
     setActiveScreen('config');
   };
 
+  // Fecha Configurações e volta para a tela anterior (mesmo efeito do botão físico voltar)
+  const closeSettings = () => {
+    if (screenHistory.length > 0) {
+      const prev = screenHistory[screenHistory.length - 1];
+      setScreenHistory(h => h.slice(0, -1));
+      setActiveScreen(prev);
+    } else {
+      setActiveScreen('listas');
+    }
+  };
+
   // ===========================
   // LISTAS — CRUD
   // ===========================
@@ -201,6 +212,7 @@ function AppContent() {
             birthDate={birthDate}
             onSetBirthDate={handleSetBirthDate}
             onChangeUserName={(name) => setUserName(name)}
+            onGoHome={closeSettings}
           />
         );
     }
