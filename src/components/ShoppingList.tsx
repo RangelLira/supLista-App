@@ -20,7 +20,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
-import { darkColors } from '../styles/theme';
+import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
 import { ShoppingList, ListItem, AVAILABLE_UNITS } from '../types';
 import SwipeRow from './SwipeRow';
 import TagPicker from './TagPicker';
@@ -172,6 +172,20 @@ function createStyles(c: typeof darkColors) {
       borderColor: c.primary + '55',
     },
     addItemCompactText: { color: c.primary, fontSize: 11, fontWeight: '700' },
+
+    menuBtn: {
+      position: 'absolute',
+      right: 20,
+      top: HEADER_TOP_PADDING - 2,
+      padding: 6,
+      gap: 4,
+    },
+    menuBtnBar: {
+      width: 22,
+      height: 2.5,
+      borderRadius: 1.5,
+      backgroundColor: 'white',
+    },
 
     // Notes textarea
     notesInput: {
@@ -706,12 +720,13 @@ interface ShoppingListScreenProps {
   onComplete?: () => void;
   onReopen?: () => void;
   onShare?: () => void;
+  onOpenSettings?: () => void;
   isSharedWithMe?: boolean;
   sharedWithUid?: string | null;
 }
 
 export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists = [], onNavigateToList,
-  onComplete, onReopen, onShare,
+  onComplete, onReopen, onShare, onOpenSettings,
   isSharedWithMe = false, sharedWithUid = null,
 }: ShoppingListScreenProps) {
   const { colors, globalStyles } = useTheme();
@@ -948,28 +963,31 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           {` • ${checkedItems.length}/${list.items.length}`}
           {isCompras && total > 0 ? ` • R$ ${total.toFixed(2)}` : ''}
         </Text>
+        {onOpenSettings && (
+          <TouchableOpacity style={styles.menuBtn} onPress={onOpenSettings}>
+            <View style={styles.menuBtnBar} />
+            <View style={styles.menuBtnBar} />
+            <View style={styles.menuBtnBar} />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Título da seção — sempre visível, muda com o toggle */}
+      {/* Título da seção */}
       <Text style={[styles.sectionTitle, { marginTop: 20, marginHorizontal: 16 }]}>
-        {showNotes ? t.common.notes.toUpperCase() : t.lists.itemsSection}
+        {t.lists.itemsSection}
       </Text>
 
-      {/* Barra de progresso — visível apenas no modo itens */}
-      {!showNotes && (
-        <View style={[styles.progressBarContainer, { marginHorizontal: 16 }]}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-        </View>
-      )}
+      {/* Barra de progresso */}
+      <View style={[styles.progressBarContainer, { marginHorizontal: 16 }]}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      </View>
 
-      {/* Linha de ações — 4 botões: Anotações/Itens | Compartilhar | Excluir | Concluir/Reabrir */}
+      {/* Linha de ações — 4 botões: Anotações | Compartilhar | Excluir | Concluir/Reabrir */}
       <View style={styles.actionBarRow}>
         <TouchableOpacity
           style={[styles.actionBarBtn, styles.gridBtnPrimary]}
-          onPress={() => setShowNotes(n => !n)}>
-          <Text style={styles.actionBarBtnText}>
-            {showNotes ? t.lists.itemsBtn : t.common.notes}
-          </Text>
+          onPress={() => setShowNotes(true)}>
+          <Text style={styles.actionBarBtnText}>{t.common.notes}</Text>
         </TouchableOpacity>
 
         {isSharedWithMe ? (
@@ -998,21 +1016,8 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         </TouchableOpacity>
       </View>
 
-      {/* CONTEÚDO — notas ou itens */}
-      {showNotes ? (
-        <TextInput
-          style={[styles.notesInput, { flex: 1, marginHorizontal: 16 }]}
-          value={notesText}
-          onChangeText={handleNotesChange}
-          onBlur={saveNotes}
-          multiline
-          placeholder={t.common.notesPlaceholder}
-          placeholderTextColor={colors.textMuted}
-          editable={!list.isCompleted}
-          textAlignVertical="top"
-        />
-      ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={globalStyles.scrollContent}>
+      {/* CONTEÚDO — itens */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={globalStyles.scrollContent}>
 
           {list.items.length === 0 && (
             <Text style={globalStyles.emptyText}>{t.lists.noItems}</Text>
@@ -1092,11 +1097,10 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
               </View>
             </SwipeRow>
           ))}
-        </ScrollView>
-      )}
+      </ScrollView>
 
       {/* Adicionar item (roxo) — única coisa fixa na parte inferior */}
-      {!list.isCompleted && !showNotes && (
+      {!list.isCompleted && (
         <View style={styles.bottomContainer}>
           <View style={styles.addItemSection}>
             <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowAddItem(true)}>
@@ -1121,6 +1125,40 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         onClose={() => setPriceModalItem(null)}
         onSave={addPrice}
       />
+
+      {/* MODAL DE ANOTAÇÕES */}
+      <Modal
+        visible={showNotes}
+        animationType="fade"
+        transparent
+        onRequestClose={() => { saveNotes(); setShowNotes(false); }}>
+        <TouchableOpacity
+          style={globalStyles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => { saveNotes(); setShowNotes(false); }}>
+          <TouchableOpacity activeOpacity={1} style={globalStyles.modalContent} onPress={() => {}}>
+            <Text style={[globalStyles.textTitle, { textAlign: 'center', marginBottom: 12 }]}>
+              {t.common.notes}
+            </Text>
+            <TextInput
+              style={[styles.notesInput, { minHeight: 160, maxHeight: 280 }]}
+              value={notesText}
+              onChangeText={handleNotesChange}
+              multiline
+              placeholder={t.common.notesPlaceholder}
+              placeholderTextColor={colors.textMuted}
+              editable={!list.isCompleted}
+              textAlignVertical="top"
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[globalStyles.buttonPrimary, { marginTop: 16 }]}
+              onPress={() => { saveNotes(); setShowNotes(false); }}>
+              <Text style={globalStyles.buttonPrimaryText}>OK</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

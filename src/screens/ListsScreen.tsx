@@ -512,6 +512,7 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
           onBack={() => setSelectedList(null)}
           onUpdate={onUpdateList}
           onDelete={onDeleteList}
+          onOpenSettings={onOpenSettings}
           allLists={lists.filter(l => !l.isArchived)}
           onNavigateToList={(id) => {
             const target = lists.find(l => l.id === id);

@@ -20,7 +20,7 @@ import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ScreenName, ShoppingList } from './src/types';
-import { loadLists, loadSettings, saveLists, saveSettings } from './src/utils/storage';
+import { loadLists, loadSettings, saveLists } from './src/utils/storage';
 import {
   listenToSharedListsWithMe, listenToMySharedLists,
   updateSharedList, deleteSharedListDoc,
@@ -58,7 +58,6 @@ function AppContent() {
 
   const [userName, setUserName] = useState('');
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null); // null = ainda carregando
-  const [birthDate, setBirthDate] = useState('');
 
   // ===========================
   // INICIALIZAÇÃO
@@ -68,7 +67,6 @@ function AppContent() {
       const settings = await loadSettings();
       setUserName(settings.displayName ?? '');
       setOnboardingDone(settings.onboardingDone ?? false);
-      if (settings.birthDate) setBirthDate(settings.birthDate);
       setLists(await loadLists());
     };
     init();
@@ -183,14 +181,6 @@ function AppContent() {
   };
 
   // ===========================
-  // CONFIGURAÇÕES
-  // ===========================
-  const handleSetBirthDate = async (date: string) => {
-    setBirthDate(date);
-    await saveSettings({ birthDate: date });
-  };
-
-  // ===========================
   // RENDER TELA ATIVA
   // ===========================
   const renderScreen = () => {
@@ -209,8 +199,6 @@ function AppContent() {
       case 'config':
         return (
           <SettingsScreen
-            birthDate={birthDate}
-            onSetBirthDate={handleSetBirthDate}
             onChangeUserName={(name) => setUserName(name)}
             onGoHome={closeSettings}
           />
@@ -233,7 +221,6 @@ function AppContent() {
     const handleOnboardingDone = async () => {
       const settings = await loadSettings();
       setUserName(settings.displayName ?? '');
-      if (settings.birthDate) setBirthDate(settings.birthDate);
       setOnboardingDone(true);
     };
     return (

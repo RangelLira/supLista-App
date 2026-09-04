@@ -23,57 +23,26 @@ import SharingScreen from './SharingScreen';
 type SubScreen = null | 'perfil' | 'preferencias' | 'compartilhamento' | 'sobre';
 
 interface Props {
-  // Perfil
-  birthDate: string;
-  onSetBirthDate: (date: string) => void;
   onChangeUserName: (name: string) => void;
   // Fecha Configurações e volta para a tela de Listas
   onGoHome?: () => void;
 }
 
-export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUserName, onGoHome }: Props) {
+export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   const { colors, globalStyles, theme, setTheme } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
   const [localDisplayName, setLocalDisplayName] = useState('');
-  const [localBirthDate, setLocalBirthDate] = useState(birthDate);
   const styles = useMemo(() => createStyles(colors), [colors]);
-
-  // Formata automaticamente DD/MM/AAAA enquanto o usuário digita
-  const handleBirthDateChange = (raw: string) => {
-    const digits = raw.replace(/\D/g, '').slice(0, 8);
-    let formatted = digits;
-    if (digits.length > 4) formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    else if (digits.length > 2) formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    setLocalBirthDate(formatted);
-  };
-
-  const handleSaveBirthDate = () => {
-    const match = localBirthDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (match) {
-      const d = parseInt(match[1], 10);
-      const m = parseInt(match[2], 10);
-      const y = parseInt(match[3], 10);
-      if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 1900 && y <= 2099) {
-        onSetBirthDate(localBirthDate);
-        return;
-      }
-    }
-    setLocalBirthDate(birthDate);
-  };
 
   useEffect(() => {
     if (subScreen === 'perfil') {
       loadSettings().then(s => {
         setLocalDisplayName(s.displayName ?? '');
-        setLocalBirthDate(s.birthDate ?? '');
       });
     }
   }, [subScreen]);
-
-  // Sincroniza localBirthDate quando a prop muda (ex: carregamento inicial)
-  useEffect(() => { setLocalBirthDate(birthDate); }, [birthDate]);
 
   useEffect(() => {
     if (!subScreen) return;
@@ -141,6 +110,13 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
         <View style={globalStyles.header}>
           <Text style={globalStyles.headerTitle}>{t.settings.menuProfile}</Text>
           <Text style={globalStyles.headerSubtitle}>{t.settings.menuProfileSubtitle}</Text>
+          {onGoHome && (
+            <TouchableOpacity style={styles.menuBtn} onPress={onGoHome}>
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView contentContainerStyle={globalStyles.scrollContent}>
@@ -163,23 +139,6 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
               onPress={handleSaveDisplayName}>
               <Text style={globalStyles.buttonPrimaryText}>{t.settings.profileNameSave}</Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Data de nascimento */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.settings.profileBirthDateLabel}</Text>
-            <TextInput
-              style={[globalStyles.input, { marginBottom: 10, textAlign: 'center', fontSize: 18 }]}
-              value={localBirthDate}
-              onChangeText={handleBirthDateChange}
-              onBlur={handleSaveBirthDate}
-              placeholder={t.settings.profileBirthDatePlaceholder}
-              placeholderTextColor={colors.textSecondary}
-              keyboardType="numeric"
-              maxLength={10}
-              returnKeyType="done"
-              onSubmitEditing={handleSaveBirthDate}
-            />
           </View>
 
           {/* Conta Google */}
@@ -250,6 +209,13 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
         <View style={globalStyles.header}>
           <Text style={globalStyles.headerTitle}>{t.settings.menuOptions}</Text>
           <Text style={globalStyles.headerSubtitle}>{t.settings.menuOptionsSubtitle}</Text>
+          {onGoHome && (
+            <TouchableOpacity style={styles.menuBtn} onPress={onGoHome}>
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView contentContainerStyle={globalStyles.scrollContent}>
@@ -308,6 +274,13 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
         <View style={globalStyles.header}>
           <Text style={globalStyles.headerTitle}>{t.settings.menuShare}</Text>
           <Text style={globalStyles.headerSubtitle}>{t.settings.menuShareSubtitle}</Text>
+          {onGoHome && (
+            <TouchableOpacity style={styles.menuBtn} onPress={onGoHome}>
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+            </TouchableOpacity>
+          )}
         </View>
         <SharingScreen />
       </View>
@@ -323,6 +296,13 @@ export default function SettingsScreen({ birthDate, onSetBirthDate, onChangeUser
         <View style={globalStyles.header}>
           <Text style={globalStyles.headerTitle}>{t.settings.menuAbout}</Text>
           <Text style={globalStyles.headerSubtitle}>{t.settings.menuAboutSubtitle}</Text>
+          {onGoHome && (
+            <TouchableOpacity style={styles.menuBtn} onPress={onGoHome}>
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+              <View style={styles.menuBtnBar} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.aboutContainer}>

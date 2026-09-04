@@ -108,7 +108,7 @@ const translations = {
     lists: {
       title: 'supList',
       createBtn: 'Criar nova lista',
-      sectionOpen: 'Meu progresso:',
+      sectionOpen: 'MEU PROGRESSO:',
       sectionDone: 'CONCLUÍDAS / ARQUIVADAS',
       createTitle: 'Criar Lista',
       createSubtitle: 'Preencha os detalhes da lista',
@@ -629,7 +629,7 @@ const translations = {
     lists: {
       title: 'supList',
       createBtn: 'Create new list',
-      sectionOpen: 'My progress:',
+      sectionOpen: 'MY PROGRESS:',
       sectionDone: 'COMPLETED / ARCHIVED',
       createTitle: 'Create List',
       createSubtitle: 'Fill in the list details',
@@ -1150,7 +1150,7 @@ const translations = {
     lists: {
       title: 'supList',
       createBtn: 'Crear nueva lista',
-      sectionOpen: 'Mi progreso:',
+      sectionOpen: 'MI PROGRESO:',
       sectionDone: 'COMPLETADAS / ARCHIVADAS',
       createTitle: 'Crear Lista',
       createSubtitle: 'Completa los detalles de la lista',
