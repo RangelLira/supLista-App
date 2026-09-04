@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   BackHandler,
+  Linking,
   Modal,
   ScrollView,
   StyleSheet,
@@ -23,6 +24,10 @@ import { termsOfService } from '../content/termsOfService';
 import SharingScreen from './SharingScreen';
 
 type SubScreen = null | 'perfil' | 'preferencias' | 'compartilhamento' | 'sobre';
+
+// TODO: substituir pelos dados reais de contato antes do lançamento
+const CONTACT_WHATSAPP = '5511999999999';
+const CONTACT_EMAIL = 'contato@suplist.com.br';
 
 interface Props {
   onChangeUserName: (name: string) => void;
@@ -345,40 +350,51 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
 
             <View style={styles.aboutDivider} />
 
-            <TouchableOpacity style={styles.aboutTermsBtn} onPress={() => setShowTerms(true)}>
-              <Text style={styles.aboutTermsBtnText}>Ver termos de uso</Text>
+            <Text style={styles.aboutLabel}>{t.settings.aboutContactTitle}</Text>
+            <View style={styles.aboutContactRow}>
+              <TouchableOpacity
+                style={styles.aboutContactBtn}
+                onPress={() => Linking.openURL(`https://wa.me/${CONTACT_WHATSAPP}`)}>
+                <Text style={styles.aboutContactIcon}>💬</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.aboutContactBtn}
+                onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}`)}>
+                <Text style={styles.aboutContactIcon}>✉️</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.aboutDivider} />
+
+            <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(true)}>
+              <Text style={globalStyles.buttonPrimaryText}>Ver termos de uso</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.aboutCopyright}>© 2026 supList. Todos os direitos reservados.</Text>
         </View>
 
-        {/* MODAL — TERMOS DE USO */}
+        {/* MODAL — TERMOS DE USO (tela cheia, rolável) */}
         <Modal
           visible={showTerms}
-          animationType="fade"
-          transparent
+          animationType="slide"
+          presentationStyle="fullScreen"
           onRequestClose={() => setShowTerms(false)}>
-          <TouchableOpacity
-            style={globalStyles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowTerms(false)}>
-            <TouchableOpacity activeOpacity={1} style={styles.termsModalContent} onPress={() => {}}>
-              <Text style={[globalStyles.textTitle, { textAlign: 'center', marginBottom: 12 }]}>
-                {t.onboarding.termsTitle}
+          <View style={globalStyles.screen}>
+            <View style={globalStyles.header}>
+              <Text style={globalStyles.headerTitle}>{t.onboarding.termsTitle}</Text>
+            </View>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.termsScrollContent}>
+              <Text style={styles.termsText}>
+                {termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt}
               </Text>
-              <ScrollView style={styles.termsScroll}>
-                <Text style={styles.termsText}>
-                  {termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt}
-                </Text>
-              </ScrollView>
-              <TouchableOpacity
-                style={[globalStyles.buttonPrimary, { marginTop: 16 }]}
-                onPress={() => setShowTerms(false)}>
-                <Text style={globalStyles.buttonPrimaryText}>OK</Text>
+            </ScrollView>
+            <View style={styles.termsBottomBar}>
+              <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(false)}>
+                <Text style={globalStyles.buttonPrimaryText}>Fechar</Text>
               </TouchableOpacity>
-            </TouchableOpacity>
-          </TouchableOpacity>
+            </View>
+          </View>
         </Modal>
       </View>
     );
@@ -495,7 +511,7 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
     justifyContent: 'space-between',
     padding: 32,
     paddingTop: 48,
-    paddingBottom: 32,
+    paddingBottom: 56,
   },
   aboutTop: {
     alignItems: 'center',
@@ -534,40 +550,38 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
     fontSize: 18,
     fontWeight: '700',
   },
-  aboutTermsBtn: {
+  aboutContactRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  aboutContactBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: c.bgSecondary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  aboutTermsBtnText: {
-    color: c.primary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  aboutContactIcon: { fontSize: 22 },
   aboutCopyright: {
     color: c.textMuted,
     fontSize: 11,
     textAlign: 'center',
   },
 
-  termsModalContent: {
-    backgroundColor: c.bgInput,
-    borderRadius: 12,
-    padding: 20,
-    width: '100%',
-    maxWidth: 480,
-    maxHeight: '80%',
-  },
-  termsScroll: {
-    backgroundColor: c.bgCard,
-    borderRadius: 10,
-    padding: 14,
+  termsScrollContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
   termsText: {
     color: c.textSecondary,
     fontSize: 13,
     lineHeight: 20,
+  },
+  termsBottomBar: {
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: c.bgMain,
   },
 
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },

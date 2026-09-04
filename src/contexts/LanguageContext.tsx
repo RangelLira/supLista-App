@@ -131,8 +131,6 @@ const translations = {
       addTask: 'Adicionar Tarefa',
       finalize: 'Finalizar',
       noItems: 'Nenhum item ainda.\nToque em "Adicionar Item" abaixo.',
-      shoppingMode: 'Modo Compras',
-      total: 'Total',
       subtitle: (total: number, closed: number) =>
         `${total} lista${total !== 1 ? 's' : ''} . ${closed} concluída${closed !== 1 ? 's' : ''}`,
       linkedTo: 'Vinculada:',
@@ -208,6 +206,7 @@ const translations = {
       menuShareSubtitle: 'Ativar, gerar e administrar compartilhamentos',
       menuAbout: 'Sobre',
       menuAboutSubtitle: 'Informações do app e desenvolvimento',
+      aboutContactTitle: 'Contato',
       backBtn: '← Voltar',
       comingSoon: 'Em desenvolvimento',
       // Perfil
@@ -478,7 +477,6 @@ const translations = {
     },
     onboarding: {
       // Etapa 1 — Idioma + Tema
-      welcomeTitle: 'Bem-vindo ao TaskFlow!',
       welcomeSub: 'Bem-vindo! / Welcome! / ¡Bienvenido!',
       languageLabel: 'Escolha seu idioma:',
       themeLabel: 'Escolha seu tema:',
@@ -531,7 +529,7 @@ const translations = {
       waterHint: 'Você pode ativar depois em Configurações.',
       // Etapa 6 — Termos de uso
       termsTitle: 'Termos de Uso',
-      termsSubtitle: 'Leia com atenção antes de começar a usar o TaskFlow.',
+      termsSubtitle: 'Leia com atenção antes de começar a usar o supList.',
       termsScrollHint: 'Role até o final para habilitar o botão de aceite.',
       termsAcceptBtn: 'Li e aceito os Termos de Uso',
     },
@@ -657,8 +655,6 @@ const translations = {
       addTask: 'Add Task',
       finalize: 'Finalize',
       noItems: 'No items yet.\nTap "Add Item" below.',
-      shoppingMode: 'Shopping Mode',
-      total: 'Total',
       subtitle: (total: number, closed: number) =>
         `${total} list${total !== 1 ? 's' : ''} . ${closed} completed`,
       linkedTo: 'Linked to:',
@@ -734,6 +730,7 @@ const translations = {
       menuShareSubtitle: 'Enable, generate and manage sharing',
       menuAbout: 'About',
       menuAboutSubtitle: 'App info and development',
+      aboutContactTitle: 'Contact',
       backBtn: '← Back',
       comingSoon: 'Coming soon',
       // Profile
@@ -1004,7 +1001,6 @@ const translations = {
     },
     onboarding: {
       // Step 1 — Language + Theme
-      welcomeTitle: 'Welcome to TaskFlow!',
       welcomeSub: 'Welcome! / Bem-vindo! / ¡Bienvenido!',
       languageLabel: 'Choose your language:',
       themeLabel: 'Choose your theme:',
@@ -1057,7 +1053,7 @@ const translations = {
       waterHint: 'You can enable it later in Settings.',
       // Step 6 — Terms
       termsTitle: 'Terms of Use',
-      termsSubtitle: 'Read carefully before using TaskFlow.',
+      termsSubtitle: 'Read carefully before using supList.',
       termsScrollHint: 'Scroll to the bottom to enable the accept button.',
       termsAcceptBtn: 'I have read and accept the Terms of Use',
     },
@@ -1183,8 +1179,6 @@ const translations = {
       addTask: 'Agregar Tarea',
       finalize: 'Finalizar',
       noItems: 'Sin artículos aún.\nToca "Agregar Artículo" abajo.',
-      shoppingMode: 'Modo Compra',
-      total: 'Total',
       subtitle: (total: number, closed: number) =>
         `${total} lista${total !== 1 ? 's' : ''} . ${closed} completada${closed !== 1 ? 's' : ''}`,
       linkedTo: 'Vinculada a:',
@@ -1260,6 +1254,7 @@ const translations = {
       menuShareSubtitle: 'Activar, generar y administrar compartidos',
       menuAbout: 'Acerca de',
       menuAboutSubtitle: 'Información del app y desarrollo',
+      aboutContactTitle: 'Contacto',
       backBtn: '← Volver',
       comingSoon: 'En desarrollo',
       // Perfil
@@ -1530,7 +1525,6 @@ const translations = {
     },
     onboarding: {
       // Paso 1 — Idioma + Tema
-      welcomeTitle: '¡Bienvenido a TaskFlow!',
       welcomeSub: '¡Bienvenido! / Welcome! / Bem-vindo!',
       languageLabel: 'Elige tu idioma:',
       themeLabel: 'Elige tu tema:',
@@ -1583,7 +1577,7 @@ const translations = {
       waterHint: 'Puedes activarlo después en Configuración.',
       // Paso 6 — Términos de uso
       termsTitle: 'Términos de Uso',
-      termsSubtitle: 'Lee con atención antes de usar TaskFlow.',
+      termsSubtitle: 'Lee con atención antes de usar supList.',
       termsScrollHint: 'Desplázate hasta el final para habilitar el botón de aceptación.',
       termsAcceptBtn: 'He leído y acepto los Términos de Uso',
     },
