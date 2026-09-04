@@ -727,13 +727,12 @@ interface ShoppingListScreenProps {
   onComplete?: () => void;
   onReopen?: () => void;
   onShare?: () => void;
-  onArchive?: () => void;
   isSharedWithMe?: boolean;
   sharedWithUid?: string | null;
 }
 
 export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists = [], onNavigateToList,
-  onComplete, onReopen, onShare, onArchive,
+  onComplete, onReopen, onShare,
   isSharedWithMe = false, sharedWithUid = null,
 }: ShoppingListScreenProps) {
   const { colors, globalStyles } = useTheme();
@@ -936,17 +935,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
     );
   };
 
-  const handleArchive = () => {
-    Alert.alert(
-      t.alerts.archiveList,
-      t.alerts.archiveListMsg(list.name),
-      [
-        { text: t.common.cancel, style: 'cancel' },
-        { text: t.alerts.archiveListBtn, onPress: () => { onUpdate({ ...list, isArchived: true }); onBack(); } },
-      ]
-    );
-  };
-
   const formatQuantity = (item: ListItem) => {
     if (!item.unit || item.unit === 'unidade') return `Qtd: ${item.quantity}`;
     return `Qtd: ${item.quantity} ${item.unit}`;
@@ -1105,9 +1093,9 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           </View>
         )}
 
-        {/* Grid 6 botões — posição fixa: sempre imediatamente acima do separador */}
+        {/* Grid 4 botões — posição fixa: sempre imediatamente acima do separador */}
         <View style={styles.gridPanel}>
-          {/* Linha 1: Anotações/Itens | Arquivar (concluída) | Compartilhar */}
+          {/* Linha 1: Anotações/Itens | Compartilhar */}
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.gridBtn, styles.gridBtnPrimary]}
@@ -1116,16 +1104,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
                 {showNotes ? t.lists.itemsBtn : t.common.notes}
               </Text>
             </TouchableOpacity>
-
-            {!list.isCompleted ? (
-              <View style={[styles.gridBtn, styles.gridBtnDisabled]}>
-                <Text style={styles.gridBtnTextDisabled}>—</Text>
-              </View>
-            ) : (
-              <TouchableOpacity style={[styles.gridBtn, styles.gridBtnNeutral]} onPress={onArchive}>
-                <Text style={styles.gridBtnText}>{t.common.archive}</Text>
-              </TouchableOpacity>
-            )}
 
             {isSharedWithMe ? (
               <TouchableOpacity style={[styles.gridBtn, styles.gridBtnDanger]} onPress={onShare}>
@@ -1141,17 +1119,8 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
             )}
           </View>
 
-          {/* Linha 2: Editar | Excluir | Concluir/Reabrir */}
+          {/* Linha 2: Excluir | Concluir/Reabrir */}
           <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={[styles.gridBtn, !list.isCompleted ? styles.gridBtnWarning : styles.gridBtnDisabled]}
-              disabled={list.isCompleted}
-              onPress={() => handleStartEditName()}>
-              <Text style={!list.isCompleted ? styles.gridBtnText : styles.gridBtnTextDisabled}>
-                {t.common.edit}
-              </Text>
-            </TouchableOpacity>
-
             <TouchableOpacity style={[styles.gridBtn, styles.gridBtnDanger]} onPress={handleDelete}>
               <Text style={styles.gridBtnText}>{t.common.delete}</Text>
             </TouchableOpacity>

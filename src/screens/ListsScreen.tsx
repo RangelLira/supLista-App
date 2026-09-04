@@ -549,7 +549,6 @@ export default function ListsScreen({ userName, lists, initialListId, onSaveList
               setSharingList(currentList);
             }
           }}
-          onArchive={() => { onUpdateList({ ...currentList, isArchived: true }); setSelectedList(null); }}
           isSharedWithMe={currentList.isSharedWithMe}
           sharedWithUid={currentList.sharedWithUid ?? null}
         />
