@@ -201,24 +201,6 @@ function createStyles(c: typeof darkColors) {
       paddingBottom: 8,
       gap: 8,
     },
-    bottomBar: {
-      borderTopWidth: 1,
-      borderTopColor: c.border,
-      padding: 16,
-      gap: 8,
-    },
-    backBtn: {
-      backgroundColor: c.bgSecondary,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      alignItems: 'center' as const,
-    },
-    backBtnText: {
-      color: c.textSecondary,
-      fontSize: 16,
-      fontWeight: '600' as const,
-    },
     addItemSection: {
       paddingHorizontal: 16,
       paddingTop: 8,
@@ -1133,13 +1115,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Linha separadora + Voltar */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-            <Text style={styles.backBtnText}>{t.home.altBack}</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
