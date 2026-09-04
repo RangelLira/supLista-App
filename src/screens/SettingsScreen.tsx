@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   BackHandler,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +19,7 @@ import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
 import { AccentColor, ACCENT_PRESETS, HEADER_TOP_PADDING } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
+import { termsOfService } from '../content/termsOfService';
 import SharingScreen from './SharingScreen';
 
 type SubScreen = null | 'perfil' | 'preferencias' | 'compartilhamento' | 'sobre';
@@ -34,6 +36,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   const { user, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
   const [localDisplayName, setLocalDisplayName] = useState('');
+  const [showTerms, setShowTerms] = useState(false);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
@@ -330,25 +333,53 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
         </View>
 
         <View style={styles.aboutContainer}>
-          <Text style={styles.aboutAppName}>supList</Text>
-          <Text style={styles.aboutVersion}>Versão 1.0</Text>
-          <Text style={styles.aboutTagline}>"Sua lista, sempre à mão"</Text>
+          <View style={styles.aboutTop}>
+            <Text style={styles.aboutAppName}>supList</Text>
+            <Text style={styles.aboutVersion}>Versão 1.0</Text>
+            <Text style={styles.aboutTagline}>"Faça suas próprias escolhas"</Text>
 
-          <View style={styles.aboutDivider} />
+            <View style={styles.aboutDivider} />
 
-          <Text style={styles.aboutLabel}>Desenvolvido por</Text>
-          <Text style={styles.aboutDeveloper}>Rangel Lira</Text>
+            <Text style={styles.aboutLabel}>Desenvolvido por</Text>
+            <Text style={styles.aboutDeveloper}>Contest Software - Rangel Lira</Text>
 
-          <View style={styles.aboutDivider} />
+            <View style={styles.aboutDivider} />
 
-          <Text style={styles.aboutFeatures}>Features principais</Text>
-          <Text style={styles.aboutFeatureItem}>Listas de compras e tarefas</Text>
-          <Text style={styles.aboutFeatureItem}>Compartilhamento em tempo real</Text>
-          <Text style={styles.aboutFeatureItem}>Suporte a múltiplos idiomas</Text>
+            <TouchableOpacity style={styles.aboutTermsBtn} onPress={() => setShowTerms(true)}>
+              <Text style={styles.aboutTermsBtnText}>Ver termos de uso</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.aboutDivider} />
           <Text style={styles.aboutCopyright}>© 2026 supList. Todos os direitos reservados.</Text>
         </View>
+
+        {/* MODAL — TERMOS DE USO */}
+        <Modal
+          visible={showTerms}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowTerms(false)}>
+          <TouchableOpacity
+            style={globalStyles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowTerms(false)}>
+            <TouchableOpacity activeOpacity={1} style={styles.termsModalContent} onPress={() => {}}>
+              <Text style={[globalStyles.textTitle, { textAlign: 'center', marginBottom: 12 }]}>
+                {t.onboarding.termsTitle}
+              </Text>
+              <ScrollView style={styles.termsScroll}>
+                <Text style={styles.termsText}>
+                  {termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt}
+                </Text>
+              </ScrollView>
+              <TouchableOpacity
+                style={[globalStyles.buttonPrimary, { marginTop: 16 }]}
+                onPress={() => setShowTerms(false)}>
+                <Text style={globalStyles.buttonPrimaryText}>OK</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </View>
     );
   }
@@ -461,8 +492,14 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   aboutContainer: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 32,
     paddingTop: 48,
+    paddingBottom: 32,
+  },
+  aboutTop: {
+    alignItems: 'center',
+    width: '100%',
   },
   aboutAppName: {
     color: c.primary,
@@ -497,23 +534,40 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
     fontSize: 18,
     fontWeight: '700',
   },
-  aboutFeatures: {
-    color: c.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 12,
-    alignSelf: 'flex-start',
+  aboutTermsBtn: {
+    backgroundColor: c.bgSecondary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
   },
-  aboutFeatureItem: {
-    color: c.textMuted,
+  aboutTermsBtnText: {
+    color: c.primary,
     fontSize: 14,
-    lineHeight: 26,
-    alignSelf: 'flex-start',
+    fontWeight: '700',
   },
   aboutCopyright: {
-    color: c.textSecondary,
-    fontSize: 12,
+    color: c.textMuted,
+    fontSize: 11,
     textAlign: 'center',
+  },
+
+  termsModalContent: {
+    backgroundColor: c.bgInput,
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: '80%',
+  },
+  termsScroll: {
+    backgroundColor: c.bgCard,
+    borderRadius: 10,
+    padding: 14,
+  },
+  termsText: {
+    color: c.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
 
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
