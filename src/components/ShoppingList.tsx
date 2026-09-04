@@ -196,8 +196,8 @@ function createStyles(c: typeof darkColors) {
       paddingTop: 16,
     },
     addItemSection: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
+      padding: 16,
+      paddingBottom: 48,
     },
     actionBarRow: {
       flexDirection: 'row',
