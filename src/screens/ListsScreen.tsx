@@ -9,7 +9,6 @@ import {
   Animated,
   BackHandler,
   Easing,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,7 +23,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
 import { darkColors } from '../styles/theme';
-import { ShoppingList, Event } from '../types';
+import { ShoppingList } from '../types';
 import { exitSharedList, shareList, unshareList } from '../utils/firestore';
 import { formatHeaderDate } from '../utils/dateUtils';
 
@@ -33,13 +32,11 @@ let hasPlayedAnimation = false;
 interface Props {
   userName: string;
   lists: ShoppingList[];
-  events: Event[];
   initialListId?: number;
   onSaveList: (list: ShoppingList) => void;
   onUpdateList: (list: ShoppingList) => void;
   onDeleteList: (id: number) => void;
-  onLinkFromList: (listId: number, targetId: number, targetType: 'event' | 'pending') => void;
-  onUnlinkList?: (listId: number) => void;
+  onSearch?: () => void;
   resetKey?: number;
 }
 
@@ -267,7 +264,7 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
-export default function ListsScreen({ userName, lists, events, initialListId, onSaveList, onUpdateList, onDeleteList, onLinkFromList, onUnlinkList, resetKey }: Props) {
+export default function ListsScreen({ userName, lists, initialListId, onSaveList, onUpdateList, onDeleteList, onSearch, resetKey }: Props) {
   const { colors, globalStyles } = useTheme();
   const { t, lang } = useLanguage();
   const { userId } = useFirebase();
@@ -275,7 +272,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [linkingListId, setLinkingListId] = useState<number | null>(null);
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
   const [sharingList, setSharingList] = useState<ShoppingList | null>(null);
 
@@ -430,13 +426,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
     }
   };
 
-  const handleUnlink = (list: ShoppingList) => {
-    Alert.alert(t.alerts.unlinkSimple, t.alerts.unlinkSimpleMsg, [
-      { text: t.common.cancel, style: 'cancel' },
-      { text: t.alerts.unlinkSimple, onPress: () => onUnlinkList?.(list.id) },
-    ]);
-  };
-
   const formatListTimestamp = (iso: string) => {
     const d = new Date(iso);
     const day = d.getDate().toString().padStart(2, '0');
@@ -449,7 +438,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
   const renderList = (list: ShoppingList) => {
     const checkedCount = list.items.filter(i => i.isChecked).length;
     const progress = list.items.length > 0 ? checkedCount / list.items.length : 0;
-    const isLinked = !!(list.linkedEventId || list.linkedPendingId || list.linkedRotinaId);
 
     return (
       <SwipeRow
@@ -504,7 +492,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
                 <Text style={[styles.listBadgeIcon, syncSuccessListId === list.id && { color: colors.success }]}>👥</Text>
               )
             )}
-            {isLinked && <Text style={styles.listBadgeIcon}>🔗</Text>}
             <Text style={styles.listBadgeIcon}>{list.type === 'tarefas' ? '✅' : '🛒'}</Text>
           </View>
         </View>
@@ -537,8 +524,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
           }}
           onComplete={() => onUpdateList({ ...currentList, isCompleted: true, completedAt: new Date().toISOString() })}
           onReopen={() => onUpdateList({ ...currentList, isCompleted: false, completedAt: null })}
-          onLink={() => setLinkingListId(currentList.id)}
-          onUnlink={() => handleUnlink(currentList)}
           onShare={() => {
             if (currentList.isSharedWithMe) {
               if (!currentList.ownerUid) return;
@@ -565,7 +550,6 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
             }
           }}
           onArchive={() => { onUpdateList({ ...currentList, isArchived: true }); setSelectedList(null); }}
-          isLinked={!!(currentList.linkedEventId || currentList.linkedPendingId || currentList.linkedRotinaId)}
           isSharedWithMe={currentList.isSharedWithMe}
           sharedWithUid={currentList.sharedWithUid ?? null}
         />
@@ -629,55 +613,20 @@ export default function ListsScreen({ userName, lists, events, initialListId, on
           </ScrollView>
 
           {/* BOTÃO FIXO INFERIOR */}
-          <View style={styles.bottomBar}>
-            <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowCreateForm(true)}>
+          <View style={[styles.bottomBar, { flexDirection: 'row', gap: 10 }]}>
+            {onSearch && (
+              <TouchableOpacity
+                style={[globalStyles.buttonSecondary, { width: 52, paddingHorizontal: 0, alignItems: 'center' }]}
+                onPress={onSearch}>
+                <Text style={{ fontSize: 18 }}>🔍</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[globalStyles.buttonPrimary, { flex: 1 }]} onPress={() => setShowCreateForm(true)}>
               <Text style={globalStyles.buttonPrimaryText}>{t.lists.createBtn}</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
-
-      {/* MODAL VINCULAR — sempre montado para funcionar também dentro da ShoppingListScreen */}
-      {linkingListId !== null && (() => {
-        const availableEvents = events.filter(e => !e.is_completed && !e.linkedListId);
-        return (
-          <Modal visible={true} animationType="fade" transparent onRequestClose={() => setLinkingListId(null)}>
-            <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-              <View style={{ backgroundColor: colors.bgInput, borderRadius: 12, padding: 20, width: '100%', maxWidth: 400 }}>
-                <Text style={[globalStyles.textTitle, { textAlign: 'center', marginBottom: 16 }]}>
-                  {t.lists.linkModalTitle}
-                </Text>
-                {availableEvents.length === 0 ? (
-                  <Text style={globalStyles.emptyText}>{t.lists.linkModalEmpty}</Text>
-                ) : (
-                  <ScrollView style={{ maxHeight: 300 }}>
-                    {availableEvents.map(event => (
-                      <TouchableOpacity
-                        key={event.id}
-                        style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 8, backgroundColor: colors.bgCard, marginBottom: 8, gap: 10 }}
-                        onPress={() => {
-                          onLinkFromList(linkingListId, event.id, event.is_pending ? 'pending' : 'event');
-                          setLinkingListId(null);
-                        }}>
-                        <Text style={{ fontSize: 18 }}>{event.is_pending ? '⏳' : '📅'}</Text>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: '500' }}>{event.title}</Text>
-                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                            {event.is_pending ? t.lists.linkTypePending : t.lists.linkTypeEvent}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-                <TouchableOpacity style={[globalStyles.buttonSecondary, { marginTop: 12 }]} onPress={() => setLinkingListId(null)}>
-                  <Text style={globalStyles.buttonSecondaryText}>{t.common.cancel}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        );
-      })()}
 
       {/* MODAL CRIAR LISTA */}
       <CreateListForm

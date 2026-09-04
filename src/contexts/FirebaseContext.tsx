@@ -148,11 +148,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     try {
       await GoogleSignin.signOut();
       await auth().signOut();
-      // Garante que backup em nuvem não fique configurado sem conta Google
-      const settings = await loadSettings();
-      if (settings.backupLocation === 'cloud') {
-        await saveSettings({ backupLocation: 'local' });
-      }
       await signInAnonymouslyIfNeeded();
     } catch (error) {
       console.error('[Firebase] Erro ao desconectar Google:', error);

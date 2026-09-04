@@ -726,18 +726,15 @@ interface ShoppingListScreenProps {
   // Action grid callbacks (Sprint 13)
   onComplete?: () => void;
   onReopen?: () => void;
-  onLink?: () => void;
-  onUnlink?: () => void;
   onShare?: () => void;
   onArchive?: () => void;
-  isLinked?: boolean;
   isSharedWithMe?: boolean;
   sharedWithUid?: string | null;
 }
 
 export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists = [], onNavigateToList,
-  onComplete, onReopen, onLink, onUnlink, onShare, onArchive,
-  isLinked = false, isSharedWithMe = false, sharedWithUid = null,
+  onComplete, onReopen, onShare, onArchive,
+  isSharedWithMe = false, sharedWithUid = null,
 }: ShoppingListScreenProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
@@ -1110,7 +1107,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
 
         {/* Grid 6 botões — posição fixa: sempre imediatamente acima do separador */}
         <View style={styles.gridPanel}>
-          {/* Linha 1: Anotações/Itens | Vincular/Desvincular | Compartilhar */}
+          {/* Linha 1: Anotações/Itens | Arquivar (concluída) | Compartilhar */}
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.gridBtn, styles.gridBtnPrimary]}
@@ -1121,15 +1118,9 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
             </TouchableOpacity>
 
             {!list.isCompleted ? (
-              isLinked ? (
-                <TouchableOpacity style={[styles.gridBtn, styles.gridBtnPrimary]} onPress={onUnlink}>
-                  <Text style={styles.gridBtnText}>{t.common.unlink}</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity style={[styles.gridBtn, styles.gridBtnPrimary]} onPress={onLink}>
-                  <Text style={styles.gridBtnText}>{t.common.linkShort}</Text>
-                </TouchableOpacity>
-              )
+              <View style={[styles.gridBtn, styles.gridBtnDisabled]}>
+                <Text style={styles.gridBtnTextDisabled}>—</Text>
+              </View>
             ) : (
               <TouchableOpacity style={[styles.gridBtn, styles.gridBtnNeutral]} onPress={onArchive}>
                 <Text style={styles.gridBtnText}>{t.common.archive}</Text>

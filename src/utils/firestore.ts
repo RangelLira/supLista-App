@@ -3,14 +3,13 @@
 // ===========================
 
 import firestore from '@react-native-firebase/firestore';
-import { Event, Rotina, ShoppingList } from '../types';
+import { ShoppingList } from '../types';
 
 // ===========================
 // COLEÇÕES
 // ===========================
 // users/{userId}
 // shares/{shareId} → { fromUid, toUid, displayName, createdAt }
-// sharedEvents/{ownerUid}_{eventId}
 // sharedLists/{ownerUid}_{listId}
 
 // ===========================
@@ -116,71 +115,6 @@ export const deleteShareConnection = async (shareId: string): Promise<void> => {
 };
 
 // ===========================
-// EVENTOS COMPARTILHADOS
-// ===========================
-
-export const shareEvent = async (event: Event, ownerUid: string, partnerUid: string): Promise<void> => {
-  await firestore()
-    .collection('sharedEvents')
-    .doc(`${ownerUid}_${event.id}`)
-    .set({
-      ...event,
-      ownerUid,
-      sharedWithUid: partnerUid,
-      updatedAt: Date.now(),
-    }, { merge: true });
-};
-
-export const unshareEvent = async (event: Event, ownerUid: string): Promise<void> => {
-  await firestore()
-    .collection('sharedEvents')
-    .doc(`${ownerUid}_${event.id}`)
-    .update({
-      sharedWithUid: null,
-      updatedAt: Date.now(),
-    });
-};
-
-export const updateSharedEvent = async (event: Event, ownerUid: string): Promise<void> => {
-  await firestore()
-    .collection('sharedEvents')
-    .doc(`${ownerUid}_${event.id}`)
-    .set({ ...event, ownerUid, updatedAt: Date.now() }, { merge: true });
-};
-
-/** Escuta eventos compartilhados comigo por outros usuários */
-export const listenToSharedEventsWithMe = (
-  myUid: string,
-  onUpdate: (events: Event[]) => void,
-): (() => void) => {
-  return firestore()
-    .collection('sharedEvents')
-    .where('sharedWithUid', '==', myUid)
-    .onSnapshot(
-      snap => {
-        if (!snap) return;
-        const events = snap.docs.map(d => d.data() as Event);
-        onUpdate(events);
-      },
-      _error => { /* erro de rede — ignora silenciosamente */ },
-    );
-};
-
-/**
- * Sair de um evento compartilhado comigo (receptor).
- * Remove sharedWithUid do documento mas não deleta — o dono continua com o item.
- */
-export const exitSharedEvent = async (ownerUid: string, eventId: number): Promise<void> => {
-  await firestore()
-    .collection('sharedEvents')
-    .doc(`${ownerUid}_${eventId}`)
-    .update({
-      sharedWithUid: null,
-      updatedAt: Date.now(),
-    });
-};
-
-// ===========================
 // LISTAS COMPARTILHADAS
 // ===========================
 
@@ -244,10 +178,6 @@ export const exitSharedList = async (ownerUid: string, listId: number): Promise<
     });
 };
 
-export const deleteSharedEventDoc = async (ownerUid: string, eventId: number): Promise<void> => {
-  await firestore().collection('sharedEvents').doc(`${ownerUid}_${eventId}`).delete();
-};
-
 export const deleteSharedListDoc = async (ownerUid: string, listId: number): Promise<void> => {
   await firestore().collection('sharedLists').doc(`${ownerUid}_${listId}`).delete();
 };
@@ -255,26 +185,6 @@ export const deleteSharedListDoc = async (ownerUid: string, listId: number): Pro
 // ===========================
 // ESCUTA: MEUS ITENS COMPARTILHADOS (para sync local do sharedWithUid)
 // ===========================
-
-export const listenToMySharedEvents = (
-  ownerUid: string,
-  onUpdate: (updates: Array<{ id: number; sharedWithUid: string | null }>) => void,
-): (() => void) => {
-  return firestore()
-    .collection('sharedEvents')
-    .where('ownerUid', '==', ownerUid)
-    .onSnapshot(
-      snap => {
-        if (!snap) return;
-        const updates = snap.docs.map(d => {
-          const data = d.data();
-          return { id: data.id as number, sharedWithUid: (data.sharedWithUid ?? null) as string | null };
-        });
-        onUpdate(updates);
-      },
-      _error => { /* erro de rede — ignora silenciosamente */ },
-    );
-};
 
 export const listenToMySharedLists = (
   ownerUid: string,
@@ -443,17 +353,12 @@ export const cleanupSharedDocsOnDisconnect = async (
   const db = firestore();
   const nullify = { sharedWithUid: null, updatedAt: Date.now() };
 
-  const [myEvents, myLists, theirEvents, theirLists] = await Promise.all([
-    db.collection('sharedEvents').where('ownerUid', '==', myUid).where('sharedWithUid', '==', partnerUid).get(),
+  const [myLists, theirLists] = await Promise.all([
     db.collection('sharedLists').where('ownerUid', '==', myUid).where('sharedWithUid', '==', partnerUid).get(),
-    db.collection('sharedEvents').where('ownerUid', '==', partnerUid).where('sharedWithUid', '==', myUid).get(),
     db.collection('sharedLists').where('ownerUid', '==', partnerUid).where('sharedWithUid', '==', myUid).get(),
   ]);
 
-  const allDocs = [
-    ...myEvents.docs, ...myLists.docs,
-    ...theirEvents.docs, ...theirLists.docs,
-  ];
+  const allDocs = [...myLists.docs, ...theirLists.docs];
   if (allDocs.length === 0) return;
 
   const batch = db.batch();

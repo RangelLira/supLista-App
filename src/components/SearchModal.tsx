@@ -17,16 +17,13 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { darkColors } from '../styles/theme';
-import { Event, ShoppingList } from '../types';
-import { detectDateInText, formatDetectedDate } from '../utils/dateUtils';
+import { ShoppingList } from '../types';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  events: Event[];
   lists: ShoppingList[];
-  onGoToDate: (date: Date) => void;
-  onEditEvent: (event: Event) => void;
+  onSelectList: (list: ShoppingList) => void;
 }
 
 function createStyles(c: typeof darkColors) {
@@ -53,28 +50,6 @@ function createStyles(c: typeof darkColors) {
       padding: 14,
       color: 'white',
       fontSize: 16,
-    },
-
-    dateCard: {
-      backgroundColor: c.bgCard,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 16,
-      borderWidth: 2,
-      borderColor: c.primary,
-      alignItems: 'center',
-    },
-    dateCardLabel: {
-      color: c.primary,
-      fontSize: 13,
-      fontWeight: '600',
-      marginBottom: 6,
-    },
-    dateCardText: {
-      color: c.textPrimary,
-      fontSize: 16,
-      fontWeight: '600',
-      textTransform: 'capitalize',
     },
 
     resultsCount: {
@@ -119,11 +94,6 @@ function createStyles(c: typeof darkColors) {
       fontSize: 12,
       marginTop: 2,
     },
-    completedBadge: {
-      color: c.success,
-      fontSize: 18,
-      fontWeight: '700',
-    },
 
     footer: {
       padding: 20,
@@ -134,16 +104,15 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
-export default function SearchModal({ visible, onClose, events, lists, onGoToDate, onEditEvent }: Props) {
+export default function SearchModal({ visible, onClose, lists, onSelectList }: Props) {
   const { colors, globalStyles } = useTheme();
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [query, setQuery] = useState('');
-  const [detectedDate, setDetectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!visible) { setQuery(''); setDetectedDate(null); return; }
+    if (!visible) { setQuery(''); return; }
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       onClose();
       return true;
@@ -151,36 +120,9 @@ export default function SearchModal({ visible, onClose, events, lists, onGoToDat
     return () => backHandler.remove();
   }, [visible]);
 
-  useEffect(() => {
-    setDetectedDate(detectDateInText(query));
-  }, [query]);
-
-  const filteredEvents = query.trim().length < 2 ? [] : events.filter(e => {
-    const q = query.toLowerCase();
-    return (
-      e.title.toLowerCase().includes(q) ||
-      e.tag_name?.toLowerCase().includes(q) ||
-      e.notes.some(n => n.toLowerCase().includes(q)) ||
-      e.steps.some(s => s.text.toLowerCase().includes(q))
-    );
-  });
-
   const filteredLists = query.trim().length < 2 ? [] : lists.filter(l =>
     l.name.toLowerCase().includes(query.toLowerCase())
   );
-
-  const formatEventDate = (event: Event) => {
-    if (event.is_pending) return t.search.pendingLabel;
-    if (!event.start_time) return '';
-    const date = new Date(event.start_time);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${day}/${month} às ${hours}:${minutes}`;
-  };
-
-  const totalResults = filteredEvents.length + filteredLists.length;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -202,50 +144,13 @@ export default function SearchModal({ visible, onClose, events, lists, onGoToDat
         </View>
 
         <ScrollView contentContainerStyle={globalStyles.scrollContent}>
-          {/* DETECÇÃO DE DATA */}
-          {detectedDate && (
-            <TouchableOpacity
-              style={styles.dateCard}
-              onPress={() => { onGoToDate(detectedDate); onClose(); }}>
-              <Text style={styles.dateCardLabel}>📅 {t.search.dateDetected}</Text>
-              <Text style={styles.dateCardText}>
-                {t.search.goToDate} — {formatDetectedDate(detectedDate, lang)}
-              </Text>
-            </TouchableOpacity>
-          )}
-
           {/* RESULTADOS */}
           {query.trim().length >= 2 && (
             <Text style={styles.resultsCount}>
-              {totalResults === 0
+              {filteredLists.length === 0
                 ? t.search.noResultsFound
-                : t.search.resultsCount(totalResults)}
+                : t.search.resultsCount(filteredLists.length)}
             </Text>
-          )}
-
-          {/* EVENTOS */}
-          {filteredEvents.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>{t.search.sectionEvents}</Text>
-              {filteredEvents.map(event => (
-                <TouchableOpacity
-                  key={event.id}
-                  style={styles.resultCard}
-                  onPress={() => { onEditEvent(event); onClose(); }}>
-                  <View style={styles.resultRow}>
-                    <Text style={styles.resultIcon}>{event.is_pending ? '⏳' : '📅'}</Text>
-                    <View style={styles.resultInfo}>
-                      <Text style={styles.resultTitle}>{event.title}</Text>
-                      <Text style={styles.resultMeta}>
-                        {formatEventDate(event)}
-                        {event.tag_name && event.tag_name !== 'Geral' ? ` • ${event.tag_name}` : ''}
-                      </Text>
-                    </View>
-                    {event.is_completed && <Text style={styles.completedBadge}>✓</Text>}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </>
           )}
 
           {/* LISTAS */}
@@ -253,9 +158,12 @@ export default function SearchModal({ visible, onClose, events, lists, onGoToDat
             <>
               <Text style={styles.sectionTitle}>{t.search.sectionLists}</Text>
               {filteredLists.map(list => (
-                <View key={list.id} style={styles.resultCard}>
+                <TouchableOpacity
+                  key={list.id}
+                  style={styles.resultCard}
+                  onPress={() => { onSelectList(list); onClose(); }}>
                   <View style={styles.resultRow}>
-                    <Text style={styles.resultIcon}>📝</Text>
+                    <Text style={styles.resultIcon}>{list.type === 'tarefas' ? '✅' : '🛒'}</Text>
                     <View style={styles.resultInfo}>
                       <Text style={styles.resultTitle}>{list.name}</Text>
                       <Text style={styles.resultMeta}>
@@ -264,7 +172,7 @@ export default function SearchModal({ visible, onClose, events, lists, onGoToDat
                       </Text>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </>
           )}
@@ -272,8 +180,7 @@ export default function SearchModal({ visible, onClose, events, lists, onGoToDat
           {/* ESTADO VAZIO */}
           {query.trim().length < 2 && (
             <Text style={globalStyles.emptyText}>
-              {t.search.typeToSearch}{'\n\n'}
-              {t.search.tipHint}
+              {t.search.typeToSearch}
             </Text>
           )}
         </ScrollView>

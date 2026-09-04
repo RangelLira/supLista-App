@@ -29,21 +29,17 @@ type Step =
   | 'google'
   | 'manual_profile'
   | 'sharing'
-  | 'backup'
-  | 'water'
   | 'terms';
 
 export default function OnboardingScreen({ onDone }: Props) {
   const { colors, theme, setTheme } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
-  const { setSharingEnabled, signInWithGoogle, isGoogleConnected } = useFirebase();
+  const { setSharingEnabled, signInWithGoogle } = useFirebase();
 
   const [step, setStep] = useState<Step>('language');
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  const [backupMode, setBackupMode] = useState<'auto' | 'manual'>('manual');
-  const [backupLocation, setBackupLocation] = useState<'local' | 'cloud'>('local');
   const [termsScrolled, setTermsScrolled] = useState(false);
 
   const s = createStyles(colors);
@@ -67,19 +63,14 @@ export default function OnboardingScreen({ onDone }: Props) {
       sharingEnabled: false,
     });
     setLoading(false);
-    setStep('backup');
+    setStep('terms');
   };
 
   const handleSharingYes = async () => {
     setLoading(true);
     await setSharingEnabled(true);
     setLoading(false);
-    setStep('backup');
-  };
-
-  const handleBackupContinue = async () => {
-    await saveSettings({ backupMode, backupLocation });
-    setStep('water');
+    setStep('terms');
   };
 
   const handleTermsScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -106,7 +97,7 @@ export default function OnboardingScreen({ onDone }: Props) {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <Text style={s.appName}>TaskFlow</Text>
+          <Text style={s.appName}>supList</Text>
           <Text style={s.welcomeSub}>{t.onboarding.welcomeSub}</Text>
 
           <Text style={s.sectionLabel}>{t.onboarding.languageLabel}</Text>
@@ -268,7 +259,7 @@ export default function OnboardingScreen({ onDone }: Props) {
             style={s.secondaryBtn}
             onPress={async () => {
               await saveSettings({ sharingEnabled: false });
-              setStep('backup');
+              setStep('terms');
             }}
             disabled={loading}>
             <Text style={s.secondaryBtnText}>{t.onboarding.sharingSkipBtn}</Text>
@@ -280,110 +271,7 @@ export default function OnboardingScreen({ onDone }: Props) {
     );
   }
 
-  // ─── ETAPA 4: Backup ──────────────────────────────────────
-  if (step === 'backup') {
-    return (
-      <View style={s.screen}>
-        <ScrollView
-          contentContainerStyle={s.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <Text style={s.stepIcon}>💾</Text>
-          <Text style={s.stepTitle}>{t.onboarding.backupTitle}</Text>
-          <Text style={s.stepDesc}>{t.onboarding.backupDesc}</Text>
-
-          <Text style={s.sectionLabel}>{t.onboarding.backupModeLabel}</Text>
-          <View style={s.optionRow}>
-            {([
-              { key: 'auto'   as const, label: t.onboarding.backupModeAuto,   desc: t.onboarding.backupModeAutoDesc },
-              { key: 'manual' as const, label: t.onboarding.backupModeManual, desc: t.onboarding.backupModeManualDesc },
-            ]).map(opt => (
-              <TouchableOpacity
-                key={opt.key}
-                style={[s.optionCard, backupMode === opt.key && s.optionCardSelected]}
-                onPress={() => setBackupMode(opt.key)}>
-                <Text style={[s.optionTitle, backupMode === opt.key && s.optionTitleSelected]}>
-                  {opt.label}
-                </Text>
-                <Text style={s.optionDesc}>{opt.desc}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={[s.sectionLabel, { marginTop: 20 }]}>{t.onboarding.backupLocationLabel}</Text>
-          <View style={s.optionRow}>
-            <TouchableOpacity
-              style={[s.optionCard, backupLocation === 'local' && s.optionCardSelected]}
-              onPress={() => setBackupLocation('local')}>
-              <Text style={[s.optionTitle, backupLocation === 'local' && s.optionTitleSelected]}>
-                {t.onboarding.backupLocationLocal}
-              </Text>
-              <Text style={s.optionDesc}>{t.onboarding.backupLocationLocalDesc}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                s.optionCard,
-                backupLocation === 'cloud' && s.optionCardSelected,
-                !isGoogleConnected && s.optionCardDisabled,
-              ]}
-              onPress={() => { if (isGoogleConnected) setBackupLocation('cloud'); }}
-              disabled={!isGoogleConnected}>
-              <Text style={[
-                s.optionTitle,
-                backupLocation === 'cloud' && s.optionTitleSelected,
-                !isGoogleConnected && s.optionTitleDisabled,
-              ]}>
-                {t.onboarding.backupLocationCloud}
-              </Text>
-              <Text style={s.optionDesc}>
-                {isGoogleConnected
-                  ? t.onboarding.backupLocationCloudDesc
-                  : t.onboarding.backupCloudDisabledHint}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[s.primaryBtn, { marginTop: 28 }]}
-            onPress={handleBackupContinue}>
-            <Text style={s.primaryBtnText}>{t.onboarding.backupContinueBtn}</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // ─── ETAPA 5: Hidratação ──────────────────────────────────
-  if (step === 'water') {
-    return (
-      <View style={s.screen}>
-        <View style={s.centeredContent}>
-          <Text style={s.stepIcon}>💧</Text>
-          <Text style={s.stepTitle}>{t.onboarding.waterTitle}</Text>
-          <Text style={s.stepDesc}>{t.onboarding.waterDesc}</Text>
-
-          <TouchableOpacity
-            style={s.primaryBtn}
-            onPress={async () => {
-              await saveSettings({ waterTrackerEnabled: true });
-              setStep('terms');
-            }}>
-            <Text style={s.primaryBtnText}>{t.onboarding.waterEnableBtn}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={s.secondaryBtn}
-            onPress={() => setStep('terms')}>
-            <Text style={s.secondaryBtnText}>{t.onboarding.waterSkipBtn}</Text>
-          </TouchableOpacity>
-
-          <Text style={s.hint}>{t.onboarding.waterHint}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  // ─── ETAPA 6: Termos de uso ───────────────────────────────
+  // ─── ETAPA 4: Termos de uso ───────────────────────────────
   const termsText = termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt;
   return (
     <View style={s.screen}>
@@ -424,14 +312,14 @@ function createStyles(c: typeof import('../styles/theme').darkColors) {
       backgroundColor: c.bgMain,
     },
 
-    // Layout para etapas com ScrollView (Idioma, Backup, Perfil manual)
+    // Layout para etapas com ScrollView (Idioma, Perfil manual)
     scrollContent: {
       paddingHorizontal: 28,
       paddingVertical: 36,
       alignItems: 'center',
     },
 
-    // Layout para etapas centradas verticalmente (Google, Compartilhamento, Água)
+    // Layout para etapas centradas verticalmente (Google, Compartilhamento)
     centeredContent: {
       flex: 1,
       paddingHorizontal: 28,
@@ -564,23 +452,6 @@ function createStyles(c: typeof import('../styles/theme').darkColors) {
       alignSelf: 'flex-start',
       marginTop: 4,
     },
-
-    // ─── Backup — cartões em grade ───
-    optionRow: { flexDirection: 'row', gap: 10, width: '100%' },
-    optionCard: {
-      flex: 1,
-      backgroundColor: c.bgCard,
-      borderRadius: 12,
-      padding: 14,
-      borderWidth: 2,
-      borderColor: c.border,
-    },
-    optionCardSelected: { borderColor: c.primary, backgroundColor: c.bgSecondary },
-    optionCardDisabled: { opacity: 0.4 },
-    optionTitle: { color: c.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 4 },
-    optionTitleSelected: { color: c.primary },
-    optionTitleDisabled: { color: c.textMuted },
-    optionDesc: { color: c.textMuted, fontSize: 11, lineHeight: 16 },
 
     // ─── Termos ───
     termsWrapper: {
