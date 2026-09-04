@@ -253,7 +253,7 @@ function createStyles(c: typeof darkColors) {
     },
     bottomBar: {
       padding: 16,
-      paddingBottom: 32,
+      paddingBottom: 48,
       backgroundColor: c.bgMain,
     },
 
