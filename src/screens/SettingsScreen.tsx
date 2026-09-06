@@ -154,7 +154,6 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
             {isGoogleConnected ? (
               <>
                 <View style={[styles.infoRow, { marginTop: 8, marginBottom: 12 }]}>
-                  <Text style={styles.infoRowIcon}>✅</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={[globalStyles.textBody, { fontWeight: '600' }]}>
                       {t.settings.profileGoogleConnected}
@@ -444,8 +443,7 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
     color: c.textPrimary,
     fontSize: 15,
     fontWeight: '600',
-    marginBottom: 0,
-    flex: 1,
+    marginBottom: 10,
   },
   optionButtons: { gap: 8 },
   optionButton: {
@@ -584,5 +582,4 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   },
 
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  infoRowIcon: { fontSize: 20, marginTop: 1 },
 }); }
