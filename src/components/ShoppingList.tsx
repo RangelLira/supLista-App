@@ -829,6 +829,11 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   };
 
   const handleDelete = () => {
+    if (isSharedWithMe) {
+      // O colaborador pode excluir ITENS, mas não a lista inteira — só o dono.
+      Alert.alert(t.alerts.cantDeleteSharedList, t.alerts.cantDeleteSharedListMsg);
+      return;
+    }
     Alert.alert(
       t.alerts.deleteList,
       t.alerts.deleteListMsg(list.name),
@@ -905,9 +910,10 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
             <Text style={styles.actionBarBtnText}>{t.common.exit}</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={[styles.actionBarBtn, !list.isCompleted ? styles.gridBtnPrimary : styles.gridBtnDisabled]}
-            onPress={!list.isCompleted ? onShare : undefined}>
-            <Text style={!list.isCompleted ? styles.actionBarBtnText : styles.gridBtnTextDisabled}>
+          // Compartilhamento é independente do estado da lista — uma lista concluída
+          // pode ser compartilhada (quem recebe pode reabrir e editar).
+          <TouchableOpacity style={[styles.actionBarBtn, styles.gridBtnPrimary]} onPress={onShare}>
+            <Text style={styles.actionBarBtnText}>
               {sharedWithUid ? t.common.unshare : t.common.share}
             </Text>
           </TouchableOpacity>

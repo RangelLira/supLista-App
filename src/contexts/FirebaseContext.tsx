@@ -10,7 +10,7 @@ import {
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { loadSettings, saveSettings } from '../utils/storage';
-import { saveUserProfile } from '../utils/firestore';
+import { saveUserProfile, setAcceptsSharing, disableAllSharing } from '../utils/firestore';
 
 // ─── Configuração do Google Sign-In ───────────────────────────────────────────
 // webClientId: Firebase Console > Configurações do projeto > Android app >
@@ -61,7 +61,12 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
         setSharingEnabledState(true);
         // Sessão Google já é restaurada automaticamente pelo Firebase SDK.
         // Login anônimo só é criado se não houver sessão ativa.
-        signInAnonymouslyIfNeeded();
+        signInAnonymouslyIfNeeded().then(() => {
+          // Mantém o perfil sincronizado: com o compartilhamento ligado,
+          // este usuário está disponível para receber listas.
+          const uid = auth().currentUser?.uid;
+          if (uid) setAcceptsSharing(uid, true).catch(() => {});
+        });
       }
     });
 
@@ -158,12 +163,36 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setSharingEnabled = async (enabled: boolean) => {
-    setSharingEnabledState(enabled);
-    await saveSettings({ sharingEnabled: enabled });
-    if (enabled && !isGoogleConnected) {
-      // Sem conta Google, compartilhamento usa sessão anônima
-      await signInAnonymouslyIfNeeded();
+    if (enabled) {
+      setSharingEnabledState(true);
+      await saveSettings({ sharingEnabled: true });
+      if (!isGoogleConnected) {
+        // Sem conta Google, compartilhamento usa sessão anônima
+        await signInAnonymouslyIfNeeded();
+      }
+      const uid = auth().currentUser?.uid;
+      if (uid) {
+        try { await setAcceptsSharing(uid, true); } catch (e) {
+          console.warn('[setSharingEnabled] falha ao publicar disponibilidade:', e);
+        }
+      }
+      return;
     }
+
+    // Desativar (regra de ouro): revoga TODOS os compartilhamentos no servidor
+    // ANTES de desligar os listeners. Se falhar (ex.: offline), propaga o erro e
+    // NÃO desativa — não dá para revogar acesso sem rede.
+    const uid = auth().currentUser?.uid;
+    if (uid) {
+      // Revogar o acesso é obrigatório — se falhar, propaga e não desativa.
+      await disableAllSharing(uid);
+      // Publicar indisponibilidade é secundário — não bloqueia a desativação.
+      try { await setAcceptsSharing(uid, false); } catch (e) {
+        console.warn('[setSharingEnabled] falha ao publicar indisponibilidade:', e);
+      }
+    }
+    setSharingEnabledState(false);
+    await saveSettings({ sharingEnabled: false });
   };
 
   return (

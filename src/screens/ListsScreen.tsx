@@ -403,6 +403,11 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
   }, []);
 
   const handleDeleteList = (list: ShoppingList) => {
+    if (list.isSharedWithMe) {
+      // O colaborador pode excluir ITENS, mas não a lista inteira — só o dono.
+      Alert.alert(t.alerts.cantDeleteSharedList, t.alerts.cantDeleteSharedListMsg);
+      return;
+    }
     Alert.alert(
       t.alerts.deleteList,
       t.alerts.deleteListMsg(list.name),
@@ -502,7 +507,19 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
     );
   };
 
-  const currentList = selectedList ? (lists.find(l => l.id === selectedList.id) || selectedList) : null;
+  const liveList = selectedList ? lists.find(l => l.id === selectedList.id) ?? null : null;
+  // Fallback para `selectedList` só vale para listas locais recém-criadas (evita flicker
+  // ao abrir). Uma lista compartilhada COMIGO que some (dono excluiu / descompartilhou /
+  // removeu a conexão / desativou o compartilhamento) fecha na hora — ver efeito abaixo.
+  const currentList = liveList ?? (selectedList && !selectedList.isSharedWithMe ? selectedList : null);
+
+  useEffect(() => {
+    if (selectedList && !liveList && selectedList.isSharedWithMe) {
+      setSelectedList(null);
+      showToast(t.toast.listNoLongerShared);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveList, selectedList]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -532,8 +549,11 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
                     text: t.alerts.exitShareBtn,
                     style: 'destructive',
                     onPress: async () => {
+                      const ownerUid = currentList.ownerUid!;
+                      const listId = currentList.id;
+                      setSelectedList(null); // fecha a lista já — saída manual não precisa do toast do efeito
                       try {
-                        await exitSharedList(currentList.ownerUid!, currentList.id);
+                        await exitSharedList(ownerUid, listId);
                       } catch (err: any) {
                         Alert.alert(t.common.error, err?.message ?? t.sharing.errorConnect);
                       }
@@ -639,6 +659,7 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
       <ShareModal
         visible={sharingList !== null}
         onClose={() => setSharingList(null)}
+        listName={sharingList?.name ?? ''}
         currentSharedWithUid={sharingList?.sharedWithUid ?? null}
         onToggle={async (partnerUid, _partnerName, isCurrentlyShared) => {
           if (!sharingList || !userId) return;

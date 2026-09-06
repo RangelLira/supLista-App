@@ -194,7 +194,16 @@ export default function SharingScreen() {
       t.sharing.disableAlertMsg,
       [
         { text: t.common.cancel, style: 'cancel' },
-        { text: t.sharing.disableAlertBtn, style: 'destructive', onPress: () => setSharingEnabled(false) },
+        { text: t.sharing.disableAlertBtn, style: 'destructive', onPress: async () => {
+          setLoadingEnable(true);
+          try {
+            await setSharingEnabled(false);
+          } catch (err) {
+            console.warn('[handleDisable] falha ao revogar compartilhamentos:', err);
+            Alert.alert(t.common.error, t.sharing.disableErrorMsg);
+          }
+          setLoadingEnable(false);
+        }},
       ]
     );
   };
@@ -297,14 +306,22 @@ export default function SharingScreen() {
         {
           text: t.sharing.disconnectBtn, style: 'destructive',
           onPress: async () => {
-            if (userId) {
-              try {
-                await cleanupSharedDocsOnDisconnect(userId, partnerUid);
-              } catch {
-                // cleanup best-effort — a desconexão prossegue mesmo se falhar
-              }
+            if (!userId) return;
+            // Revoga o acesso às listas ANTES de apagar a conexão. Se a limpeza
+            // falhar, aborta — não deixa a conexão sumir com listas ainda acessíveis.
+            try {
+              await cleanupSharedDocsOnDisconnect(userId, partnerUid);
+            } catch (err) {
+              console.warn('[handleDisconnect] falha ao revogar listas:', err);
+              Alert.alert(t.common.error, t.sharing.disconnectCleanupError);
+              return;
             }
-            await deleteShareConnection(conn.id);
+            try {
+              await deleteShareConnection(conn.id);
+            } catch (err) {
+              console.warn('[handleDisconnect] falha ao apagar conexão:', err);
+              Alert.alert(t.common.error, t.sharing.errorConnect);
+            }
           },
         },
       ]

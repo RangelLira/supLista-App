@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -14,17 +15,19 @@ import {
 import { useFirebase } from '../contexts/FirebaseContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { ShareConnection, listenToShareConnections } from '../utils/firestore';
+import { ShareConnection, getUserProfile, listenToShareConnections } from '../utils/firestore';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
+  /** Nome da lista (para os diálogos de confirmação) */
+  listName: string;
   /** UID atualmente compartilhado com este item (null = não compartilhado) */
   currentSharedWithUid: string | null;
   onToggle: (partnerUid: string, partnerName: string, isCurrentlyShared: boolean) => Promise<void>;
 }
 
-export default function ShareModal({ visible, onClose, currentSharedWithUid, onToggle }: Props) {
+export default function ShareModal({ visible, onClose, listName, currentSharedWithUid, onToggle }: Props) {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const { userId, sharingEnabled } = useFirebase();
@@ -39,13 +42,43 @@ export default function ShareModal({ visible, onClose, currentSharedWithUid, onT
     return unsub;
   }, [userId, visible]);
 
+  const confirmAsync = (title: string, message: string, confirmLabel: string) =>
+    new Promise<boolean>(resolve => {
+      Alert.alert(
+        title,
+        message,
+        [
+          { text: t.common.cancel, style: 'cancel', onPress: () => resolve(false) },
+          { text: confirmLabel, style: 'destructive', onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      );
+    });
+
   const handleToggle = async (conn: ShareConnection) => {
     const partnerUid = conn.fromUid === userId ? conn.toUid : conn.fromUid;
     const partnerName = conn.fromUid === userId ? conn.toDisplayName : conn.fromDisplayName;
     const isShared = currentSharedWithUid === partnerUid;
+
+    const confirmed = isShared
+      ? await confirmAsync(t.sharing.confirmUnshareTitle, t.sharing.confirmUnshareMsg(partnerName), t.common.unshare)
+      : await confirmAsync(t.sharing.confirmShareTitle, t.sharing.confirmShareMsg(partnerName, listName), t.common.share);
+    if (!confirmed) return;
+
     setLoadingUid(partnerUid);
-    await onToggle(partnerUid, partnerName, isShared);
-    setLoadingUid(null);
+    try {
+      if (!isShared) {
+        // O parceiro pode ter desativado o compartilhamento — não pode receber listas agora.
+        const profile = await getUserProfile(partnerUid).catch(() => null);
+        if (profile && profile.acceptsSharing === false) {
+          Alert.alert(t.sharing.partnerUnavailableTitle, t.sharing.partnerUnavailableMsg(partnerName));
+          return;
+        }
+      }
+      await onToggle(partnerUid, partnerName, isShared);
+    } finally {
+      setLoadingUid(null);
+    }
   };
 
   if (!sharingEnabled) {

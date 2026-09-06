@@ -3,7 +3,7 @@
 // Navegação principal + gerenciamento de estado global
 // ===========================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   SafeAreaView,
@@ -134,6 +134,34 @@ function AppContent() {
     return () => { unsubLists(); unsubMyLists(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, sharingEnabled]);
+
+  // ===========================
+  // DESATIVAR COMPARTILHAMENTO — faxina local (regra de ouro)
+  // A revogação no servidor acontece em FirebaseContext.setSharingEnabled(false).
+  // Aqui: as listas compartilhadas COMIGO somem do estado local e as minhas
+  // ficam sem sharedWithUid. Ao religar, nada volta sozinho — só avisamos
+  // quantas precisam ser recompartilhadas uma a uma.
+  // ===========================
+  const prevSharingRef = useRef(sharingEnabled);
+  const pendingReshareRef = useRef(0);
+  useEffect(() => {
+    const was = prevSharingRef.current;
+    prevSharingRef.current = sharingEnabled;
+    if (was && !sharingEnabled) {
+      setLists(current => {
+        pendingReshareRef.current = current.filter(l => l.sharedWithUid || l.isSharedWithMe).length;
+        const purged = current
+          .filter(l => !l.isSharedWithMe)
+          .map(l => (l.sharedWithUid ? { ...l, sharedWithUid: null } : l));
+        saveLists(purged);
+        return purged;
+      });
+    } else if (!was && sharingEnabled && pendingReshareRef.current > 0) {
+      showToast(t.toast.reshareHint(pendingReshareRef.current));
+      pendingReshareRef.current = 0;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharingEnabled]);
 
   // BackHandler global — pilha de navegação: sub-telas das screens → screens → sai só de 'listas'
   useEffect(() => {

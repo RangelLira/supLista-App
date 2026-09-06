@@ -20,6 +20,9 @@ export interface UserProfile {
   uid: string;
   displayName: string;
   createdAt: number;
+  // false = o usuário desativou o compartilhamento e não pode receber listas agora.
+  // undefined (perfis antigos) = disponível, por retrocompatibilidade.
+  acceptsSharing?: boolean;
 }
 
 export const saveUserProfile = async (uid: string, displayName: string): Promise<void> => {
@@ -28,6 +31,15 @@ export const saveUserProfile = async (uid: string, displayName: string): Promise
     displayName,
     createdAt: Date.now(),
   }, { merge: true });
+};
+
+/**
+ * Publica no perfil se este usuário aceita receber compartilhamentos.
+ * Espelha o toggle local `sharingEnabled` para que o parceiro consiga checar
+ * antes de tentar compartilhar uma lista.
+ */
+export const setAcceptsSharing = async (uid: string, accepts: boolean): Promise<void> => {
+  await firestore().collection('users').doc(uid).set({ acceptsSharing: accepts }, { merge: true });
 };
 
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
@@ -362,15 +374,60 @@ export const cleanupSharedDocsOnDisconnect = async (
   const db = firestore();
   const nullify = { sharedWithUid: null, updatedAt: Date.now() };
 
-  const [myLists, theirLists] = await Promise.all([
-    db.collection('sharedLists').where('ownerUid', '==', myUid).where('sharedWithUid', '==', partnerUid).get(),
-    db.collection('sharedLists').where('ownerUid', '==', partnerUid).where('sharedWithUid', '==', myUid).get(),
+  // Consultas de campo único + filtro no cliente — evita índice composto e
+  // respeita as regras (ownerUid==me OU sharedWithUid==me sempre são legíveis).
+  const [owned, sharedWithMe] = await Promise.all([
+    db.collection('sharedLists').where('ownerUid', '==', myUid).get(),
+    db.collection('sharedLists').where('sharedWithUid', '==', myUid).get(),
   ]);
 
-  const allDocs = [...myLists.docs, ...theirLists.docs];
-  if (allDocs.length === 0) return;
+  const docs = [
+    ...owned.docs.filter(d => (d.data() as any).sharedWithUid === partnerUid),
+    ...sharedWithMe.docs.filter(d => (d.data() as any).ownerUid === partnerUid),
+  ];
+  if (docs.length === 0) return;
 
+  const seen = new Set<string>();
   const batch = db.batch();
-  allDocs.forEach(d => batch.update(d.ref, nullify));
+  for (const d of docs) {
+    if (seen.has(d.ref.path)) continue;
+    seen.add(d.ref.path);
+    batch.update(d.ref, nullify);
+  }
+  await batch.commit();
+};
+
+/**
+ * Desativar o compartilhamento por completo (regra de ouro).
+ * - Todas as listas que EU sou dono: sharedWithUid → null (somem para os parceiros).
+ * - Todas as listas compartilhadas COMIGO: sharedWithUid → null (saio de cada uma).
+ * Nada é deletado; o dono mantém a própria lista. Ao reativar, os compartilhamentos
+ * de lista NÃO voltam sozinhos — precisam ser refeitos um a um.
+ * Lança em caso de falha (ex.: offline) para que a UI não desative sem revogar.
+ */
+export const disableAllSharing = async (myUid: string): Promise<void> => {
+  const db = firestore();
+  const nullify = { sharedWithUid: null, updatedAt: Date.now() };
+
+  const [owned, sharedWithMe] = await Promise.all([
+    db.collection('sharedLists').where('ownerUid', '==', myUid).get(),
+    db.collection('sharedLists').where('sharedWithUid', '==', myUid).get(),
+  ]);
+
+  const docs = [
+    ...owned.docs.filter(d => (d.data() as any).sharedWithUid != null),
+    ...sharedWithMe.docs,
+  ];
+  if (docs.length === 0) return;
+
+  // Deduplica por caminho (uma lista que eu compartilho comigo mesmo é impossível,
+  // mas mantém a garantia caso as duas queries retornem o mesmo doc).
+  const seen = new Set<string>();
+  const batch = db.batch();
+  for (const d of docs) {
+    if (seen.has(d.ref.path)) continue;
+    seen.add(d.ref.path);
+    batch.update(d.ref, nullify);
+  }
   await batch.commit();
 };
