@@ -473,6 +473,7 @@ const translations = {
       shareDisabled: 'Compartilhamento desativado',
       undo: 'Desfazer',
       allListItemsDone: 'Todos os itens marcados!',
+      syncError: 'Falha ao sincronizar — verifique sua conexão',
     },
     onboarding: {
       // Etapa 1 — Idioma + Tema
@@ -994,6 +995,7 @@ const translations = {
       shareDisabled: 'Sharing disabled',
       undo: 'Undo',
       allListItemsDone: 'All items checked!',
+      syncError: 'Sync failed — check your connection',
     },
     onboarding: {
       // Step 1 — Language + Theme
@@ -1515,6 +1517,7 @@ const translations = {
       shareDisabled: 'Compartición desactivada',
       undo: 'Deshacer',
       allListItemsDone: '¡Todos los artículos marcados!',
+      syncError: 'Error al sincronizar — revisa tu conexión',
     },
     onboarding: {
       // Paso 1 — Idioma + Tema
