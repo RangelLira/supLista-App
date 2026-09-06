@@ -7,7 +7,6 @@ import {
   Alert,
   BackHandler,
   Linking,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -55,11 +54,12 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   useEffect(() => {
     if (!subScreen) return;
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (showTerms) { setShowTerms(false); return true; }
       setSubScreen(null);
       return true;
     });
     return () => backHandler.remove();
-  }, [subScreen]);
+  }, [subScreen, showTerms]);
 
   const handleSaveDisplayName = async () => {
     const name = localDisplayName.trim();
@@ -320,6 +320,30 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   }
 
   // ===========================
+  // TERMOS DE USO (tela cheia, dentro do fluxo normal — não usa <Modal>
+  // porque ScrollView dentro de Modal tem um bug conhecido de não rolar no Android)
+  // ===========================
+  if (subScreen === 'sobre' && showTerms) {
+    return (
+      <View style={globalStyles.screen}>
+        <View style={globalStyles.header}>
+          <Text style={globalStyles.headerTitle}>{t.onboarding.termsTitle}</Text>
+        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.termsScrollContent}>
+          <Text style={styles.termsText}>
+            {termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt}
+          </Text>
+        </ScrollView>
+        <View style={styles.termsBottomBar}>
+          <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(false)}>
+            <Text style={globalStyles.buttonPrimaryText}>Fechar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ===========================
   // SOBRE
   // ===========================
   if (subScreen === 'sobre') {
@@ -373,29 +397,6 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
 
           <Text style={styles.aboutCopyright}>© 2026 supList. Todos os direitos reservados.</Text>
         </View>
-
-        {/* MODAL — TERMOS DE USO (tela cheia, rolável) */}
-        <Modal
-          visible={showTerms}
-          animationType="slide"
-          presentationStyle="fullScreen"
-          onRequestClose={() => setShowTerms(false)}>
-          <View style={globalStyles.screen}>
-            <View style={globalStyles.header}>
-              <Text style={globalStyles.headerTitle}>{t.onboarding.termsTitle}</Text>
-            </View>
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.termsScrollContent}>
-              <Text style={styles.termsText}>
-                {termsOfService[lang as 'pt' | 'en' | 'es'] ?? termsOfService.pt}
-              </Text>
-            </ScrollView>
-            <View style={styles.termsBottomBar}>
-              <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(false)}>
-                <Text style={globalStyles.buttonPrimaryText}>Fechar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     );
   }
