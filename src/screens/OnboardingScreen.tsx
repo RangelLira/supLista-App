@@ -20,6 +20,7 @@ import { LangType, useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { saveSettings } from '../utils/storage';
 import { termsOfService } from '../content/termsOfService';
+import { AccentColor, ACCENT_PRESETS } from '../styles/theme';
 
 interface Props {
   onDone: () => void;
@@ -33,7 +34,7 @@ type Step =
   | 'terms';
 
 export default function OnboardingScreen({ onDone }: Props) {
-  const { colors, theme, setTheme } = useTheme();
+  const { colors, theme, setTheme, accentColor, setAccentColor } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { setSharingEnabled, signInWithGoogle } = useFirebase();
 
@@ -141,6 +142,30 @@ export default function OnboardingScreen({ onDone }: Props) {
                   </Text>
                   {opt.hint ? <Text style={s.themeHint}>{opt.hint}</Text> : null}
                 </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={[s.sectionLabel, { marginTop: 28 }]}>{t.settings.accentColorTitle}</Text>
+          <View style={s.accentRow}>
+            {([
+              { value: 'roxo' as AccentColor, label: t.settings.accentRoxo },
+              { value: 'vermelho' as AccentColor, label: t.settings.accentVermelho },
+              { value: 'azul' as AccentColor, label: t.settings.accentAzul },
+              { value: 'verde' as AccentColor, label: t.settings.accentVerde },
+            ]).map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                style={s.accentSwatchWrap}
+                onPress={() => setAccentColor(opt.value)}>
+                <View style={[
+                  s.accentSwatch,
+                  { backgroundColor: ACCENT_PRESETS[opt.value].dark.primary },
+                  accentColor === opt.value && s.accentSwatchSelected,
+                ]}>
+                  {accentColor === opt.value && <Text style={s.accentSwatchCheck}>✓</Text>}
+                </View>
+                <Text style={s.accentSwatchLabel}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -375,6 +400,27 @@ function createStyles(c: typeof import('../styles/theme').darkColors) {
     themeBtnLabel: { color: c.textPrimary, fontSize: 15, fontWeight: '500' },
     themeBtnLabelSelected: { color: c.primary, fontWeight: '700' },
     themeHint: { color: c.textMuted, fontSize: 11, marginTop: 2 },
+
+    // ─── Cor de destaque ───
+    accentRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginTop: 4,
+    },
+    accentSwatchWrap: { alignItems: 'center', gap: 6, flex: 1 },
+    accentSwatch: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    accentSwatchSelected: { borderColor: c.textPrimary },
+    accentSwatchCheck: { color: 'white', fontSize: 16, fontWeight: '700' },
+    accentSwatchLabel: { color: c.textSecondary, fontSize: 11, textAlign: 'center' },
 
     // ─── Genérico ───
     stepIcon: { fontSize: 52, marginBottom: 16 },
