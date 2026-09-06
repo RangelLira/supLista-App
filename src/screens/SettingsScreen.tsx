@@ -581,7 +581,7 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   },
   termsBottomBar: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 48,
     backgroundColor: c.bgMain,
   },
 
