@@ -93,7 +93,7 @@ export const listenToShareConnections = (
         sentConnections = snap.docs.map(d => ({ id: d.id, ...d.data() } as ShareConnection));
         merge();
       },
-      _error => { /* erro de rede — ignora silenciosamente */ },
+      error => console.warn('[listenToShareConnections:sent] falha na escuta:', error),
     );
 
   const unsubReceived = firestore()
@@ -104,7 +104,7 @@ export const listenToShareConnections = (
         receivedConnections = snap.docs.map(d => ({ id: d.id, ...d.data() } as ShareConnection));
         merge();
       },
-      _error => { /* erro de rede — ignora silenciosamente */ },
+      error => console.warn('[listenToShareConnections:received] falha na escuta:', error),
     );
 
   return () => { unsubSent(); unsubReceived(); };
@@ -150,6 +150,7 @@ export const updateSharedList = async (list: ShoppingList, ownerUid: string): Pr
 export const listenToSharedListsWithMe = (
   myUid: string,
   onUpdate: (lists: ShoppingList[]) => void,
+  onError?: (error: unknown) => void,
 ): (() => void) => {
   return firestore()
     .collection('sharedLists')
@@ -160,7 +161,10 @@ export const listenToSharedListsWithMe = (
         const lists = snap.docs.map(d => d.data() as ShoppingList);
         onUpdate(lists);
       },
-      _error => { /* erro de rede — ignora silenciosamente */ },
+      error => {
+        console.warn('[listenToSharedListsWithMe] falha na escuta (rede/permissão):', error);
+        onError?.(error);
+      },
     );
 };
 
@@ -183,12 +187,17 @@ export const deleteSharedListDoc = async (ownerUid: string, listId: number): Pro
 };
 
 // ===========================
-// ESCUTA: MEUS ITENS COMPARTILHADOS (para sync local do sharedWithUid)
+// ESCUTA: MINHAS LISTAS COMPARTILHADAS (dono) — traz o documento inteiro
 // ===========================
+// Corrigido: antes só repassava { id, sharedWithUid }, descartando qualquer
+// edição feita pelo receptor (itens, nome, notas). Agora traz o ShoppingList
+// completo, igual a listenToSharedListsWithMe, para que o dono também receba
+// em tempo real o que o parceiro alterou.
 
 export const listenToMySharedLists = (
   ownerUid: string,
-  onUpdate: (updates: Array<{ id: number; sharedWithUid: string | null }>) => void,
+  onUpdate: (lists: ShoppingList[]) => void,
+  onError?: (error: unknown) => void,
 ): (() => void) => {
   return firestore()
     .collection('sharedLists')
@@ -196,13 +205,13 @@ export const listenToMySharedLists = (
     .onSnapshot(
       snap => {
         if (!snap) return;
-        const updates = snap.docs.map(d => {
-          const data = d.data();
-          return { id: data.id as number, sharedWithUid: (data.sharedWithUid ?? null) as string | null };
-        });
-        onUpdate(updates);
+        const lists = snap.docs.map(d => d.data() as ShoppingList);
+        onUpdate(lists);
       },
-      _error => { /* erro de rede — ignora silenciosamente */ },
+      error => {
+        console.warn('[listenToMySharedLists] falha na escuta (rede/permissão):', error);
+        onError?.(error);
+      },
     );
 };
 
@@ -311,7 +320,7 @@ export const listenToIncomingRequests = (
         const requests = snap.docs.map(d => ({ id: d.id, ...d.data() } as ShareRequest));
         onUpdate(requests);
       },
-      _error => { /* erro de rede — ignora silenciosamente */ },
+      error => console.warn('[listenToIncomingRequests] falha na escuta:', error),
     );
 };
 

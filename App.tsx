@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 
 import { ToastProvider } from './src/components/Toast';
+import { useToast } from './src/hooks/useToast';
 import { FirebaseProvider, useFirebase } from './src/contexts/FirebaseContext';
-import { LanguageProvider } from './src/contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './src/contexts/LanguageContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
@@ -29,6 +30,8 @@ import {
 function AppContent() {
   const { colors, theme } = useTheme();
   const { userId, sharingEnabled } = useFirebase();
+  const { t } = useLanguage();
+  const { showToast } = useToast();
 
   // ===========================
   // HELPERS DE SYNC — COMPARTILHAMENTO
@@ -45,11 +48,14 @@ function AppContent() {
       }
     } catch (err) {
       console.warn('[syncSharedList] falha ao sincronizar lista compartilhada:', err);
+      showToast(t.toast.syncError);
     }
   };
   const removeSharedList = async (list: ShoppingList) => {
     if (!userId || list.isSharedWithMe || !list.sharedWithUid) return;
-    try { await deleteSharedListDoc(userId, list.id); } catch {}
+    try { await deleteSharedListDoc(userId, list.id); } catch (err) {
+      console.warn('[removeSharedList] falha ao remover documento compartilhado:', err);
+    }
   };
 
   const [lists, setLists] = useState<ShoppingList[]>([]);
@@ -78,33 +84,55 @@ function AppContent() {
   useEffect(() => {
     if (!userId || !sharingEnabled) return;
 
-    // Listas que outros compartilharam comigo
-    const unsubLists = listenToSharedListsWithMe(userId, (sharedLists) => {
-      setLists(current => {
-        const mine = current.filter(l => !l.isSharedWithMe);
-        const merged = sharedLists.map(incoming => {
-          // Preserva estado local de conclusão que ainda não sincronizou com o Firestore.
-          const local = current.find(
-            l => l.isSharedWithMe && l.id === incoming.id && l.ownerUid === incoming.ownerUid,
-          );
-          if (local?.isCompleted && !incoming.isCompleted) {
-            return { ...incoming, isSharedWithMe: true as const, isCompleted: true };
-          }
-          return { ...incoming, isSharedWithMe: true as const };
+    // Listas que outros compartilharam comigo — traz o documento inteiro do Firestore
+    const unsubLists = listenToSharedListsWithMe(
+      userId,
+      (sharedLists) => {
+        setLists(current => {
+          const mine = current.filter(l => !l.isSharedWithMe);
+          const merged = sharedLists.map(incoming => {
+            // Preserva estado local de conclusão que ainda não sincronizou com o Firestore.
+            const local = current.find(
+              l => l.isSharedWithMe && l.id === incoming.id && l.ownerUid === incoming.ownerUid,
+            );
+            if (local?.isCompleted && !incoming.isCompleted) {
+              return { ...incoming, isSharedWithMe: true as const, isCompleted: true };
+            }
+            return { ...incoming, isSharedWithMe: true as const };
+          });
+          const updated = [...mine, ...merged];
+          saveLists(updated);
+          return updated;
         });
-        return [...mine, ...merged];
-      });
-    });
+      },
+      () => showToast(t.toast.syncError),
+    );
 
-    // Minhas listas compartilhadas — mantém sharedWithUid sincronizado no estado local
-    const unsubMyLists = listenToMySharedLists(userId, (updates) => {
-      setLists(current => current.map(l => {
-        const u = updates.find(x => x.id === l.id);
-        return u ? { ...l, sharedWithUid: u.sharedWithUid } : l;
-      }));
-    });
+    // Minhas listas compartilhadas (dono) — traz o documento inteiro, para receber
+    // em tempo real edições feitas pelo parceiro (itens, nome, notas), não só sharedWithUid.
+    const unsubMyLists = listenToMySharedLists(
+      userId,
+      (sharedLists) => {
+        setLists(current => {
+          const updated = current.map(l => {
+            if (l.isSharedWithMe) return l; // essas vêm do outro listener
+            const incoming = sharedLists.find(s => s.id === l.id);
+            if (!incoming) return l;
+            // Preserva estado local de conclusão que ainda não sincronizou com o Firestore.
+            if (l.isCompleted && !incoming.isCompleted) {
+              return { ...incoming, isSharedWithMe: false as const, isCompleted: true };
+            }
+            return { ...incoming, isSharedWithMe: false as const };
+          });
+          saveLists(updated);
+          return updated;
+        });
+      },
+      () => showToast(t.toast.syncError),
+    );
 
     return () => { unsubLists(); unsubMyLists(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, sharingEnabled]);
 
   // BackHandler global — pilha de navegação: sub-telas das screens → screens → sai só de 'listas'

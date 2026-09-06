@@ -657,10 +657,13 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
               setSharingList(prev => prev ? { ...prev, sharedWithUid: partnerUid } : null);
               showToast(t.toast.shareEnabled);
             }
-          } finally {
-            setSyncingListId(null);
             setSyncSuccessListId(listId);
             setTimeout(() => setSyncSuccessListId(null), 1000);
+          } catch (err) {
+            console.warn('[ShareModal.onToggle] falha ao (des)compartilhar lista:', err);
+            showToast(t.toast.syncError);
+          } finally {
+            setSyncingListId(null);
           }
         }}
       />

@@ -668,13 +668,18 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   const notesRef = useRef(notesText);
   notesRef.current = notesText;
   const saveNotesTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sempre a versão mais recente de `list` — evita que o debounce de notas grave
+  // por cima de edições de itens que chegaram (ex.: do parceiro, via Firestore)
+  // depois que o timeout foi agendado mas antes de disparar.
+  const listRef = useRef(list);
+  listRef.current = list;
 
   useEffect(() => {
     return () => { if (saveNotesTimeoutRef.current) clearTimeout(saveNotesTimeoutRef.current); };
   }, []);
 
   const saveNotes = () => {
-    onUpdate({ ...list, notes: notesRef.current });
+    onUpdate({ ...listRef.current, notes: notesRef.current });
   };
 
   const handleNotesChange = (text: string) => {
@@ -682,7 +687,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
     notesRef.current = text;
     if (saveNotesTimeoutRef.current) clearTimeout(saveNotesTimeoutRef.current);
     saveNotesTimeoutRef.current = setTimeout(() => {
-      onUpdate({ ...list, notes: text });
+      onUpdate({ ...listRef.current, notes: text });
     }, 600);
   };
 
