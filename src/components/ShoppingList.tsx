@@ -88,14 +88,6 @@ function createStyles(c: typeof darkColors) {
     },
     checkboxViewChecked: { backgroundColor: c.success, borderColor: c.success },
     checkboxMark: { color: 'white', fontSize: 14, fontWeight: '800', lineHeight: 18 },
-    checkboxViewLarge: {
-      width: 38, height: 38,
-      borderRadius: 8, borderWidth: 2,
-      borderColor: c.border,
-      marginHorizontal: 12,
-      justifyContent: 'center', alignItems: 'center',
-    },
-    checkboxMarkLarge: { color: 'white', fontSize: 22, fontWeight: '800', lineHeight: 28 },
 
     itemInfo: { flex: 1 },
     itemName: { color: c.textPrimary, fontSize: 15, fontWeight: '500' },
@@ -106,72 +98,6 @@ function createStyles(c: typeof darkColors) {
     priceText: { color: c.success, fontSize: 14, fontWeight: '600' },
     addPriceButton: { backgroundColor: c.primary, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 7 },
     addPriceText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
-
-    footer: {
-      flexDirection: 'row',
-      padding: 16,
-      gap: 8,
-      backgroundColor: c.bgInput,
-      borderTopWidth: 1,
-      borderTopColor: c.border,
-    },
-    actionButton: { borderRadius: 12, paddingVertical: 16, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center' },
-    completeButton: { backgroundColor: c.success, flex: 1 },
-    reopenButton: { backgroundColor: c.bgSecondary, flex: 1 },
-    archiveButton: { backgroundColor: c.bgSecondary, flex: 1 },
-    shareButton: { backgroundColor: c.bgSecondary, borderRadius: 12, paddingVertical: 16, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center' },
-    shareButtonText: { fontSize: 20 },
-    deleteButton: { backgroundColor: c.danger },
-    actionButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
-
-    // Shopping mode
-    shoppingModeBtn: {
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-    },
-    shoppingModeBtnActive: {
-      backgroundColor: 'rgba(255,255,255,0.35)',
-    },
-    shoppingModeBtnText: { fontSize: 20 },
-    headerRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
-    // Shopping mode items
-    itemNameLarge: { fontSize: 18 },
-    // Shopping mode footer total
-    shoppingTotal: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    shoppingTotalLabel: {
-      color: c.textSecondary,
-      fontSize: 12,
-      fontWeight: '500' as const,
-    },
-    shoppingTotalAmount: {
-      color: c.success,
-      fontSize: 22,
-      fontWeight: '700' as const,
-    },
-    finalizeSmall: {
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      backgroundColor: c.success,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-
-    // Compact add button in section title row
-    addItemCompact: {
-      backgroundColor: c.primary + '22',
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderWidth: 1,
-      borderColor: c.primary + '55',
-    },
-    addItemCompactText: { color: c.primary, fontSize: 11, fontWeight: '700' },
 
     menuBtn: {
       position: 'absolute',
@@ -503,7 +429,7 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem }: AddItemM
       return true;
     });
     return () => backHandler.remove();
-  }, [visible, onClose]);
+  }, [visible, editItem, onClose]);
 
   const getUnitLabel = () => t.units[selectedUnit as keyof typeof t.units] ?? (AVAILABLE_UNITS.find(u => u.value === selectedUnit)?.label || 'Unidade');
 
@@ -737,7 +663,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   const [showAddItem, setShowAddItem] = useState(false);
   const [editingItem, setEditingItem] = useState<ListItem | null>(null);
   const [priceModalItem, setPriceModalItem] = useState<ListItem | null>(null);
-  const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [notesText, setNotesText] = useState(list.notes ?? '');
   const notesRef = useRef(notesText);
@@ -772,7 +697,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   };
 
   const isCompras = list.type === 'compras';
-  const shoppingModeActive = isShoppingMode && isCompras && !list.isCompleted;
 
   // L5 — swipe no header para navegar entre listas
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -868,14 +792,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkedItems.length, list.items.length]);
 
-  // In shopping mode: unchecked items first, then checked
-  const displayItems = shoppingModeActive
-    ? [...list.items].sort((a, b) => {
-        if (a.isChecked === b.isChecked) return 0;
-        return a.isChecked ? 1 : -1;
-      })
-    : list.items;
-
   const toggleItem = (itemId: number) => {
     if (list.isCompleted) return;
     const updated = { ...list, items: list.items.map(i => i.id === itemId ? { ...i, isChecked: !i.isChecked } : i) };
@@ -905,17 +821,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   const addPrice = (itemId: number, price: number, priceType: 'unit' | 'total') => {
     const updated = { ...list, items: list.items.map(i => i.id === itemId ? { ...i, price, priceType } : i) };
     onUpdate(updated);
-  };
-
-  const toggleComplete = () => {
-    Alert.alert(
-      list.isCompleted ? t.alerts.reopenList : t.alerts.finalizeList,
-      list.isCompleted ? t.alerts.reopenListMsg : t.alerts.finalizeListMsg,
-      [
-        { text: t.common.cancel, style: 'cancel' },
-        { text: t.common.confirm, onPress: () => onUpdate({ ...list, isCompleted: !list.isCompleted, totalSpent: total }) },
-      ]
-    );
   };
 
   const handleDelete = () => {
@@ -1023,17 +928,10 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
             <Text style={globalStyles.emptyText}>{t.lists.noItems}</Text>
           )}
 
-          {shoppingModeActive && (
-            <View style={styles.shoppingTotal}>
-              <Text style={styles.shoppingTotalLabel}>{t.lists.total}</Text>
-              <Text style={styles.shoppingTotalAmount}>R$ {total.toFixed(2)}</Text>
-            </View>
-          )}
-
-          {displayItems.map(item => (
+          {list.items.map(item => (
             <SwipeRow
               key={item.id}
-              disabled={list.isCompleted || shoppingModeActive}
+              disabled={list.isCompleted}
               onSwipeRight={() => toggleItem(item.id)}
               onSwipeLeft={() => removeItem(item.id)}
               rightIcon="✓"
@@ -1050,23 +948,22 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
                   disabled={list.isCompleted}
                   activeOpacity={0.7}>
                   <View style={[
-                    shoppingModeActive ? styles.checkboxViewLarge : styles.checkboxView,
+                    styles.checkboxView,
                     item.isChecked && styles.checkboxViewChecked,
                   ]}>
                     {item.isChecked && (
-                      <Text style={shoppingModeActive ? styles.checkboxMarkLarge : styles.checkboxMark}>✓</Text>
+                      <Text style={styles.checkboxMark}>✓</Text>
                     )}
                   </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.itemInfo}
-                  onPress={() => !list.isCompleted && !shoppingModeActive && setEditingItem(item)}
-                  disabled={list.isCompleted || shoppingModeActive}
-                  activeOpacity={list.isCompleted || shoppingModeActive ? 1 : 0.6}>
+                  onPress={() => !list.isCompleted && setEditingItem(item)}
+                  disabled={list.isCompleted}
+                  activeOpacity={list.isCompleted ? 1 : 0.6}>
                   <Text style={[
                     styles.itemName,
-                    shoppingModeActive && styles.itemNameLarge,
                     item.isChecked && styles.itemNameChecked,
                   ]}>
                     {item.name}
@@ -1079,18 +976,16 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
                 {isCompras && (
                   <View style={styles.itemPrice}>
                     {item.price ? (
-                      <TouchableOpacity onPress={() => handleOpenPriceModal(item)} disabled={list.isCompleted || shoppingModeActive}>
+                      <TouchableOpacity onPress={() => handleOpenPriceModal(item)} disabled={list.isCompleted}>
                         <Text style={styles.priceText}>R$ {item.price.toFixed(2)}</Text>
                       </TouchableOpacity>
                     ) : (
-                      !shoppingModeActive && (
-                        <TouchableOpacity
-                          style={[styles.addPriceButton, list.isCompleted && { opacity: 0.4 }]}
-                          onPress={() => handleOpenPriceModal(item)}
-                          disabled={list.isCompleted}>
-                          <Text style={styles.addPriceText}>{t.shoppingItem.addPrice}</Text>
-                        </TouchableOpacity>
-                      )
+                      <TouchableOpacity
+                        style={[styles.addPriceButton, list.isCompleted && { opacity: 0.4 }]}
+                        onPress={() => handleOpenPriceModal(item)}
+                        disabled={list.isCompleted}>
+                        <Text style={styles.addPriceText}>{t.shoppingItem.addPrice}</Text>
+                      </TouchableOpacity>
                     )}
                   </View>
                 )}

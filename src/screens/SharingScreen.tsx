@@ -26,7 +26,6 @@ import {
   acceptShareRequest,
   cleanupSharedDocsOnDisconnect,
   createInviteCode,
-  createShareConnection,
   createShareRequest,
   deleteShareConnection,
   listenToIncomingRequests,
@@ -34,7 +33,7 @@ import {
   lookupInviteCode,
   rejectShareRequest,
 } from '../utils/firestore';
-import { loadSettings, saveSettings } from '../utils/storage';
+import { loadSettings } from '../utils/storage';
 
 // ───────────────────────────────────────────────
 // MODAL: EXIBIR QR CODE
@@ -152,7 +151,7 @@ const qrModalStyles = StyleSheet.create({
 export default function SharingScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { user, userId, sharingEnabled, setSharingEnabled } = useFirebase();
+  const { userId, sharingEnabled, setSharingEnabled } = useFirebase();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [displayName, setDisplayName] = useState('');
@@ -311,9 +310,6 @@ export default function SharingScreen() {
       ]
     );
   };
-
-  const sentConnections = connections.filter(c => c.fromUid === userId);
-  const receivedConnections = connections.filter(c => c.toUid === userId);
 
   return (
     <>
