@@ -97,51 +97,53 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Retorna null apenas quando o próprio usuário cancela (não é um erro).
+  // Qualquer outra falha (sem Play Services, sem internet, etc.) propaga a
+  // exceção para o chamador decidir como avisar o usuário.
   const signInWithGoogle = async (): Promise<GoogleSignInResult | null> => {
-    try {
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      const response = await GoogleSignin.signIn();
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const response = await GoogleSignin.signIn();
 
-      if (isCancelledResponse(response)) return null;
-      if (!isSuccessResponse(response)) return null;
-
-      const { idToken, user: googleUser } = response.data;
-      if (!idToken) return null;
-
-      const credential = auth.GoogleAuthProvider.credential(idToken);
-      const current = auth().currentUser;
-
-      if (current?.isAnonymous) {
-        // Vincula conta anônima existente à conta Google (preserva o UID)
-        try {
-          await current.linkWithCredential(credential);
-        } catch (linkError: any) {
-          // Conta Google já existe em outra sessão Firebase — faz sign-in normal
-          if (
-            linkError.code === 'auth/credential-already-in-use' ||
-            linkError.code === 'auth/email-already-in-use'
-          ) {
-            await auth().signInWithCredential(credential);
-          } else {
-            throw linkError;
-          }
-        }
-      } else {
-        await auth().signInWithCredential(credential);
-      }
-
-      const name = googleUser.name ?? googleUser.email ?? 'Usuário';
-      const email = googleUser.email ?? '';
-
-      await saveSettings({ displayName: name });
-      const uid = auth().currentUser?.uid;
-      if (uid) await saveUserProfile(uid, name);
-
-      return { name, email };
-    } catch (error: any) {
-      console.error('[Firebase] Erro no Google Sign-In:', error);
-      return null;
+    if (isCancelledResponse(response)) return null;
+    if (!isSuccessResponse(response)) {
+      throw new Error('google-signin-failed');
     }
+
+    const { idToken, user: googleUser } = response.data;
+    if (!idToken) {
+      throw new Error('google-signin-no-token');
+    }
+
+    const credential = auth.GoogleAuthProvider.credential(idToken);
+    const current = auth().currentUser;
+
+    if (current?.isAnonymous) {
+      // Vincula conta anônima existente à conta Google (preserva o UID)
+      try {
+        await current.linkWithCredential(credential);
+      } catch (linkError: any) {
+        // Conta Google já existe em outra sessão Firebase — faz sign-in normal
+        if (
+          linkError.code === 'auth/credential-already-in-use' ||
+          linkError.code === 'auth/email-already-in-use'
+        ) {
+          await auth().signInWithCredential(credential);
+        } else {
+          throw linkError;
+        }
+      }
+    } else {
+      await auth().signInWithCredential(credential);
+    }
+
+    const name = googleUser.name ?? googleUser.email ?? 'Usuário';
+    const email = googleUser.email ?? '';
+
+    await saveSettings({ displayName: name });
+    const uid = auth().currentUser?.uid;
+    if (uid) await saveUserProfile(uid, name);
+
+    return { name, email };
   };
 
   const signOutGoogle = async (): Promise<void> => {

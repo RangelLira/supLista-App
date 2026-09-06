@@ -17,8 +17,6 @@ export interface AppSettings {
   sharingEnabled?: boolean;
   onboardingDone?: boolean;
   displayName?: string; // nome visível para outros usuários
-  // Perfil
-  birthDate?: string; // 'DD/MM/AAAA'
   // Termos de uso
   termsAccepted?: boolean;
   termsAcceptedAt?: string; // ISO timestamp

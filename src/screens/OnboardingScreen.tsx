@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
@@ -39,7 +40,6 @@ export default function OnboardingScreen({ onDone }: Props) {
   const [step, setStep] = useState<Step>('language');
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
   const [termsScrolled, setTermsScrolled] = useState(false);
 
   const s = createStyles(colors);
@@ -48,10 +48,15 @@ export default function OnboardingScreen({ onDone }: Props) {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const result = await signInWithGoogle();
-    setLoading(false);
-    if (result) setStep('sharing');
-    // null = cancelado pelo usuário — fica na tela
+    try {
+      const result = await signInWithGoogle();
+      if (result) setStep('sharing');
+      // null = cancelado pelo usuário — fica na tela
+    } catch (error) {
+      Alert.alert(t.common.error, t.onboarding.googleErrorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleManualProfileContinue = async () => {
@@ -59,7 +64,6 @@ export default function OnboardingScreen({ onDone }: Props) {
     setLoading(true);
     await saveSettings({
       displayName: name,
-      birthDate: birthDate.trim() || undefined,
       sharingEnabled: false,
     });
     setLoading(false);
@@ -203,22 +207,9 @@ export default function OnboardingScreen({ onDone }: Props) {
             placeholderTextColor={colors.textMuted}
             autoFocus
             maxLength={30}
-            returnKeyType="next"
-          />
-
-          <Text style={s.fieldLabel}>{t.onboarding.manualBirthLabel}</Text>
-          <TextInput
-            style={s.input}
-            value={birthDate}
-            onChangeText={setBirthDate}
-            placeholder={t.onboarding.manualBirthPlaceholder}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="numeric"
-            maxLength={10}
             returnKeyType="done"
             onSubmitEditing={handleManualProfileContinue}
           />
-          <Text style={s.fieldHint}>{t.onboarding.manualBirthHint}</Text>
 
           <Text style={[s.hint, { marginTop: 12, marginBottom: 20 }]}>
             {t.onboarding.manualLimitationNote}

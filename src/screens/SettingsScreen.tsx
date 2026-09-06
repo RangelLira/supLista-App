@@ -174,7 +174,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
                       { text: t.common.cancel, style: 'cancel' },
                       { text: t.settings.profileGoogleDisconnect, style: 'destructive', onPress: async () => {
                         try { await signOutGoogle(); } catch {
-                          Alert.alert(t.common.error, t.settings.profileGoogleDisconnectConfirm);
+                          Alert.alert(t.common.error, t.settings.profileGoogleDisconnectError);
                         }
                       }},
                     ],
@@ -190,10 +190,14 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
                 <TouchableOpacity
                   style={globalStyles.buttonPrimary}
                   onPress={async () => {
-                    const result = await signInWithGoogle();
-                    if (result) {
-                      onChangeUserName(result.name);
-                      setLocalDisplayName(result.name);
+                    try {
+                      const result = await signInWithGoogle();
+                      if (result) {
+                        onChangeUserName(result.name);
+                        setLocalDisplayName(result.name);
+                      }
+                    } catch {
+                      Alert.alert(t.common.error, t.onboarding.googleErrorMsg);
                     }
                   }}>
                   <Text style={globalStyles.buttonPrimaryText}>{t.settings.profileGoogleConnect}</Text>
