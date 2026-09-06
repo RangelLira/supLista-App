@@ -234,12 +234,13 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
 
     const today = new Date().toISOString().split('T')[0];
     const duplicate = existingLists.some(l => {
+      if (l.isSharedWithMe) return false; // lista de amigo não conta — pode ter nome igual à sua
       const listDay = l.createdAt.split('T')[0];
       return l.name.trim().toLowerCase() === listName.trim().toLowerCase() && listDay === today;
     });
 
     if (duplicate) {
-      Alert.alert(t.alerts.deleteList, t.alerts.deleteListMsg(listName));
+      Alert.alert(t.alerts.listNameTaken, t.alerts.listNameTakenMsg);
       return;
     }
 
@@ -401,9 +402,10 @@ interface AddItemModalProps {
   onSave: (item: ListItem) => void;
   listType: 'compras' | 'tarefas';
   editItem?: ListItem | null;
+  existingItems?: ListItem[];
 }
 
-function AddItemModal({ visible, onClose, onSave, listType, editItem }: AddItemModalProps) {
+function AddItemModal({ visible, onClose, onSave, listType, editItem, existingItems = [] }: AddItemModalProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -439,6 +441,22 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem }: AddItemM
     const savedItem: ListItem = editItem
       ? { ...editItem, name: itemName.trim(), quantity: listType === 'compras' ? (parseInt(quantity) || 1) : 1, unit: listType === 'compras' ? selectedUnit : null }
       : { id: Date.now(), name: itemName.trim(), quantity: listType === 'compras' ? (parseInt(quantity) || 1) : 1, unit: listType === 'compras' ? selectedUnit : null, isChecked: false, price: null };
+
+    if (!editItem) {
+      // Já existe item com o mesmo nome? (em compras, também precisa ser a mesma unidade)
+      const norm = (s: string) => s.trim().toLowerCase();
+      const dup = existingItems.some(i =>
+        norm(i.name) === norm(itemName) &&
+        (listType === 'tarefas' || (i.unit ?? 'unidade') === selectedUnit),
+      );
+      if (dup) {
+        Alert.alert(t.alerts.itemExists, t.alerts.itemExistsMsg(itemName.trim()), [
+          { text: t.common.cancel, style: 'cancel' },
+          { text: t.alerts.itemExistsAdd, onPress: () => { onSave(savedItem); onClose(); } },
+        ]);
+        return;
+      }
+    }
 
     onSave(savedItem);
     onClose();
@@ -1021,6 +1039,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
       <AddItemModal
         visible={showAddItem || !!editingItem}
         editItem={editingItem}
+        existingItems={list.items}
         onClose={() => { setShowAddItem(false); setEditingItem(null); }}
         onSave={(item) => editingItem ? updateItem(item) : addItem(item)}
         listType={list.type || 'compras'}

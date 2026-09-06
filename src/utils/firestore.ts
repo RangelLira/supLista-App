@@ -33,6 +33,34 @@ export const saveUserProfile = async (uid: string, displayName: string): Promise
   }, { merge: true });
 };
 
+/** Atualiza só o nome de exibição no perfil (sem mexer em createdAt). */
+export const setUserDisplayName = async (uid: string, displayName: string): Promise<void> => {
+  await firestore().collection('users').doc(uid).set({ displayName }, { merge: true });
+};
+
+/**
+ * Propaga um novo nome de exibição para todas as conexões (`shares`) das quais
+ * o usuário participa, para que o parceiro veja o nome atualizado em tempo real.
+ * O `fromDisplayName` / `toDisplayName` é um snapshot no doc — sem isto, o nome
+ * antigo fica congelado no aparelho do parceiro.
+ */
+export const propagateDisplayName = async (uid: string, displayName: string): Promise<void> => {
+  const db = firestore();
+  const [asSender, asReceiver] = await Promise.all([
+    db.collection('shares').where('fromUid', '==', uid).get(),
+    db.collection('shares').where('toUid', '==', uid).get(),
+  ]);
+  const batch = db.batch();
+  let n = 0;
+  asSender.docs.forEach(d => {
+    if ((d.data() as any).fromDisplayName !== displayName) { batch.update(d.ref, { fromDisplayName: displayName }); n++; }
+  });
+  asReceiver.docs.forEach(d => {
+    if ((d.data() as any).toDisplayName !== displayName) { batch.update(d.ref, { toDisplayName: displayName }); n++; }
+  });
+  if (n > 0) await batch.commit();
+};
+
 /**
  * Publica no perfil se este usuário aceita receber compartilhamentos.
  * Espelha o toggle local `sharingEnabled` para que o parceiro consiga checar

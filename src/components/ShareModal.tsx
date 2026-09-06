@@ -42,14 +42,28 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
     return unsub;
   }, [userId, visible]);
 
-  const confirmAsync = (title: string, message: string, confirmLabel: string) =>
+  // Contatos com o mesmo nome exibido — mostra a data da conexão para diferenciar.
+  const nameCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    connections.forEach(c => {
+      const n = (c.fromUid === userId ? c.toDisplayName : c.fromDisplayName).trim().toLowerCase();
+      m[n] = (m[n] ?? 0) + 1;
+    });
+    return m;
+  }, [connections, userId]);
+  const fmtConnDate = (ms: number) => {
+    const d = new Date(ms);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  };
+
+  const confirmAsync = (title: string, message: string, confirmLabel: string, destructive: boolean) =>
     new Promise<boolean>(resolve => {
       Alert.alert(
         title,
         message,
         [
           { text: t.common.cancel, style: 'cancel', onPress: () => resolve(false) },
-          { text: confirmLabel, style: 'destructive', onPress: () => resolve(true) },
+          { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: () => resolve(true) },
         ],
         { cancelable: true, onDismiss: () => resolve(false) },
       );
@@ -61,8 +75,8 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
     const isShared = currentSharedWithUid === partnerUid;
 
     const confirmed = isShared
-      ? await confirmAsync(t.sharing.confirmUnshareTitle, t.sharing.confirmUnshareMsg(partnerName), t.common.unshare)
-      : await confirmAsync(t.sharing.confirmShareTitle, t.sharing.confirmShareMsg(partnerName, listName), t.common.share);
+      ? await confirmAsync(t.sharing.confirmUnshareTitle, t.sharing.confirmUnshareMsg(partnerName), t.common.unshare, true)
+      : await confirmAsync(t.sharing.confirmShareTitle, t.sharing.confirmShareMsg(partnerName, listName), t.common.share, false);
     if (!confirmed) return;
 
     setLoadingUid(partnerUid);
@@ -111,6 +125,7 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
               const partnerName = conn.fromUid === userId ? conn.toDisplayName : conn.fromDisplayName;
               const isShared = currentSharedWithUid === partnerUid;
               const isLoading = loadingUid === partnerUid;
+              const ambiguous = (nameCounts[partnerName.trim().toLowerCase()] ?? 0) > 1;
               return (
                 <TouchableOpacity
                   key={conn.id}
@@ -118,7 +133,12 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
                   onPress={() => handleToggle(conn)}
                   disabled={loadingUid !== null}>
                   <Text style={styles.connAvatar}>👤</Text>
-                  <Text style={styles.connName}>{partnerName}</Text>
+                  <View style={styles.connNameWrap}>
+                    <Text style={styles.connName}>{partnerName}</Text>
+                    {ambiguous && (
+                      <Text style={styles.connMeta}>{t.sharing.connectedOn(fmtConnDate(conn.createdAt))}</Text>
+                    )}
+                  </View>
                   {isLoading
                     ? <ActivityIndicator size="small" color={colors.primary} />
                     : <Text style={[styles.connStatus, isShared && styles.connStatusActive]}>
@@ -184,7 +204,9 @@ function createStyles(c: typeof import('../styles/theme').darkColors) {
       backgroundColor: c.bgMain,
     },
     connAvatar: { fontSize: 20 },
-    connName: { flex: 1, color: c.textPrimary, fontSize: 15, fontWeight: '500' },
+    connNameWrap: { flex: 1 },
+    connName: { color: c.textPrimary, fontSize: 15, fontWeight: '500' },
+    connMeta: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
     connStatus: {
       color: c.textSecondary,
       fontSize: 13,

@@ -207,6 +207,7 @@ const translations = {
       menuAbout: 'Sobre',
       menuAboutSubtitle: 'Informações do app e desenvolvimento',
       aboutContactTitle: 'Contato',
+      aboutSiteLabel: 'Site oficial',
       backBtn: '← Voltar',
       comingSoon: 'Em desenvolvimento',
       // Perfil
@@ -391,6 +392,8 @@ const translations = {
       confirmUnshareMsg: (name: string) => `Parar de compartilhar esta lista com ${name}?\n\nA lista vai sumir do aparelho de ${name} imediatamente.`,
       partnerUnavailableTitle: 'Indisponível',
       partnerUnavailableMsg: (name: string) => `${name} desativou o compartilhamento e não pode receber listas agora. Peça para reativar em Configurações → Compartilhamento.`,
+      codeEmptyMsg: 'Digite o código de convite primeiro.',
+      connectedOn: (date: string) => `conectado em ${date}`,
     },
     search: {
       title: 'Busca',
@@ -471,6 +474,11 @@ const translations = {
       reopenRoutineMsg: 'Deseja marcar esta ocorrência como não concluída?',
       cantDeleteSharedList: 'Sem permissão',
       cantDeleteSharedListMsg: 'Você não pode excluir uma lista que foi compartilhada com você. Você pode excluir itens, mas para remover a lista inteira use o botão Sair.',
+      listNameTaken: 'Nome já usado',
+      listNameTakenMsg: 'Não é possível criar a mesma lista no mesmo dia. Escolha um nome diferente ou edite a lista já existente.',
+      itemExists: 'Item já na lista',
+      itemExistsMsg: (name: string) => `"${name}" já está na lista. Adicionar mesmo assim?`,
+      itemExistsAdd: 'Adicionar',
     },
     toast: {
       eventCompleted: 'Compromisso concluído!',
@@ -741,6 +749,7 @@ const translations = {
       menuAbout: 'About',
       menuAboutSubtitle: 'App info and development',
       aboutContactTitle: 'Contact',
+      aboutSiteLabel: 'Official website',
       backBtn: '← Back',
       comingSoon: 'Coming soon',
       // Profile
@@ -925,6 +934,8 @@ const translations = {
       confirmUnshareMsg: (name: string) => `Stop sharing this list with ${name}?\n\nThe list will disappear from ${name}'s device right away.`,
       partnerUnavailableTitle: 'Unavailable',
       partnerUnavailableMsg: (name: string) => `${name} turned sharing off and can't receive lists right now. Ask them to turn it back on in Settings → Sharing.`,
+      codeEmptyMsg: 'Enter the invite code first.',
+      connectedOn: (date: string) => `connected on ${date}`,
     },
     search: {
       title: 'Search',
@@ -1005,6 +1016,11 @@ const translations = {
       reopenRoutineMsg: 'Mark this occurrence as not completed?',
       cantDeleteSharedList: 'Not allowed',
       cantDeleteSharedListMsg: 'You cannot delete a list that was shared with you. You can delete items, but to remove the whole list use the Leave button.',
+      listNameTaken: 'Name already used',
+      listNameTakenMsg: "You can't create the same list on the same day. Choose a different name or edit the existing list.",
+      itemExists: 'Item already in list',
+      itemExistsMsg: (name: string) => `"${name}" is already in the list. Add it anyway?`,
+      itemExistsAdd: 'Add',
     },
     toast: {
       eventCompleted: 'Event completed!',
@@ -1275,6 +1291,7 @@ const translations = {
       menuAbout: 'Acerca de',
       menuAboutSubtitle: 'Información del app y desarrollo',
       aboutContactTitle: 'Contacto',
+      aboutSiteLabel: 'Sitio oficial',
       backBtn: '← Volver',
       comingSoon: 'En desarrollo',
       // Perfil
@@ -1459,6 +1476,8 @@ const translations = {
       confirmUnshareMsg: (name: string) => `¿Dejar de compartir esta lista con ${name}?\n\nLa lista desaparecerá del dispositivo de ${name} de inmediato.`,
       partnerUnavailableTitle: 'No disponible',
       partnerUnavailableMsg: (name: string) => `${name} desactivó la compartición y no puede recibir listas ahora. Pídele que la reactive en Configuración → Compartir.`,
+      codeEmptyMsg: 'Escribe primero el código de invitación.',
+      connectedOn: (date: string) => `conectado el ${date}`,
     },
     search: {
       title: 'Búsqueda',
@@ -1539,6 +1558,11 @@ const translations = {
       reopenRoutineMsg: '¿Marcar esta ocurrencia como no completada?',
       cantDeleteSharedList: 'Sin permiso',
       cantDeleteSharedListMsg: 'No puedes eliminar una lista que se compartió contigo. Puedes eliminar artículos, pero para quitar la lista completa usa el botón Salir.',
+      listNameTaken: 'Nombre ya usado',
+      listNameTakenMsg: 'No puedes crear la misma lista el mismo día. Elige un nombre diferente o edita la lista existente.',
+      itemExists: 'Artículo ya en la lista',
+      itemExistsMsg: (name: string) => `"${name}" ya está en la lista. ¿Agregarlo de todos modos?`,
+      itemExistsAdd: 'Agregar',
     },
     toast: {
       eventCompleted: '¡Compromiso completado!',

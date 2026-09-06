@@ -10,7 +10,7 @@ import {
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { loadSettings, saveSettings } from '../utils/storage';
-import { saveUserProfile, setAcceptsSharing, disableAllSharing } from '../utils/firestore';
+import { saveUserProfile, setAcceptsSharing, disableAllSharing, propagateDisplayName } from '../utils/firestore';
 
 // ─── Configuração do Google Sign-In ───────────────────────────────────────────
 // webClientId: Firebase Console > Configurações do projeto > Android app >
@@ -146,7 +146,11 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
     await saveSettings({ displayName: name });
     const uid = auth().currentUser?.uid;
-    if (uid) await saveUserProfile(uid, name);
+    if (uid) {
+      await saveUserProfile(uid, name);
+      // Se já havia conexões, atualiza o nome nelas para o parceiro ver.
+      propagateDisplayName(uid, name).catch(() => {});
+    }
 
     return { name, email };
   };

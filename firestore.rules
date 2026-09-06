@@ -35,6 +35,8 @@ service cloud.firestore {
     // ── Conexões ativas (pares de usuários) ───────────────────
     // Qualquer participante pode ler e deletar.
     // O destinatário cria (via acceptShareRequest).
+    // Participante pode atualizar apenas o próprio nome de exibição
+    // (fromUid/toUid/createdAt são imutáveis).
     match /shares/{shareId} {
       allow read, delete: if request.auth != null
                           && (resource.data.fromUid == request.auth.uid
@@ -42,6 +44,12 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && (request.resource.data.fromUid == request.auth.uid
                         || request.resource.data.toUid == request.auth.uid);
+      allow update: if request.auth != null
+                    && (resource.data.fromUid == request.auth.uid
+                        || resource.data.toUid == request.auth.uid)
+                    && request.resource.data.fromUid == resource.data.fromUid
+                    && request.resource.data.toUid == resource.data.toUid
+                    && request.resource.data.createdAt == resource.data.createdAt;
     }
 
     // ── Eventos compartilhados ─────────────────────────────────

@@ -156,6 +156,25 @@ export default function SharingScreen() {
 
   const [displayName, setDisplayName] = useState('');
   const [connections, setConnections] = useState<ShareConnection[]>([]);
+
+  // Desambiguação de contatos com o mesmo nome de exibição (o usuário não controla
+  // o nome do amigo) — mostra a data da conexão quando há colisão.
+  const partnerNameOf = (c: ShareConnection) => (c.fromUid === userId ? c.toDisplayName : c.fromDisplayName);
+  const nameCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    connections.forEach(c => {
+      const k = partnerNameOf(c).trim().toLowerCase();
+      m[k] = (m[k] ?? 0) + 1;
+    });
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections, userId]);
+  const isAmbiguousName = (c: ShareConnection) =>
+    (nameCounts[partnerNameOf(c).trim().toLowerCase()] ?? 0) > 1;
+  const fmtConnDate = (ms: number) => {
+    const d = new Date(ms);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  };
   const [incomingRequests, setIncomingRequests] = useState<ShareRequest[]>([]);
   const [connectCode, setConnectCode] = useState('');
   const [connectLoading, setConnectLoading] = useState(false);
@@ -236,7 +255,14 @@ export default function SharingScreen() {
 
   const handleConnect = async () => {
     const code = connectCode.trim().toUpperCase();
-    if (!code || !userId || !displayName) return;
+    if (!code) {
+      Alert.alert(t.sharing.codeInvalidTitle, t.sharing.codeEmptyMsg);
+      return;
+    }
+    if (!userId || !displayName) {
+      Alert.alert(t.common.error, t.sharing.authErrorMsg);
+      return;
+    }
 
     setConnectLoading(true);
     setConnectResult(null);
@@ -406,9 +432,9 @@ export default function SharingScreen() {
                 <Text style={styles.successMsg}>{t.sharing.requestSent}</Text>
               )}
               <TouchableOpacity
-                style={[styles.connectBtn, !connectCode.trim() && styles.connectBtnDisabled]}
+                style={styles.connectBtn}
                 onPress={handleConnect}
-                disabled={!connectCode.trim() || connectLoading}>
+                disabled={connectLoading}>
                 {connectLoading
                   ? <ActivityIndicator color="white" />
                   : <Text style={styles.connectBtnText}>{t.sharing.sendRequest}</Text>
@@ -428,7 +454,10 @@ export default function SharingScreen() {
                       <Text style={styles.connectionAvatar}>👤</Text>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.connectionName}>{name}</Text>
-                        <Text style={styles.connectionMeta}>{isSent ? t.sharing.youInitiated : t.sharing.addedYou}</Text>
+                        <Text style={styles.connectionMeta}>
+                          {isSent ? t.sharing.youInitiated : t.sharing.addedYou}
+                          {isAmbiguousName(conn) ? ` • ${t.sharing.connectedOn(fmtConnDate(conn.createdAt))}` : ''}
+                        </Text>
                       </View>
                       <TouchableOpacity style={styles.disconnectBtn} onPress={() => handleDisconnect(conn)}>
                         <Text style={styles.disconnectBtnText}>{t.sharing.removeConnection}</Text>
