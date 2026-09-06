@@ -88,16 +88,15 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
 
         <ScrollView contentContainerStyle={globalStyles.scrollContent}>
           {[
-            { key: 'perfil', icon: '👤', label: t.settings.menuProfile, subtitle: t.settings.menuProfileSubtitle },
-            { key: 'preferencias', icon: '⚙️', label: t.settings.menuOptions, subtitle: t.settings.menuOptionsSubtitle },
-            { key: 'compartilhamento', icon: '🔗', label: t.settings.menuShare, subtitle: t.settings.menuShareSubtitle },
-            { key: 'sobre', icon: 'ℹ️', label: t.settings.menuAbout, subtitle: t.settings.menuAboutSubtitle },
+            { key: 'perfil', label: t.settings.menuProfile, subtitle: t.settings.menuProfileSubtitle },
+            { key: 'preferencias', label: t.settings.menuOptions, subtitle: t.settings.menuOptionsSubtitle },
+            { key: 'compartilhamento', label: t.settings.menuShare, subtitle: t.settings.menuShareSubtitle },
+            { key: 'sobre', label: t.settings.menuAbout, subtitle: t.settings.menuAboutSubtitle },
           ].map(item => (
             <TouchableOpacity
               key={item.key}
               style={styles.menuItem}
               onPress={() => setSubScreen(item.key as SubScreen)}>
-              <Text style={styles.menuIcon}>{item.icon}</Text>
               <View style={styles.menuInfo}>
                 <Text style={styles.menuLabel}>{item.label}</Text>
                 <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
@@ -415,7 +414,6 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
     borderWidth: 1,
     borderColor: c.border,
   },
-  menuIcon: { fontSize: 24, marginRight: 14 },
   menuInfo: { flex: 1 },
   menuLabel: { color: c.textPrimary, fontSize: 16, fontWeight: '600' },
   menuSubtitle: { color: c.textSecondary, fontSize: 13, marginTop: 2 },
@@ -423,7 +421,7 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   menuBtn: {
     position: 'absolute',
     right: 20,
-    top: HEADER_TOP_PADDING - 2,
+    top: HEADER_TOP_PADDING + 8,
     padding: 6,
     gap: 4,
   },

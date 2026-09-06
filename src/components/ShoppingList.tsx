@@ -102,7 +102,7 @@ function createStyles(c: typeof darkColors) {
     menuBtn: {
       position: 'absolute',
       right: 20,
-      top: HEADER_TOP_PADDING - 2,
+      top: HEADER_TOP_PADDING + 8,
       padding: 6,
       gap: 4,
     },
@@ -325,7 +325,7 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
               {inheritFrom ? (
                 <View style={styles.inheritSelected}>
                   <Text style={styles.inheritSelectedText}>
-                    {inheritFrom.type === 'tarefas' ? '✅' : '🛒'} {inheritFrom.name}
+                    {inheritFrom.type === 'tarefas' ? '📋' : '🛒'} {inheritFrom.name}
                     {' '}({inheritFrom.items.length} itens)
                   </Text>
                   <TouchableOpacity onPress={() => setInheritFrom(null)}>
@@ -369,7 +369,7 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
                   style={styles.inheritOption}
                   onPress={() => { setInheritFrom(l); setShowInheritModal(false); }}>
                   <Text style={styles.inheritOptionIcon}>
-                    {l.type === 'tarefas' ? '✅' : '🛒'}
+                    {l.type === 'tarefas' ? '📋' : '🛒'}
                   </Text>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inheritOptionName}>{l.name}</Text>

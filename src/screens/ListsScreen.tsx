@@ -241,7 +241,7 @@ function createStyles(c: typeof darkColors) {
     menuBtn: {
       position: 'absolute',
       right: 20,
-      top: HEADER_TOP_PADDING - 2,
+      top: HEADER_TOP_PADDING + 8,
       padding: 6,
       gap: 4,
     },
@@ -487,7 +487,7 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
                 <Text style={[styles.listBadgeIcon, syncSuccessListId === list.id && { color: colors.success }]}>👥</Text>
               )
             )}
-            <Text style={styles.listBadgeIcon}>{list.type === 'tarefas' ? '✅' : '🛒'}</Text>
+            <Text style={styles.listBadgeIcon}>{list.type === 'tarefas' ? '📋' : '🛒'}</Text>
           </View>
         </View>
 
