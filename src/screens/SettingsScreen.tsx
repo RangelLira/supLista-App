@@ -18,6 +18,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
+import { useToast } from '../hooks/useToast';
 import { AccentColor, ACCENT_PRESETS, HEADER_TOP_PADDING } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
 import { propagateDisplayName, setUserDisplayName } from '../utils/firestore';
@@ -56,6 +57,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   const { colors, globalStyles, theme, setTheme, accentColor, setAccentColor } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, userId, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
+  const { showToast } = useToast();
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
   const [localDisplayName, setLocalDisplayName] = useState('');
   const [showTerms, setShowTerms] = useState(false);
@@ -89,9 +91,13 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
       try {
         await setUserDisplayName(userId, name);
         await propagateDisplayName(userId, name);
+        showToast(t.settings.profileNameSaved);
       } catch (e) {
         console.warn('[handleSaveDisplayName] falha ao propagar nome:', e);
+        Alert.alert(t.common.error, t.settings.profileNamePropagateError);
       }
+    } else {
+      showToast(t.settings.profileNameSaved);
     }
   };
 
