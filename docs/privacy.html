@@ -94,8 +94,8 @@
       <ul>
         <li>O supLista funciona <strong>localmente no seu aparelho</strong>. Suas listas ficam no seu celular.</li>
         <li>Não há anúncios, não há rastreamento e não usamos ferramentas de análise de uso.</li>
-        <li>Uma conta é criada automaticamente (anônima) para permitir o recurso <strong>opcional</strong> de compartilhamento de listas.</li>
-        <li>Seus dados só vão para a internet (servidores do Google/Firebase) se <strong>você ativar o compartilhamento</strong> e compartilhar uma lista com outra pessoa.</li>
+        <li>O app pode ser usado <strong>sem nenhuma conta</strong>. Nesse modo, tudo fica no seu aparelho.</li>
+        <li>O compartilhamento de listas é <strong>opcional</strong> e exige entrar com uma Conta Google. Se você não usa esse recurso, nenhuma conta é criada e nada é enviado para a internet.</li>
         <li>Não vendemos e não cedemos seus dados a terceiros.</li>
       </ul>
     </div>
@@ -107,22 +107,26 @@
     <ul>
       <li>Suas listas e seus itens: nomes, quantidades, unidades, preços que você digitar, estado de marcação e anotações em texto livre.</li>
       <li>Preferências do app: tema, cor de destaque, idioma, nome de exibição escolhido, e o registro de aceite dos Termos de Uso com data e hora.</li>
-      <li>Uma data de nascimento, caso você a informe durante a configuração inicial. Esse dado fica apenas no aparelho e não é enviado para lugar nenhum.</li>
     </ul>
     <p>Esses dados são apagados quando você desinstala o aplicativo.</p>
 
-    <h3>1.2 Conta (Firebase Authentication)</h3>
-    <p>Para viabilizar o compartilhamento, o app usa o serviço <strong>Firebase Authentication</strong>, do Google:</p>
+    <h3>1.2 Conta (opcional)</h3>
+    <p>
+      O supLista pode ser usado sem conta. Você só cria uma identidade quando escolhe
+      <strong>entrar com o Google</strong> para usar o compartilhamento de listas. Nesse caso:
+    </p>
     <ul>
-      <li>Na primeira execução é criada uma <strong>conta anônima</strong>, representada por um identificador aleatório (UID). Ela não contém nome, e-mail ou telefone.</li>
-      <li>Se você optar por <strong>entrar com o Google</strong>, sua conta Google é vinculada a essa conta. Nesse caso o app recebe do Google o seu <strong>nome</strong> e o seu <strong>endereço de e-mail</strong>, usados para te identificar para as pessoas com quem você compartilha listas. Nenhuma senha é recebida ou armazenada pelo app.</li>
+      <li>O app usa o serviço <strong>Firebase Authentication</strong> (Google) para autenticar você e recebe da sua Conta Google o seu <strong>nome</strong> e o seu <strong>endereço de e-mail</strong>, usados para te identificar para as pessoas com quem você compartilha listas.</li>
+      <li>É gerado um identificador de usuário (UID) associado a você, usado nas operações de compartilhamento.</li>
+      <li>Nenhuma senha é recebida ou armazenada pelo app.</li>
     </ul>
+    <p>Se você não entra com o Google, o app não cria conta alguma.</p>
 
     <h3>1.3 Compartilhamento de listas (Cloud Firestore)</h3>
     <p>
       Este recurso é <strong>desativado por padrão</strong>. Ele só funciona depois que você
-      o ativa nas configurações. Quando ativo, os seguintes dados são enviados para o
-      <strong>Cloud Firestore</strong> (banco de dados do Google/Firebase):
+      entra com o Google e o ativa nas configurações. Quando ativo, os seguintes dados são
+      enviados para o <strong>Cloud Firestore</strong> (banco de dados do Google/Firebase):
     </p>
     <ul>
       <li><strong>Perfil de compartilhamento:</strong> seu UID, seu nome de exibição, a data de criação da conta e a informação de que você aceita receber compartilhamentos.</li>
@@ -177,7 +181,7 @@
       <li><strong>Lista compartilhada:</strong> o registro no Firestore é apagado quando o dono exclui a lista. Se você é o dono e encerra o compartilhamento, o vínculo com a outra pessoa é removido. Se você recebeu a lista e usa o botão &ldquo;Sair&rdquo;, seu acesso é removido imediatamente.</li>
       <li><strong>Convites:</strong> expiram automaticamente em 24 horas e são de uso único.</li>
       <li><strong>Conexões:</strong> são apagadas quando qualquer uma das partes remove a conexão. A opção de desativar o compartilhamento revoga todas as conexões de uma vez.</li>
-      <li><strong>Conta:</strong> contas anônimas deixam de ser úteis assim que os dados locais são apagados. Para excluir uma conta vinculada ao Google e os dados de perfil associados, entre em contato pelo e-mail abaixo.</li>
+      <li><strong>Conta:</strong> para excluir sua conta (vinculada ao Google) e os dados de perfil associados no Firestore, entre em contato pelo e-mail abaixo. Desconectar o Google dentro do app também encerra o compartilhamento.</li>
     </ul>
 
     <h2>6. Segurança</h2>
@@ -228,8 +232,8 @@
       <ul>
         <li>supLista runs <strong>locally on your device</strong>. Your lists stay on your phone.</li>
         <li>No ads, no tracking, and we use no usage-analytics tools.</li>
-        <li>An account is created automatically (anonymous) to enable the <strong>optional</strong> list-sharing feature.</li>
-        <li>Your data only leaves the device (to Google/Firebase servers) if <strong>you turn on sharing</strong> and share a list with someone.</li>
+        <li>The app can be used with <strong>no account at all</strong>. In that mode, everything stays on your device.</li>
+        <li>List sharing is <strong>optional</strong> and requires signing in with a Google Account. If you don&rsquo;t use it, no account is created and nothing is sent to the internet.</li>
         <li>We do not sell or hand your data to third parties.</li>
       </ul>
     </div>
@@ -241,22 +245,26 @@
     <ul>
       <li>Your lists and their items: names, quantities, units, any prices you type, checked state and free-text notes.</li>
       <li>App preferences: theme, accent color, language, chosen display name, and the record of your acceptance of the Terms of Use with date and time.</li>
-      <li>A date of birth, if you provide one during initial setup. This stays on the device only and is never sent anywhere.</li>
     </ul>
     <p>This data is deleted when you uninstall the app.</p>
 
-    <h3>1.2 Account (Firebase Authentication)</h3>
-    <p>To enable sharing, the app uses Google&rsquo;s <strong>Firebase Authentication</strong> service:</p>
+    <h3>1.2 Account (optional)</h3>
+    <p>
+      supLista can be used without an account. You only create an identity when you choose to
+      <strong>sign in with Google</strong> to use list sharing. In that case:
+    </p>
     <ul>
-      <li>On first launch an <strong>anonymous account</strong> is created, represented by a random identifier (UID). It contains no name, email or phone number.</li>
-      <li>If you choose to <strong>sign in with Google</strong>, your Google account is linked to it. In that case the app receives your <strong>name</strong> and <strong>email address</strong> from Google, used to identify you to the people you share lists with. No password is received or stored by the app.</li>
+      <li>The app uses Google&rsquo;s <strong>Firebase Authentication</strong> service to authenticate you and receives your <strong>name</strong> and <strong>email address</strong> from your Google Account, used to identify you to the people you share lists with.</li>
+      <li>A user identifier (UID) is generated for you, used for sharing operations.</li>
+      <li>No password is received or stored by the app.</li>
     </ul>
+    <p>If you do not sign in with Google, the app creates no account.</p>
 
     <h3>1.3 List sharing (Cloud Firestore)</h3>
     <p>
-      This feature is <strong>off by default</strong>. It only works after you enable it in
-      settings. When enabled, the following data is sent to <strong>Cloud Firestore</strong>
-      (Google/Firebase database):
+      This feature is <strong>off by default</strong>. It only works after you sign in with
+      Google and enable it in settings. When enabled, the following data is sent to
+      <strong>Cloud Firestore</strong> (Google/Firebase database):
     </p>
     <ul>
       <li><strong>Sharing profile:</strong> your UID, your display name, the account creation date and whether you accept receiving shares.</li>
@@ -309,7 +317,7 @@
       <li><strong>Shared list:</strong> the Firestore record is deleted when the owner deletes the list. If you are the owner and end sharing, the link to the other person is removed. If you received the list and use the &ldquo;Leave&rdquo; button, your access is removed immediately.</li>
       <li><strong>Invites:</strong> expire automatically after 24 hours and are single-use.</li>
       <li><strong>Connections:</strong> deleted when either party removes the connection. Disabling sharing revokes all connections at once.</li>
-      <li><strong>Account:</strong> anonymous accounts cease to be useful once local data is deleted. To delete a Google-linked account and the associated profile data, contact us at the email below.</li>
+      <li><strong>Account:</strong> to delete your (Google-linked) account and the associated profile data in Firestore, contact us at the email below. Disconnecting Google inside the app also ends sharing.</li>
     </ul>
 
     <h2>6. Security</h2>
@@ -358,8 +366,8 @@
       <ul>
         <li>supLista funciona <strong>localmente en tu dispositivo</strong>. Tus listas quedan en tu teléfono.</li>
         <li>No hay anuncios, no hay rastreo y no usamos herramientas de análisis de uso.</li>
-        <li>Se crea una cuenta automáticamente (anónima) para habilitar la función <strong>opcional</strong> de compartir listas.</li>
-        <li>Tus datos solo salen del dispositivo (a servidores de Google/Firebase) si <strong>activas el compartido</strong> y compartes una lista con alguien.</li>
+        <li>La app se puede usar <strong>sin ninguna cuenta</strong>. En ese modo, todo queda en tu dispositivo.</li>
+        <li>Compartir listas es <strong>opcional</strong> y requiere iniciar sesión con una Cuenta de Google. Si no lo usas, no se crea ninguna cuenta y no se envía nada a internet.</li>
         <li>No vendemos ni cedemos tus datos a terceros.</li>
       </ul>
     </div>
@@ -371,22 +379,26 @@
     <ul>
       <li>Tus listas y sus elementos: nombres, cantidades, unidades, precios que escribas, estado de marcado y notas de texto libre.</li>
       <li>Preferencias de la app: tema, color de acento, idioma, nombre para mostrar elegido, y el registro de aceptación de los Términos de Uso con fecha y hora.</li>
-      <li>Una fecha de nacimiento, si la indicas durante la configuración inicial. Este dato queda solo en el dispositivo y no se envía a ningún sitio.</li>
     </ul>
     <p>Estos datos se eliminan cuando desinstalas la aplicación.</p>
 
-    <h3>1.2 Cuenta (Firebase Authentication)</h3>
-    <p>Para habilitar el compartido, la app usa el servicio <strong>Firebase Authentication</strong> de Google:</p>
+    <h3>1.2 Cuenta (opcional)</h3>
+    <p>
+      supLista se puede usar sin cuenta. Solo creas una identidad cuando eliges
+      <strong>iniciar sesión con Google</strong> para usar el compartido de listas. En ese caso:
+    </p>
     <ul>
-      <li>En el primer inicio se crea una <strong>cuenta anónima</strong>, representada por un identificador aleatorio (UID). No contiene nombre, correo ni teléfono.</li>
-      <li>Si eliges <strong>iniciar sesión con Google</strong>, tu cuenta de Google se vincula a ella. En ese caso la app recibe de Google tu <strong>nombre</strong> y tu <strong>correo electrónico</strong>, usados para identificarte ante las personas con quienes compartes listas. La app no recibe ni almacena ninguna contraseña.</li>
+      <li>La app usa el servicio <strong>Firebase Authentication</strong> de Google para autenticarte y recibe de tu Cuenta de Google tu <strong>nombre</strong> y tu <strong>correo electrónico</strong>, usados para identificarte ante las personas con quienes compartes listas.</li>
+      <li>Se genera un identificador de usuario (UID) asociado a ti, usado para las operaciones de compartido.</li>
+      <li>La app no recibe ni almacena ninguna contraseña.</li>
     </ul>
+    <p>Si no inicias sesión con Google, la app no crea ninguna cuenta.</p>
 
     <h3>1.3 Compartir listas (Cloud Firestore)</h3>
     <p>
       Esta función está <strong>desactivada de forma predeterminada</strong>. Solo funciona
-      después de que la actives en los ajustes. Cuando está activa, se envían los siguientes
-      datos a <strong>Cloud Firestore</strong> (base de datos de Google/Firebase):
+      después de que inicies sesión con Google y la actives en los ajustes. Cuando está activa,
+      se envían los siguientes datos a <strong>Cloud Firestore</strong> (base de datos de Google/Firebase):
     </p>
     <ul>
       <li><strong>Perfil de compartido:</strong> tu UID, tu nombre para mostrar, la fecha de creación de la cuenta y si aceptas recibir compartidos.</li>
@@ -441,7 +453,7 @@
       <li><strong>Lista compartida:</strong> el registro en Firestore se elimina cuando el propietario borra la lista. Si eres el propietario y finalizas el compartido, se elimina el vínculo con la otra persona. Si recibiste la lista y usas el botón &ldquo;Salir&rdquo;, tu acceso se elimina de inmediato.</li>
       <li><strong>Invitaciones:</strong> caducan automáticamente a las 24 horas y son de un solo uso.</li>
       <li><strong>Conexiones:</strong> se eliminan cuando cualquiera de las partes quita la conexión. Desactivar el compartido revoca todas las conexiones a la vez.</li>
-      <li><strong>Cuenta:</strong> las cuentas anónimas dejan de ser útiles cuando se borran los datos locales. Para eliminar una cuenta vinculada a Google y los datos de perfil asociados, contáctanos en el correo de abajo.</li>
+      <li><strong>Cuenta:</strong> para eliminar tu cuenta (vinculada a Google) y los datos de perfil asociados en Firestore, contáctanos en el correo de abajo. Desconectar Google dentro de la app también finaliza el compartido.</li>
     </ul>
 
     <h2>6. Seguridad</h2>
