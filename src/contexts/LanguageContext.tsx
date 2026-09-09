@@ -191,7 +191,7 @@ const translations = {
       subtitle: 'Seus ajustes e preferências',
       // Menu principal
       menuProfile: 'Meu Perfil',
-      menuProfileSubtitle: 'Nome, data de nascimento e conta',
+      menuProfileSubtitle: 'Nome e conta',
       menuOptions: 'Preferências',
       menuOptionsSubtitle: 'Tema e idioma',
       menuNotifications: 'Notificações',
@@ -221,7 +221,7 @@ const translations = {
       profileGoogleConnected: 'Conta Google conectada',
       profileGoogleConnectedDesc: (email: string) => `Conectado como ${email}`,
       profileGoogleDisconnect: 'Desconectar conta Google',
-      profileGoogleDisconnectConfirm: 'Desconectar do Google?\n\nO compartilhamento com outras pessoas será limitado.',
+      profileGoogleDisconnectConfirm: 'Desconectar do Google?\n\nO compartilhamento será desativado e todas as suas conexões e listas compartilhadas serão removidas.',
       profileGoogleDisconnectError: 'Não foi possível desconectar sua conta Google agora. Tente novamente.',
       // Preferências
       themeTitle: 'Tema',
@@ -325,8 +325,10 @@ const translations = {
     },
     sharing: {
       disabled: 'Compartilhamento desativado',
-      disabledDesc: 'Habilite para compartilhar eventos e listas em tempo real com outras pessoas.',
+      disabledDesc: 'Habilite para compartilhar listas em tempo real com outras pessoas.',
       enableBtn: 'Habilitar compartilhamento',
+      requiresGoogleTitle: 'Conecte sua conta Google',
+      requiresGoogleMsg: 'O compartilhamento de listas exige uma conta Google. Conecte a sua em Configurações → Perfil.',
       pendingRequests: (n: number) => `🔔 Solicitações pendentes (${n})`,
       pendingRequestsDesc: 'Alguém quer se conectar com você. Aceite ou recuse:',
       accept: 'Aceitar',
@@ -522,7 +524,7 @@ const translations = {
       manualLimitationNote: 'O compartilhamento de listas requer conta Google.',
       // Etapa 3 — Compartilhamento
       sharingTitle: 'Compartilhamento',
-      sharingDesc: 'Compartilhe eventos e listas em tempo real com outras pessoas.\nAs atualizações aparecem instantaneamente para todos os envolvidos.',
+      sharingDesc: 'Compartilhe listas em tempo real com outras pessoas.\nAs atualizações aparecem instantaneamente para todos os envolvidos.',
       sharingEnableBtn: 'Ativar compartilhamento',
       sharingSkipBtn: 'Agora não',
       sharingHint: 'Você pode ativar depois em Configurações.',
@@ -735,7 +737,7 @@ const translations = {
       subtitle: 'Your settings and preferences',
       // Main menu
       menuProfile: 'My Profile',
-      menuProfileSubtitle: 'Name, date of birth and account',
+      menuProfileSubtitle: 'Name and account',
       menuOptions: 'Preferences',
       menuOptionsSubtitle: 'Theme and language',
       menuNotifications: 'Notifications',
@@ -765,7 +767,7 @@ const translations = {
       profileGoogleConnected: 'Google account connected',
       profileGoogleConnectedDesc: (email: string) => `Signed in as ${email}`,
       profileGoogleDisconnect: 'Disconnect Google account',
-      profileGoogleDisconnectConfirm: 'Disconnect from Google?\n\nSharing with other people will be limited.',
+      profileGoogleDisconnectConfirm: 'Disconnect from Google?\n\nSharing will be turned off and all your connections and shared lists will be removed.',
       profileGoogleDisconnectError: 'Could not disconnect your Google account right now. Please try again.',
       // Preferences
       themeTitle: 'Theme',
@@ -869,8 +871,10 @@ const translations = {
     },
     sharing: {
       disabled: 'Sharing disabled',
-      disabledDesc: 'Enable to share events and lists in real time with other people.',
+      disabledDesc: 'Enable to share lists in real time with other people.',
       enableBtn: 'Enable sharing',
+      requiresGoogleTitle: 'Connect your Google account',
+      requiresGoogleMsg: 'List sharing requires a Google account. Connect yours in Settings → Profile.',
       pendingRequests: (n: number) => `🔔 Pending requests (${n})`,
       pendingRequestsDesc: 'Someone wants to connect with you. Accept or decline:',
       accept: 'Accept',
@@ -1066,7 +1070,7 @@ const translations = {
       manualLimitationNote: 'List sharing requires a Google account.',
       // Step 3 — Sharing
       sharingTitle: 'Sharing',
-      sharingDesc: 'Share events and lists in real time with other people.\nUpdates appear instantly for everyone involved.',
+      sharingDesc: 'Share lists in real time with other people.\nUpdates appear instantly for everyone involved.',
       sharingEnableBtn: 'Enable sharing',
       sharingSkipBtn: 'Not now',
       sharingHint: 'You can enable it later in Settings.',
@@ -1279,7 +1283,7 @@ const translations = {
       subtitle: 'Tus ajustes y preferencias',
       // Menú principal
       menuProfile: 'Mi Perfil',
-      menuProfileSubtitle: 'Nombre, fecha de nacimiento y cuenta',
+      menuProfileSubtitle: 'Nombre y cuenta',
       menuOptions: 'Preferencias',
       menuOptionsSubtitle: 'Tema e idioma',
       menuNotifications: 'Notificaciones',
@@ -1309,7 +1313,7 @@ const translations = {
       profileGoogleConnected: 'Cuenta Google conectada',
       profileGoogleConnectedDesc: (email: string) => `Sesión iniciada como ${email}`,
       profileGoogleDisconnect: 'Desconectar cuenta Google',
-      profileGoogleDisconnectConfirm: '¿Desconectar de Google?\n\nEl uso compartido con otras personas quedará limitado.',
+      profileGoogleDisconnectConfirm: '¿Desconectar de Google?\n\nEl compartido se desactivará y se eliminarán todas tus conexiones y listas compartidas.',
       profileGoogleDisconnectError: 'No se pudo desconectar tu cuenta de Google ahora. Intenta de nuevo.',
       // Preferencias
       themeTitle: 'Tema',
@@ -1413,8 +1417,10 @@ const translations = {
     },
     sharing: {
       disabled: 'Compartición desactivada',
-      disabledDesc: 'Habilita para compartir eventos y listas en tiempo real con otras personas.',
+      disabledDesc: 'Habilita para compartir listas en tiempo real con otras personas.',
       enableBtn: 'Habilitar compartición',
+      requiresGoogleTitle: 'Conecta tu cuenta de Google',
+      requiresGoogleMsg: 'Compartir listas requiere una cuenta de Google. Conéctala en Configuración → Perfil.',
       pendingRequests: (n: number) => `🔔 Solicitudes pendientes (${n})`,
       pendingRequestsDesc: 'Alguien quiere conectarse contigo. Acepta o rechaza:',
       accept: 'Aceptar',
@@ -1610,7 +1616,7 @@ const translations = {
       manualLimitationNote: 'El compartido de listas requiere cuenta de Google.',
       // Paso 3 — Compartición
       sharingTitle: 'Compartición',
-      sharingDesc: 'Comparte eventos y listas en tiempo real con otras personas.\nLas actualizaciones aparecen instantáneamente para todos los involucrados.',
+      sharingDesc: 'Comparte listas en tiempo real con otras personas.\nLas actualizaciones aparecen instantáneamente para todos los involucrados.',
       sharingEnableBtn: 'Activar compartición',
       sharingSkipBtn: 'Ahora no',
       sharingHint: 'Puedes activarlo después en Configuración.',

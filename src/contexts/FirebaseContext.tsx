@@ -57,17 +57,9 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadSettings().then(s => {
-      if (s.sharingEnabled) {
-        setSharingEnabledState(true);
-        // Sessão Google já é restaurada automaticamente pelo Firebase SDK.
-        // Login anônimo só é criado se não houver sessão ativa.
-        signInAnonymouslyIfNeeded().then(() => {
-          // Mantém o perfil sincronizado: com o compartilhamento ligado,
-          // este usuário está disponível para receber listas.
-          const uid = auth().currentUser?.uid;
-          if (uid) setAcceptsSharing(uid, true).catch(() => {});
-        });
-      }
+      // A sessão Google é restaurada automaticamente pelo Firebase SDK.
+      // Não há login anônimo: o compartilhamento exige conta Google.
+      if (s.sharingEnabled) setSharingEnabledState(true);
     });
 
     const unsubscribe = auth().onAuthStateChanged(firebaseUser => {
@@ -76,7 +68,6 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     });
 
     return unsubscribe;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ensureUserProfile = async (firebaseUser: FirebaseAuthTypes.User) => {
@@ -87,20 +78,14 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInAnonymouslyIfNeeded = async () => {
-    try {
-      const current = auth().currentUser;
-      if (current) {
-        await ensureUserProfile(current);
-        return;
-      }
-      await auth().signInAnonymously();
-      const newUser = auth().currentUser;
-      if (newUser) await ensureUserProfile(newUser);
-    } catch (error) {
-      console.error('[Firebase] Erro no login anônimo:', error);
+  // Com o compartilhamento ligado e o Google conectado, mantém o perfil
+  // publicado como disponível para receber listas.
+  useEffect(() => {
+    if (sharingEnabled && isGoogleConnected && user) {
+      ensureUserProfile(user).catch(() => {});
+      setAcceptsSharing(user.uid, true).catch(() => {});
     }
-  };
+  }, [sharingEnabled, isGoogleConnected, user]);
 
   // Retorna null apenas quando o próprio usuário cancela (não é um erro).
   // Qualquer outra falha (sem Play Services, sem internet, etc.) propaga a
@@ -157,9 +142,21 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
   const signOutGoogle = async (): Promise<void> => {
     try {
+      // Desconectar o Google encerra o compartilhamento (ele exige conta Google).
+      // Revoga tudo no servidor ANTES de sair, enquanto ainda há sessão.
+      const uid = auth().currentUser?.uid;
+      if (uid && sharingEnabled) {
+        try { await disableAllSharing(uid); } catch (e) {
+          console.warn('[signOutGoogle] falha ao revogar compartilhamentos:', e);
+        }
+        try { await setAcceptsSharing(uid, false); } catch (e) {
+          console.warn('[signOutGoogle] falha ao publicar indisponibilidade:', e);
+        }
+      }
       await GoogleSignin.signOut();
       await auth().signOut();
-      await signInAnonymouslyIfNeeded();
+      setSharingEnabledState(false);
+      await saveSettings({ sharingEnabled: false });
     } catch (error) {
       console.error('[Firebase] Erro ao desconectar Google:', error);
       throw error;
@@ -168,12 +165,12 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
 
   const setSharingEnabled = async (enabled: boolean) => {
     if (enabled) {
+      // O compartilhamento exige conta Google — sem ela, recusa.
+      if (!isGoogleConnected) {
+        throw new Error('sharing-requires-google');
+      }
       setSharingEnabledState(true);
       await saveSettings({ sharingEnabled: true });
-      if (!isGoogleConnected) {
-        // Sem conta Google, compartilhamento usa sessão anônima
-        await signInAnonymouslyIfNeeded();
-      }
       const uid = auth().currentUser?.uid;
       if (uid) {
         try { await setAcceptsSharing(uid, true); } catch (e) {

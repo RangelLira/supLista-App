@@ -151,7 +151,7 @@ const qrModalStyles = StyleSheet.create({
 export default function SharingScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const { userId, sharingEnabled, setSharingEnabled } = useFirebase();
+  const { userId, sharingEnabled, setSharingEnabled, isGoogleConnected } = useFirebase();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [displayName, setDisplayName] = useState('');
@@ -203,7 +203,12 @@ export default function SharingScreen() {
 
   const handleEnable = async () => {
     setLoadingEnable(true);
-    await setSharingEnabled(true);
+    try {
+      await setSharingEnabled(true);
+    } catch {
+      // sharing-requires-google — sem conta Google não dá para compartilhar
+      Alert.alert(t.sharing.requiresGoogleTitle, t.sharing.requiresGoogleMsg);
+    }
     setLoadingEnable(false);
   };
 
@@ -358,24 +363,32 @@ export default function SharingScreen() {
     <>
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
 
-        {/* TOGGLE */}
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>
-            {sharingEnabled ? t.sharing.disableBtn : t.sharing.enableBtn}
-          </Text>
-          {loadingEnable
-            ? <ActivityIndicator size="small" color={colors.primary} />
-            : <Switch
-                value={!!sharingEnabled}
-                onValueChange={(val) => val ? handleEnable() : handleDisable()}
-                trackColor={{ false: colors.bgSecondary, true: colors.primary }}
-                thumbColor={sharingEnabled ? colors.primaryLight : colors.textSecondary}
-              />
-          }
-        </View>
+        {/* Sem conta Google não há compartilhamento */}
+        {!isGoogleConnected ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t.sharing.requiresGoogleTitle}</Text>
+            <Text style={styles.sectionDesc}>{t.sharing.requiresGoogleMsg}</Text>
+          </View>
+        ) : (
+          /* TOGGLE */
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>
+              {sharingEnabled ? t.sharing.disableBtn : t.sharing.enableBtn}
+            </Text>
+            {loadingEnable
+              ? <ActivityIndicator size="small" color={colors.primary} />
+              : <Switch
+                  value={!!sharingEnabled}
+                  onValueChange={(val) => val ? handleEnable() : handleDisable()}
+                  trackColor={{ false: colors.bgSecondary, true: colors.primary }}
+                  thumbColor={sharingEnabled ? colors.primaryLight : colors.textSecondary}
+                />
+            }
+          </View>
+        )}
 
         {/* SOLICITAÇÕES PENDENTES */}
-        {sharingEnabled && incomingRequests.length > 0 && (
+        {isGoogleConnected && sharingEnabled && incomingRequests.length > 0 && (
           <View style={[styles.section, styles.sectionHighlight]}>
             <Text style={styles.sectionTitle}>
               {t.sharing.pendingRequests(incomingRequests.length)}
@@ -398,7 +411,7 @@ export default function SharingScreen() {
           </View>
         )}
 
-        {sharingEnabled && (
+        {isGoogleConnected && sharingEnabled && (
           <>
             {/* GERAR CÓDIGO DE CONVITE */}
             <View style={styles.section}>
