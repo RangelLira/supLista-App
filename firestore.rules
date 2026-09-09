@@ -52,26 +52,9 @@ service cloud.firestore {
                     && request.resource.data.createdAt == resource.data.createdAt;
     }
 
-    // ── Eventos compartilhados ─────────────────────────────────
-    // Dono e receptor lêem.
-    // Dono cria e deleta.
-    // Dono e receptor podem atualizar (edição colaborativa).
-    // O receptor pode fazer update com sharedWithUid:null para "sair" do item.
-    match /sharedEvents/{docId} {
-      allow read: if request.auth != null
-                  && (resource.data.ownerUid      == request.auth.uid
-                      || resource.data.sharedWithUid == request.auth.uid);
-      allow create: if request.auth != null
-                    && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if request.auth != null
-                    && (resource.data.ownerUid      == request.auth.uid
-                        || resource.data.sharedWithUid == request.auth.uid);
-      allow delete: if request.auth != null
-                    && resource.data.ownerUid == request.auth.uid;
-    }
-
     // ── Listas compartilhadas ──────────────────────────────────
-    // Mesmas regras que sharedEvents.
+    // Dono e receptor lêem. Dono cria e deleta. Ambos atualizam (edição
+    // colaborativa). O receptor faz update com sharedWithUid:null para "sair".
     match /sharedLists/{docId} {
       allow read: if request.auth != null
                   && (resource.data.ownerUid      == request.auth.uid
