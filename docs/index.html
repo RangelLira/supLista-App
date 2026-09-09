@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>supLista</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #1a1a1e; --muted: #5b5b66; --line: #e4e4ea; --accent: #6d5ae6; --card: #f6f6f9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131317; --fg: #e9e9ef; --muted: #9a9aa7; --line: #2c2c34; --accent: #9d8cff; --card: #1c1c22; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex; min-height: 100vh; align-items: center; justify-content: center;
+  }
+  main { max-width: 480px; padding: 40px 24px; }
+  h1 { font-size: 2rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+  p.tag { color: var(--muted); margin: 0 0 28px; }
+  ul { list-style: none; padding: 0; margin: 0 0 28px; }
+  li { margin: 8px 0; }
+  a.card {
+    display: block; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--card); color: var(--fg); text-decoration: none;
+  }
+  a.card span { display: block; color: var(--muted); font-size: 0.88rem; margin-top: 2px; }
+  a.card:hover { border-color: var(--accent); }
+  footer { color: var(--muted); font-size: 0.85rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>supLista</h1>
+  <p class="tag">Listas de compras e tarefas. Simples, sem anúncios, código aberto.</p>
+  <ul>
+    <li>
+      <a class="card" href="./privacy.html">
+        Política de Privacidade
+        <span>Privacy Policy &middot; Política de Privacidad</span>
+      </a>
+    </li>
+    <li>
+      <a class="card" href="https://github.com/RangelLira/supLista-App">
+        Código-fonte no GitHub
+        <span>Source code</span>
+      </a>
+    </li>
+  </ul>
+  <footer>&copy; 2026 Contest Software</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Política de Privacidade — supLista</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1e;
+    --muted: #5b5b66;
+    --line: #e4e4ea;
+    --accent: #6d5ae6;
+    --card: #f6f6f9;
+    --mark: #fff3bf;
+    --mark-fg: #5c4400;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131317;
+      --fg: #e9e9ef;
+      --muted: #9a9aa7;
+      --line: #2c2c34;
+      --accent: #9d8cff;
+      --card: #1c1c22;
+      --mark: #4a3d00;
+      --mark-fg: #ffe9a8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 96px; }
+  header.top { border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 28px; }
+  h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 1.15rem; margin: 34px 0 10px; letter-spacing: -0.01em; }
+  h3 { font-size: 1rem; margin: 22px 0 6px; }
+  p, ul { margin: 10px 0; }
+  ul { padding-left: 22px; }
+  li { margin: 5px 0; }
+  a { color: var(--accent); }
+  .muted { color: var(--muted); font-size: 0.92rem; }
+  .lang {
+    display: inline-flex; gap: 6px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .lang button {
+    font: inherit; font-size: 0.85rem; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card); color: var(--fg);
+    cursor: pointer;
+  }
+  .lang button[aria-pressed="true"] {
+    border-color: var(--accent); color: var(--accent); font-weight: 600;
+  }
+  .summary {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 4px 18px; margin: 18px 0 8px;
+  }
+  mark { background: var(--mark); color: var(--mark-fg); padding: 0 4px; border-radius: 4px; }
+  section[hidden] { display: none; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Política de Privacidade — supLista</h1>
+    <div class="muted" id="updated">Última atualização: 9 de setembro de 2026</div>
+    <nav class="lang" aria-label="Idioma / Language / Idioma">
+      <button data-lang="pt" aria-pressed="true">Português</button>
+      <button data-lang="en" aria-pressed="false">English</button>
+      <button data-lang="es" aria-pressed="false">Español</button>
+    </nav>
+  </header>
+
+  <!-- ================= PORTUGUÊS ================= -->
+  <section id="pt">
+    <p>
+      O <strong>supLista</strong> é um aplicativo de listas de compras e tarefas,
+      desenvolvido e mantido por <strong>Contest Software</strong> (&ldquo;nós&rdquo;).
+      Esta Política explica quais dados o aplicativo trata, com que finalidade, e
+      quais são os seus direitos. O código-fonte do supLista é aberto e está
+      disponível em
+      <a href="https://github.com/RangelLira/supLista-App">github.com/RangelLira/supLista-App</a>.
+    </p>
+
+    <div class="summary">
+      <h2>Resumo</h2>
+      <ul>
+        <li>O supLista funciona <strong>localmente no seu aparelho</strong>. Suas listas ficam no seu celular.</li>
+        <li>Não há anúncios, não há rastreamento e não usamos ferramentas de análise de uso.</li>
+        <li>Uma conta é criada automaticamente (anônima) para permitir o recurso <strong>opcional</strong> de compartilhamento de listas.</li>
+        <li>Seus dados só vão para a internet (servidores do Google/Firebase) se <strong>você ativar o compartilhamento</strong> e compartilhar uma lista com outra pessoa.</li>
+        <li>Não vendemos e não cedemos seus dados a terceiros.</li>
+      </ul>
+    </div>
+
+    <h2>1. Dados que o aplicativo trata</h2>
+
+    <h3>1.1 No seu aparelho (armazenamento local)</h3>
+    <p>Ficam somente no seu dispositivo, sem sair dele, exceto quando você compartilha uma lista (ver 1.3):</p>
+    <ul>
+      <li>Suas listas e seus itens: nomes, quantidades, unidades, preços que você digitar, estado de marcação e anotações em texto livre.</li>
+      <li>Preferências do app: tema, cor de destaque, idioma, nome de exibição escolhido, e o registro de aceite dos Termos de Uso com data e hora.</li>
+      <li>Uma data de nascimento, caso você a informe durante a configuração inicial. Esse dado fica apenas no aparelho e não é enviado para lugar nenhum.</li>
+    </ul>
+    <p>Esses dados são apagados quando você desinstala o aplicativo.</p>
+
+    <h3>1.2 Conta (Firebase Authentication)</h3>
+    <p>Para viabilizar o compartilhamento, o app usa o serviço <strong>Firebase Authentication</strong>, do Google:</p>
+    <ul>
+      <li>Na primeira execução é criada uma <strong>conta anônima</strong>, representada por um identificador aleatório (UID). Ela não contém nome, e-mail ou telefone.</li>
+      <li>Se você optar por <strong>entrar com o Google</strong>, sua conta Google é vinculada a essa conta. Nesse caso o app recebe do Google o seu <strong>nome</strong> e o seu <strong>endereço de e-mail</strong>, usados para te identificar para as pessoas com quem você compartilha listas. Nenhuma senha é recebida ou armazenada pelo app.</li>
+    </ul>
+
+    <h3>1.3 Compartilhamento de listas (Cloud Firestore)</h3>
+    <p>
+      Este recurso é <strong>desativado por padrão</strong>. Ele só funciona depois que você
+      o ativa nas configurações. Quando ativo, os seguintes dados são enviados para o
+      <strong>Cloud Firestore</strong> (banco de dados do Google/Firebase):
+    </p>
+    <ul>
+      <li><strong>Perfil de compartilhamento:</strong> seu UID, seu nome de exibição, a data de criação da conta e a informação de que você aceita receber compartilhamentos.</li>
+      <li><strong>Convites:</strong> ao gerar um convite, criamos um código de 8 caracteres, de uso único e válido por 24 horas, associado ao seu UID e ao seu nome de exibição.</li>
+      <li><strong>Conexões:</strong> quando você se conecta a outra pessoa, guardamos os UIDs e os nomes de exibição das duas partes.</li>
+      <li><strong>Listas compartilhadas:</strong> ao compartilhar uma lista, o <strong>conteúdo completo dela</strong> (itens, quantidades, preços e anotações) é enviado ao Firestore, junto com o seu UID (dono) e o UID da pessoa com quem foi compartilhada, para permitir a edição em tempo real pelos dois lados.</li>
+    </ul>
+    <p>Listas que você <strong>não</strong> compartilha nunca são enviadas ao Firestore.</p>
+
+    <h2>2. O que não coletamos</h2>
+    <p>O supLista <strong>não</strong> coleta, usa ou transmite:</p>
+    <ul>
+      <li>dados de localização;</li>
+      <li>sua agenda de contatos, fotos, arquivos ou dados de outros apps;</li>
+      <li>identificadores de publicidade;</li>
+      <li>dados de uso, telemetria, estatísticas de navegação ou relatórios de falha;</li>
+      <li>qualquer dado para fins de anúncios — o app não exibe anúncios.</li>
+    </ul>
+
+    <h2>3. Finalidades e base legal</h2>
+    <p>Tratamos os dados acima exclusivamente para:</p>
+    <ul>
+      <li>permitir o funcionamento do aplicativo (guardar e exibir suas listas);</li>
+      <li>oferecer o recurso opcional de compartilhamento e sincronização em tempo real;</li>
+      <li>identificar você para as pessoas com quem você escolhe compartilhar listas.</li>
+    </ul>
+    <p>
+      Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 &mdash; LGPD), as bases
+      legais são o <strong>consentimento</strong> (que você fornece ao ativar o
+      compartilhamento e ao entrar com o Google) e a <strong>execução de funcionalidade
+      solicitada por você</strong>. Você pode retirar o consentimento a qualquer momento
+      desativando o compartilhamento e/ou desconectando sua conta Google.
+    </p>
+
+    <h2>4. Compartilhamento com terceiros</h2>
+    <p>
+      Os recursos de conta e de compartilhamento são fornecidos pelo <strong>Google LLC</strong>,
+      por meio da plataforma Firebase (Firebase Authentication e Cloud Firestore), que atua
+      como operador dos dados. O uso desses serviços é regido também pela
+      <a href="https://policies.google.com/privacy">política de privacidade do Google</a>.
+    </p>
+    <p>
+      Os servidores do Firebase podem estar localizados fora do Brasil. Ao ativar o
+      compartilhamento, você concorda com a <strong>transferência internacional</strong>
+      desses dados para viabilizar o serviço.
+    </p>
+    <p>Fora isso, <strong>não compartilhamos seus dados com nenhum terceiro</strong> e <strong>nunca vendemos seus dados</strong>.</p>
+
+    <h2>5. Retenção e exclusão</h2>
+    <ul>
+      <li><strong>Dados locais:</strong> permanecem no aparelho até você apagá-los no app ou desinstalá-lo.</li>
+      <li><strong>Lista compartilhada:</strong> o registro no Firestore é apagado quando o dono exclui a lista. Se você é o dono e encerra o compartilhamento, o vínculo com a outra pessoa é removido. Se você recebeu a lista e usa o botão &ldquo;Sair&rdquo;, seu acesso é removido imediatamente.</li>
+      <li><strong>Convites:</strong> expiram automaticamente em 24 horas e são de uso único.</li>
+      <li><strong>Conexões:</strong> são apagadas quando qualquer uma das partes remove a conexão. A opção de desativar o compartilhamento revoga todas as conexões de uma vez.</li>
+      <li><strong>Conta:</strong> contas anônimas deixam de ser úteis assim que os dados locais são apagados. Para excluir uma conta vinculada ao Google e os dados de perfil associados, entre em contato pelo e-mail abaixo.</li>
+    </ul>
+
+    <h2>6. Segurança</h2>
+    <p>
+      O acesso aos dados no Firestore é restringido por regras de segurança do servidor:
+      cada usuário só pode ler e escrever os próprios dados e as listas explicitamente
+      compartilhadas com ele. A comunicação com os servidores é criptografada em trânsito
+      (HTTPS/TLS). Nenhum sistema é perfeitamente seguro; não podemos garantir segurança
+      absoluta, mas nos comprometemos a tratar seus dados de forma responsável.
+    </p>
+
+    <h2>7. Crianças</h2>
+    <p>
+      O supLista não é direcionado a crianças e não coletamos conscientemente dados de
+      menores de 13 anos. Se você acredita que uma criança nos forneceu dados, entre em
+      contato para que possamos removê-los.
+    </p>
+
+    <h2>8. Seus direitos</h2>
+    <p>
+      Você tem direito a acessar, corrigir, portar e excluir seus dados, além de revogar
+      consentimento. Grande parte disso pode ser feita diretamente no app (editar o nome
+      de exibição, excluir listas, encerrar compartilhamentos, desinstalar). Para os demais
+      casos, ou para dúvidas sobre esta Política, entre em contato:
+    </p>
+    <p><strong>E-mail:</strong> <a href="mailto:contato.contestsoftware@gmail.com">contato.contestsoftware@gmail.com</a></p>
+
+    <h2>9. Alterações nesta Política</h2>
+    <p>
+      Podemos atualizar esta Política periodicamente. A versão vigente estará sempre neste
+      endereço, com a data de &ldquo;Última atualização&rdquo; no topo. Mudanças relevantes
+      poderão ser comunicadas dentro do aplicativo.
+    </p>
+  </section>
+
+  <!-- ================= ENGLISH ================= -->
+  <section id="en" hidden>
+    <p>
+      <strong>supLista</strong> is a shopping and task list app, developed and maintained by
+      <strong>Contest Software</strong> (&ldquo;we&rdquo;). This Policy explains what data the
+      app processes, for what purpose, and what your rights are. supLista is open source and
+      available at
+      <a href="https://github.com/RangelLira/supLista-App">github.com/RangelLira/supLista-App</a>.
+    </p>
+
+    <div class="summary">
+      <h2>Summary</h2>
+      <ul>
+        <li>supLista runs <strong>locally on your device</strong>. Your lists stay on your phone.</li>
+        <li>No ads, no tracking, and we use no usage-analytics tools.</li>
+        <li>An account is created automatically (anonymous) to enable the <strong>optional</strong> list-sharing feature.</li>
+        <li>Your data only leaves the device (to Google/Firebase servers) if <strong>you turn on sharing</strong> and share a list with someone.</li>
+        <li>We do not sell or hand your data to third parties.</li>
+      </ul>
+    </div>
+
+    <h2>1. Data the app processes</h2>
+
+    <h3>1.1 On your device (local storage)</h3>
+    <p>Stays only on your device, unless you share a list (see 1.3):</p>
+    <ul>
+      <li>Your lists and their items: names, quantities, units, any prices you type, checked state and free-text notes.</li>
+      <li>App preferences: theme, accent color, language, chosen display name, and the record of your acceptance of the Terms of Use with date and time.</li>
+      <li>A date of birth, if you provide one during initial setup. This stays on the device only and is never sent anywhere.</li>
+    </ul>
+    <p>This data is deleted when you uninstall the app.</p>
+
+    <h3>1.2 Account (Firebase Authentication)</h3>
+    <p>To enable sharing, the app uses Google&rsquo;s <strong>Firebase Authentication</strong> service:</p>
+    <ul>
+      <li>On first launch an <strong>anonymous account</strong> is created, represented by a random identifier (UID). It contains no name, email or phone number.</li>
+      <li>If you choose to <strong>sign in with Google</strong>, your Google account is linked to it. In that case the app receives your <strong>name</strong> and <strong>email address</strong> from Google, used to identify you to the people you share lists with. No password is received or stored by the app.</li>
+    </ul>
+
+    <h3>1.3 List sharing (Cloud Firestore)</h3>
+    <p>
+      This feature is <strong>off by default</strong>. It only works after you enable it in
+      settings. When enabled, the following data is sent to <strong>Cloud Firestore</strong>
+      (Google/Firebase database):
+    </p>
+    <ul>
+      <li><strong>Sharing profile:</strong> your UID, your display name, the account creation date and whether you accept receiving shares.</li>
+      <li><strong>Invites:</strong> when you generate an invite we create an 8-character, single-use code valid for 24 hours, tied to your UID and display name.</li>
+      <li><strong>Connections:</strong> when you connect with someone, we store both parties&rsquo; UIDs and display names.</li>
+      <li><strong>Shared lists:</strong> when you share a list, its <strong>full contents</strong> (items, quantities, prices and notes) are sent to Firestore, together with your UID (owner) and the recipient&rsquo;s UID, to allow real-time editing by both sides.</li>
+    </ul>
+    <p>Lists you do <strong>not</strong> share are never sent to Firestore.</p>
+
+    <h2>2. What we do not collect</h2>
+    <p>supLista does <strong>not</strong> collect, use or transmit:</p>
+    <ul>
+      <li>location data;</li>
+      <li>your contacts, photos, files or data from other apps;</li>
+      <li>advertising identifiers;</li>
+      <li>usage data, telemetry, browsing statistics or crash reports;</li>
+      <li>any data for advertising purposes &mdash; the app shows no ads.</li>
+    </ul>
+
+    <h2>3. Purposes and legal basis</h2>
+    <p>We process the data above solely to:</p>
+    <ul>
+      <li>make the app work (store and display your lists);</li>
+      <li>offer the optional real-time sharing and sync feature;</li>
+      <li>identify you to the people you choose to share lists with.</li>
+    </ul>
+    <p>
+      Under Brazil&rsquo;s General Data Protection Law (Law 13.709/2018 &mdash; LGPD), the legal
+      bases are <strong>consent</strong> (given when you enable sharing and sign in with
+      Google) and <strong>performance of a feature you requested</strong>. You may withdraw
+      consent at any time by turning off sharing and/or disconnecting your Google account.
+    </p>
+
+    <h2>4. Sharing with third parties</h2>
+    <p>
+      The account and sharing features are provided by <strong>Google LLC</strong> through the
+      Firebase platform (Firebase Authentication and Cloud Firestore), acting as data
+      processor. Use of these services is also governed by
+      <a href="https://policies.google.com/privacy">Google&rsquo;s privacy policy</a>.
+    </p>
+    <p>
+      Firebase servers may be located outside Brazil. By enabling sharing you agree to the
+      <strong>international transfer</strong> of this data to provide the service.
+    </p>
+    <p>Otherwise, <strong>we do not share your data with any third party</strong> and <strong>never sell your data</strong>.</p>
+
+    <h2>5. Retention and deletion</h2>
+    <ul>
+      <li><strong>Local data:</strong> stays on the device until you delete it in the app or uninstall.</li>
+      <li><strong>Shared list:</strong> the Firestore record is deleted when the owner deletes the list. If you are the owner and end sharing, the link to the other person is removed. If you received the list and use the &ldquo;Leave&rdquo; button, your access is removed immediately.</li>
+      <li><strong>Invites:</strong> expire automatically after 24 hours and are single-use.</li>
+      <li><strong>Connections:</strong> deleted when either party removes the connection. Disabling sharing revokes all connections at once.</li>
+      <li><strong>Account:</strong> anonymous accounts cease to be useful once local data is deleted. To delete a Google-linked account and the associated profile data, contact us at the email below.</li>
+    </ul>
+
+    <h2>6. Security</h2>
+    <p>
+      Access to data in Firestore is restricted by server-side security rules: each user can
+      only read and write their own data and lists explicitly shared with them. Communication
+      with servers is encrypted in transit (HTTPS/TLS). No system is perfectly secure; we
+      cannot guarantee absolute security, but we commit to handling your data responsibly.
+    </p>
+
+    <h2>7. Children</h2>
+    <p>
+      supLista is not directed to children and we do not knowingly collect data from anyone
+      under 13. If you believe a child has provided us data, contact us so we can remove it.
+    </p>
+
+    <h2>8. Your rights</h2>
+    <p>
+      You have the right to access, correct, port and delete your data, and to withdraw
+      consent. Much of this can be done directly in the app (edit your display name, delete
+      lists, end shares, uninstall). For anything else, or questions about this Policy,
+      contact us:
+    </p>
+    <p><strong>Email:</strong> <a href="mailto:contato.contestsoftware@gmail.com">contato.contestsoftware@gmail.com</a></p>
+
+    <h2>9. Changes to this Policy</h2>
+    <p>
+      We may update this Policy from time to time. The current version is always at this
+      address, with the &ldquo;Last updated&rdquo; date at the top. Significant changes may
+      be announced inside the app.
+    </p>
+  </section>
+
+  <!-- ================= ESPAÑOL ================= -->
+  <section id="es" hidden>
+    <p>
+      <strong>supLista</strong> es una aplicación de listas de compras y tareas, desarrollada
+      y mantenida por <strong>Contest Software</strong> (&ldquo;nosotros&rdquo;). Esta Política
+      explica qué datos trata la aplicación, con qué finalidad, y cuáles son tus derechos.
+      supLista es de código abierto y está disponible en
+      <a href="https://github.com/RangelLira/supLista-App">github.com/RangelLira/supLista-App</a>.
+    </p>
+
+    <div class="summary">
+      <h2>Resumen</h2>
+      <ul>
+        <li>supLista funciona <strong>localmente en tu dispositivo</strong>. Tus listas quedan en tu teléfono.</li>
+        <li>No hay anuncios, no hay rastreo y no usamos herramientas de análisis de uso.</li>
+        <li>Se crea una cuenta automáticamente (anónima) para habilitar la función <strong>opcional</strong> de compartir listas.</li>
+        <li>Tus datos solo salen del dispositivo (a servidores de Google/Firebase) si <strong>activas el compartido</strong> y compartes una lista con alguien.</li>
+        <li>No vendemos ni cedemos tus datos a terceros.</li>
+      </ul>
+    </div>
+
+    <h2>1. Datos que trata la aplicación</h2>
+
+    <h3>1.1 En tu dispositivo (almacenamiento local)</h3>
+    <p>Permanecen solo en tu dispositivo, salvo que compartas una lista (ver 1.3):</p>
+    <ul>
+      <li>Tus listas y sus elementos: nombres, cantidades, unidades, precios que escribas, estado de marcado y notas de texto libre.</li>
+      <li>Preferencias de la app: tema, color de acento, idioma, nombre para mostrar elegido, y el registro de aceptación de los Términos de Uso con fecha y hora.</li>
+      <li>Una fecha de nacimiento, si la indicas durante la configuración inicial. Este dato queda solo en el dispositivo y no se envía a ningún sitio.</li>
+    </ul>
+    <p>Estos datos se eliminan cuando desinstalas la aplicación.</p>
+
+    <h3>1.2 Cuenta (Firebase Authentication)</h3>
+    <p>Para habilitar el compartido, la app usa el servicio <strong>Firebase Authentication</strong> de Google:</p>
+    <ul>
+      <li>En el primer inicio se crea una <strong>cuenta anónima</strong>, representada por un identificador aleatorio (UID). No contiene nombre, correo ni teléfono.</li>
+      <li>Si eliges <strong>iniciar sesión con Google</strong>, tu cuenta de Google se vincula a ella. En ese caso la app recibe de Google tu <strong>nombre</strong> y tu <strong>correo electrónico</strong>, usados para identificarte ante las personas con quienes compartes listas. La app no recibe ni almacena ninguna contraseña.</li>
+    </ul>
+
+    <h3>1.3 Compartir listas (Cloud Firestore)</h3>
+    <p>
+      Esta función está <strong>desactivada de forma predeterminada</strong>. Solo funciona
+      después de que la actives en los ajustes. Cuando está activa, se envían los siguientes
+      datos a <strong>Cloud Firestore</strong> (base de datos de Google/Firebase):
+    </p>
+    <ul>
+      <li><strong>Perfil de compartido:</strong> tu UID, tu nombre para mostrar, la fecha de creación de la cuenta y si aceptas recibir compartidos.</li>
+      <li><strong>Invitaciones:</strong> al generar una invitación creamos un código de 8 caracteres, de un solo uso y válido 24 horas, asociado a tu UID y tu nombre para mostrar.</li>
+      <li><strong>Conexiones:</strong> cuando te conectas con alguien, guardamos los UID y los nombres para mostrar de ambas partes.</li>
+      <li><strong>Listas compartidas:</strong> al compartir una lista, su <strong>contenido completo</strong> (elementos, cantidades, precios y notas) se envía a Firestore, junto con tu UID (propietario) y el UID de la persona con quien se compartió, para permitir la edición en tiempo real por ambas partes.</li>
+    </ul>
+    <p>Las listas que <strong>no</strong> compartes nunca se envían a Firestore.</p>
+
+    <h2>2. Lo que no recopilamos</h2>
+    <p>supLista <strong>no</strong> recopila, usa ni transmite:</p>
+    <ul>
+      <li>datos de ubicación;</li>
+      <li>tus contactos, fotos, archivos o datos de otras apps;</li>
+      <li>identificadores de publicidad;</li>
+      <li>datos de uso, telemetría, estadísticas de navegación o informes de fallos;</li>
+      <li>ningún dato con fines publicitarios &mdash; la app no muestra anuncios.</li>
+    </ul>
+
+    <h2>3. Finalidades y base legal</h2>
+    <p>Tratamos los datos anteriores exclusivamente para:</p>
+    <ul>
+      <li>permitir el funcionamiento de la aplicación (guardar y mostrar tus listas);</li>
+      <li>ofrecer la función opcional de compartido y sincronización en tiempo real;</li>
+      <li>identificarte ante las personas con quienes eliges compartir listas.</li>
+    </ul>
+    <p>
+      Conforme a la Ley General de Protección de Datos de Brasil (Ley 13.709/2018 &mdash; LGPD),
+      las bases legales son el <strong>consentimiento</strong> (que otorgas al activar el
+      compartido y al iniciar sesión con Google) y la <strong>ejecución de una función que
+      solicitaste</strong>. Puedes retirar el consentimiento en cualquier momento desactivando
+      el compartido y/o desconectando tu cuenta de Google.
+    </p>
+
+    <h2>4. Compartición con terceros</h2>
+    <p>
+      Las funciones de cuenta y de compartido las provee <strong>Google LLC</strong> mediante
+      la plataforma Firebase (Firebase Authentication y Cloud Firestore), que actúa como
+      encargada del tratamiento. El uso de estos servicios se rige también por la
+      <a href="https://policies.google.com/privacy">política de privacidad de Google</a>.
+    </p>
+    <p>
+      Los servidores de Firebase pueden estar ubicados fuera de Brasil. Al activar el
+      compartido, aceptas la <strong>transferencia internacional</strong> de estos datos para
+      poder prestar el servicio.
+    </p>
+    <p>Fuera de eso, <strong>no compartimos tus datos con ningún tercero</strong> y <strong>nunca vendemos tus datos</strong>.</p>
+
+    <h2>5. Conservación y eliminación</h2>
+    <ul>
+      <li><strong>Datos locales:</strong> permanecen en el dispositivo hasta que los borres en la app o la desinstales.</li>
+      <li><strong>Lista compartida:</strong> el registro en Firestore se elimina cuando el propietario borra la lista. Si eres el propietario y finalizas el compartido, se elimina el vínculo con la otra persona. Si recibiste la lista y usas el botón &ldquo;Salir&rdquo;, tu acceso se elimina de inmediato.</li>
+      <li><strong>Invitaciones:</strong> caducan automáticamente a las 24 horas y son de un solo uso.</li>
+      <li><strong>Conexiones:</strong> se eliminan cuando cualquiera de las partes quita la conexión. Desactivar el compartido revoca todas las conexiones a la vez.</li>
+      <li><strong>Cuenta:</strong> las cuentas anónimas dejan de ser útiles cuando se borran los datos locales. Para eliminar una cuenta vinculada a Google y los datos de perfil asociados, contáctanos en el correo de abajo.</li>
+    </ul>
+
+    <h2>6. Seguridad</h2>
+    <p>
+      El acceso a los datos en Firestore está restringido por reglas de seguridad del
+      servidor: cada usuario solo puede leer y escribir sus propios datos y las listas
+      compartidas explícitamente con él. La comunicación con los servidores está cifrada en
+      tránsito (HTTPS/TLS). Ningún sistema es perfectamente seguro; no podemos garantizar
+      seguridad absoluta, pero nos comprometemos a tratar tus datos de forma responsable.
+    </p>
+
+    <h2>7. Menores</h2>
+    <p>
+      supLista no está dirigido a menores y no recopilamos conscientemente datos de menores
+      de 13 años. Si crees que un menor nos ha proporcionado datos, contáctanos para que
+      podamos eliminarlos.
+    </p>
+
+    <h2>8. Tus derechos</h2>
+    <p>
+      Tienes derecho a acceder, corregir, portar y eliminar tus datos, y a retirar el
+      consentimiento. Gran parte de esto se puede hacer directamente en la app (editar tu
+      nombre para mostrar, borrar listas, finalizar compartidos, desinstalar). Para lo demás,
+      o para dudas sobre esta Política, contáctanos:
+    </p>
+    <p><strong>Correo:</strong> <a href="mailto:contato.contestsoftware@gmail.com">contato.contestsoftware@gmail.com</a></p>
+
+    <h2>9. Cambios en esta Política</h2>
+    <p>
+      Podemos actualizar esta Política periódicamente. La versión vigente estará siempre en
+      esta dirección, con la fecha de &ldquo;Última actualización&rdquo; arriba. Los cambios
+      relevantes podrán comunicarse dentro de la aplicación.
+    </p>
+  </section>
+
+  <footer class="muted">
+    <p>supLista &middot; Contest Software &middot;
+      <a href="https://github.com/RangelLira/supLista-App">código-fonte / source / código fuente</a>
+    </p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var sections = { pt: document.getElementById('pt'), en: document.getElementById('en'), es: document.getElementById('es') };
+    var buttons = document.querySelectorAll('.lang button');
+    var updated = document.getElementById('updated');
+    var labels = {
+      pt: 'Última atualização: 9 de setembro de 2026',
+      en: 'Last updated: September 9, 2026',
+      es: 'Última actualización: 9 de septiembre de 2026'
+    };
+    var htmlLang = { pt: 'pt-BR', en: 'en', es: 'es' };
+    function pick(lang) {
+      if (!sections[lang]) lang = 'pt';
+      Object.keys(sections).forEach(function (k) { sections[k].hidden = (k !== lang); });
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
+      updated.textContent = labels[lang];
+      document.documentElement.lang = htmlLang[lang];
+      try { localStorage.setItem('suplista_privacy_lang', lang); } catch (e) {}
+    }
+    buttons.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.lang); }); });
+    var initial = 'pt';
+    try {
+      var saved = localStorage.getItem('suplista_privacy_lang');
+      if (saved) initial = saved;
+      else if (navigator.language) {
+        var code = navigator.language.slice(0, 2).toLowerCase();
+        if (code === 'en' || code === 'es') initial = code;
+      }
+    } catch (e) {}
+    pick(initial);
+  })();
+</script>
+</body>
+</html>
