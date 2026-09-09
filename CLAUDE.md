@@ -21,7 +21,7 @@ npm run lint
 npm test
 ```
 
-**Windows note:** `npm run android` / `react-native run-android` can fail on Windows with `'gradlew.bat' não é reconhecido...` (a Node.js `spawn` regression with `.bat` files). Workaround: run Metro (`npm start`) in one terminal, then from `android/`, run `.\gradlew.bat app:installDebug -PreactNativeDevServerPort=8081` directly in PowerShell, then launch the app via `adb shell am start -n com.suplist.list/com.suplist.list.MainActivity`. If the device shows "Could not connect to development server", run `adb reverse tcp:8081 tcp:8081`.
+**Windows note:** `npm run android` / `react-native run-android` can fail on Windows with `'gradlew.bat' não é reconhecido...` (a Node.js `spawn` regression with `.bat` files). Workaround: run Metro (`npm start`) in one terminal, then from `android/`, run `.\gradlew.bat app:installDebug -PreactNativeDevServerPort=8081` directly in PowerShell, then launch the app via `adb shell am start -n com.contestsoftware.suplista/com.contestsoftware.suplista.MainActivity`. If the device shows "Could not connect to development server", run `adb reverse tcp:8081 tcp:8081`.
 
 iOS only: install CocoaPods before first run or after native dep changes:
 ```bash
@@ -31,7 +31,7 @@ bundle exec pod install
 
 ## Architecture
 
-**supList** is a React Native shopping/task list app (Android/iOS), forked from a larger productivity app (TaskFlow) and stripped down to just the lists feature. Package id `com.suplist.list`. All app logic lives in `App.tsx` and `src/`.
+**supLista** is a React Native shopping/task list app (Android/iOS), forked from a larger productivity app (TaskFlow) and stripped down to just the lists feature. Package id `com.contestsoftware.suplista` (developer: Contest Software). The RN module name (`app.json` `name`, `getMainComponentName`, iOS `withModuleName`) is `supLista`. The iOS Xcode project/folder/target are still named `supList` — deliberately not renamed (invisible, risky Xcode surgery); only the bundle id and display name changed. All app logic lives in `App.tsx` and `src/`.
 
 ### State Management
 There is no external state library. `App.tsx` is the single source of truth — it holds the full `lists` array in `useState` and passes it down as props. All mutations go through handlers defined in `App.tsx`, which call `saveLists` from `src/utils/storage.ts` to persist to AsyncStorage after every change.
@@ -97,7 +97,7 @@ All colors and reusable styles are in `src/styles/theme.ts` (`colors` object + `
 Used by `CreateListForm`. Renders 7 preset tag chips + 1 "Personalizar" chip in a 4×2 grid, always followed by a custom text input. See inline comments in the component for the sentinel/sync-guard details — behavior is unchanged from before the fork.
 
 ### Persistence
-AsyncStorage keys: `@suplist_lists` (lists), `@suplist_settings` (settings). Both are namespaced separately from the original TaskFlow app's keys (`@taskflow_*`) so the two apps can coexist on the same device without clobbering each other's data. All reads/writes go through `src/utils/storage.ts`.
+AsyncStorage keys: `@suplista_lists` (lists), `@suplista_settings` (settings). All reads/writes go through `src/utils/storage.ts`.
 
 ### Internationalization (i18n)
 All user-visible strings **must** use the translation system. Never hardcode visible text.
@@ -111,7 +111,7 @@ const { t } = useLanguage();
 The dictionary lives in `src/contexts/LanguageContext.tsx` (pt/en/es). When adding new strings: add to all three languages simultaneously. The file still has some dead/unused keys accumulated from the fork — don't treat their presence as evidence a feature is wired up; grep for `t.<namespace>.<key>` usage before relying on one.
 
 ### Firestore / Sharing Architecture
-Real-time sharing uses Firebase Firestore, same Firebase project as the original TaskFlow app (separate registered app, package `com.suplist.list`). Security rules are in `firestore.rules`. Collections actually used by this app:
+Real-time sharing uses Firebase Firestore. The Firebase project is `supApps` (Contest Software's umbrella project, also holds `supAgenda`); this app is registered there under package `com.contestsoftware.suplista`. Anonymous auth is intentionally NOT enabled — sharing requires Google sign-in. Security rules are in `firestore.rules`. Collections actually used by this app:
 - `users/{uid}` — user profile (displayName)
 - `shares/{id}` — bidirectional connections between users
 - `shareRequests/{id}` — pending connection requests

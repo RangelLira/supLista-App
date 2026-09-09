@@ -102,7 +102,7 @@ export default function OnboardingScreen({ onDone }: Props) {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <Text style={s.appName}>supList</Text>
+          <Text style={s.appName}>supLista</Text>
           <Text style={s.welcomeSub}>{t.onboarding.welcomeSub}</Text>
 
           <Text style={s.sectionLabel}>{t.onboarding.languageLabel}</Text>

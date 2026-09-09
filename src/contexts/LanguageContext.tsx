@@ -106,7 +106,7 @@ const translations = {
       viewBtn: 'Ver',
     },
     lists: {
-      title: 'supList',
+      title: 'supLista',
       createBtn: 'Criar nova lista',
       sectionOpen: 'MEU PROGRESSO:',
       sectionDone: 'CONCLUÍDAS / ARQUIVADAS',
@@ -549,7 +549,7 @@ const translations = {
       waterHint: 'Você pode ativar depois em Configurações.',
       // Etapa 6 — Termos de uso
       termsTitle: 'Termos de Uso',
-      termsSubtitle: 'Leia com atenção antes de começar a usar o supList.',
+      termsSubtitle: 'Leia com atenção antes de começar a usar o supLista.',
       termsScrollHint: 'Role até o final para habilitar o botão de aceite.',
       termsAcceptBtn: 'Li e aceito os Termos de Uso',
     },
@@ -650,7 +650,7 @@ const translations = {
       viewBtn: 'View',
     },
     lists: {
-      title: 'supList',
+      title: 'supLista',
       createBtn: 'Create new list',
       sectionOpen: 'MY PROGRESS:',
       sectionDone: 'COMPLETED / ARCHIVED',
@@ -1093,7 +1093,7 @@ const translations = {
       waterHint: 'You can enable it later in Settings.',
       // Step 6 — Terms
       termsTitle: 'Terms of Use',
-      termsSubtitle: 'Read carefully before using supList.',
+      termsSubtitle: 'Read carefully before using supLista.',
       termsScrollHint: 'Scroll to the bottom to enable the accept button.',
       termsAcceptBtn: 'I have read and accept the Terms of Use',
     },
@@ -1194,7 +1194,7 @@ const translations = {
       viewBtn: 'Ver',
     },
     lists: {
-      title: 'supList',
+      title: 'supLista',
       createBtn: 'Crear nueva lista',
       sectionOpen: 'MI PROGRESO:',
       sectionDone: 'COMPLETADAS / ARCHIVADAS',
@@ -1637,7 +1637,7 @@ const translations = {
       waterHint: 'Puedes activarlo después en Configuración.',
       // Paso 6 — Términos de uso
       termsTitle: 'Términos de Uso',
-      termsSubtitle: 'Lee con atención antes de usar supList.',
+      termsSubtitle: 'Lee con atención antes de usar supLista.',
       termsScrollHint: 'Desplázate hasta el final para habilitar el botón de aceptación.',
       termsAcceptBtn: 'He leído y acepto los Términos de Uso',
     },

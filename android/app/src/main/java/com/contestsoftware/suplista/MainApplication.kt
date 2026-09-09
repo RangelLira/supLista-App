@@ -1,4 +1,4 @@
-package com.suplist.list
+package com.contestsoftware.suplista
 
 import android.app.Application
 import com.facebook.react.PackageList

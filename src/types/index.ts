@@ -1,5 +1,5 @@
 // ===========================
-// TIPOS GLOBAIS DO SUPLIST
+// TIPOS GLOBAIS DO SUPLISTA
 // ===========================
 
 export interface ListItem {

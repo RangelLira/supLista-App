@@ -27,10 +27,10 @@ import SharingScreen from './SharingScreen';
 
 type SubScreen = null | 'perfil' | 'preferencias' | 'compartilhamento' | 'sobre';
 
-// TODO: substituir pelos dados reais de contato antes do lançamento
+// TODO: definir número de WhatsApp real ou remover o botão antes do lançamento
 const CONTACT_WHATSAPP = '5511999999999';
-const CONTACT_EMAIL = 'contato@suplist.com.br';
-const CONTACT_WEBSITE = 'https://suplist.com.br';
+const CONTACT_EMAIL = 'contato.contestsoftware@gmail.com';
+const CONTACT_WEBSITE = 'https://rangellira.github.io/supLista-App/';
 
 // Ícones monocromáticos (não existe emoji do WhatsApp no Unicode)
 const CONTACT_ICON_PATHS = {
@@ -398,7 +398,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
 
         <View style={styles.aboutContainer}>
           <View style={styles.aboutTop}>
-            <Text style={styles.aboutAppName}>supList</Text>
+            <Text style={styles.aboutAppName}>supLista</Text>
             <Text style={styles.aboutVersion}>Versão 1.0</Text>
             <Text style={styles.aboutTagline}>"Faça suas próprias escolhas"</Text>
 
@@ -441,7 +441,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.aboutCopyright}>© 2026 supList. Todos os direitos reservados.</Text>
+          <Text style={styles.aboutCopyright}>© 2026 supLista. Todos os direitos reservados.</Text>
         </View>
       </View>
     );

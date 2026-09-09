@@ -100,7 +100,7 @@ describe('saveLists / loadLists', () => {
   it('salva listas no AsyncStorage', async () => {
     mockSetItem.mockResolvedValueOnce(undefined);
     await saveLists([listBase]);
-    expect(mockSetItem).toHaveBeenCalledWith('@suplist_lists', expect.any(String));
+    expect(mockSetItem).toHaveBeenCalledWith('@suplista_lists', expect.any(String));
     const saved = JSON.parse(mockSetItem.mock.calls[0][1]);
     expect(saved[0].name).toBe('Mercado da Semana');
     expect(saved[0].items).toHaveLength(1);

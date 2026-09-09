@@ -84,9 +84,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.suplist.list"
+    namespace "com.contestsoftware.suplista"
     defaultConfig {
-        applicationId "com.suplist.list"
+        applicationId "com.contestsoftware.suplista"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 13

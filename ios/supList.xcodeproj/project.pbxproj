@@ -305,7 +305,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.suplist.list";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.contestsoftware.suplista";
 				PRODUCT_NAME = supList;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -332,7 +332,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.suplist.list";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.contestsoftware.suplista";
 				PRODUCT_NAME = supList;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

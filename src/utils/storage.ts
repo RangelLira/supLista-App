@@ -22,7 +22,7 @@ export interface AppSettings {
   termsAcceptedAt?: string; // ISO timestamp
 }
 
-const SETTINGS_KEY = '@suplist_settings';
+const SETTINGS_KEY = '@suplista_settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'escuro',
@@ -48,7 +48,7 @@ export const saveSettings = async (partial: Partial<AppSettings>): Promise<void>
   }
 };
 
-const LISTS_KEY = '@suplist_lists';
+const LISTS_KEY = '@suplista_lists';
 
 // LISTAS
 export const saveLists = async (lists: ShoppingList[]): Promise<void> => {

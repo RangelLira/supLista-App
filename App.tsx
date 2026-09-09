@@ -1,5 +1,5 @@
 // ===========================
-// APP.TSX — SUPLIST
+// APP.TSX — SUPLISTA
 // Navegação principal + gerenciamento de estado global
 // ===========================
 
