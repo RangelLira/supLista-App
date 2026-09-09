@@ -13,11 +13,11 @@ import { loadSettings, saveSettings } from '../utils/storage';
 import { saveUserProfile, setAcceptsSharing, disableAllSharing, propagateDisplayName } from '../utils/firestore';
 
 // ─── Configuração do Google Sign-In ───────────────────────────────────────────
-// webClientId: Firebase Console > Configurações do projeto > Android app >
-//              google-services.json > oauth_client[type=3].client_id
+// webClientId: google-services.json > client[com.contestsoftware.suplista] >
+//              oauth_client[client_type=3].client_id  (projeto Firebase supApps)
 // Deve terminar com .apps.googleusercontent.com
 GoogleSignin.configure({
-  webClientId: '299827637081-36iqniaen93qoqi917qpi14r0m3tpgmk.apps.googleusercontent.com',
+  webClientId: '308477158046-lgm4p7c7p2spscpqslu9hja8d48s7tf8.apps.googleusercontent.com',
   offlineAccess: false,
 });
 
