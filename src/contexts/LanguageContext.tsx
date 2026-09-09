@@ -208,6 +208,7 @@ const translations = {
       menuAboutSubtitle: 'Informações do app e desenvolvimento',
       aboutContactTitle: 'Contato',
       aboutSiteLabel: 'Site oficial',
+      aboutReportIssue: 'Reportar problema (GitHub)',
       backBtn: '← Voltar',
       comingSoon: 'Em desenvolvimento',
       // Perfil
@@ -754,6 +755,7 @@ const translations = {
       menuAboutSubtitle: 'App info and development',
       aboutContactTitle: 'Contact',
       aboutSiteLabel: 'Official website',
+      aboutReportIssue: 'Report an issue (GitHub)',
       backBtn: '← Back',
       comingSoon: 'Coming soon',
       // Profile
@@ -1300,6 +1302,7 @@ const translations = {
       menuAboutSubtitle: 'Información del app y desarrollo',
       aboutContactTitle: 'Contacto',
       aboutSiteLabel: 'Sitio oficial',
+      aboutReportIssue: 'Reportar un problema (GitHub)',
       backBtn: '← Volver',
       comingSoon: 'En desarrollo',
       // Perfil
