@@ -2,7 +2,7 @@
 // TELA: ONBOARDING (primeira vez)
 // ===========================
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -42,6 +42,10 @@ export default function OnboardingScreen({ onDone }: Props) {
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [termsScrolled, setTermsScrolled] = useState(false);
+  // Medidas do ScrollView dos termos — para liberar o "Aceitar" quando o texto
+  // cabe inteiro na tela (nada a rolar → onScroll nunca dispararia).
+  const termsViewportH = useRef(0);
+  const termsContentH = useRef(0);
 
   const s = createStyles(colors);
 
@@ -84,6 +88,22 @@ export default function OnboardingScreen({ onDone }: Props) {
       setTermsScrolled(true);
     }
   };
+
+  // Libera o "Aceitar" se o conteúdo dos termos couber na tela (não há o que
+  // rolar). onLayout e onContentSizeChange podem chegar em qualquer ordem.
+  const checkTermsFit = () => {
+    const vp = termsViewportH.current;
+    const ct = termsContentH.current;
+    if (vp > 0 && ct > 0 && ct <= vp + 24) setTermsScrolled(true);
+  };
+
+  // Rede de segurança: após 8s na etapa de termos, libera o aceite de qualquer
+  // forma — nenhuma medição de tela deve prender o usuário no onboarding.
+  useEffect(() => {
+    if (step !== 'terms') return;
+    const id = setTimeout(() => setTermsScrolled(true), 8000);
+    return () => clearTimeout(id);
+  }, [step]);
 
   const handleAcceptTerms = async () => {
     await saveSettings({
@@ -299,6 +319,8 @@ export default function OnboardingScreen({ onDone }: Props) {
           style={s.termsScroll}
           contentContainerStyle={s.termsScrollContent}
           onScroll={handleTermsScroll}
+          onLayout={e => { termsViewportH.current = e.nativeEvent.layout.height; checkTermsFit(); }}
+          onContentSizeChange={(_w, h) => { termsContentH.current = h; checkTermsFit(); }}
           scrollEventThrottle={200}
           showsVerticalScrollIndicator>
           <Text style={s.termsText}>{termsText}</Text>
