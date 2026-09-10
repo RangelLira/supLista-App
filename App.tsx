@@ -64,6 +64,13 @@ function AppContent() {
   };
 
   const [lists, setLists] = useState<ShoppingList[]>([]);
+  const listsRef = useRef<ShoppingList[]>([]);
+  listsRef.current = lists;
+  // Controle do efeito de persistência: só grava depois que o boot carregou as
+  // listas (senão o `[]` inicial sobrescreveria o storage antes do loadLists),
+  // e nunca regrava exatamente o array que acabou de ser lido.
+  const listsHydratedRef = useRef(false);
+  const hydratedListsRef = useRef<ShoppingList[] | null>(null);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const catalogRef = useRef<CatalogItem[]>([]);
   catalogRef.current = catalog;
@@ -83,6 +90,8 @@ function AppContent() {
       setUserName(settings.displayName ?? '');
       setOnboardingDone(settings.onboardingDone ?? false);
       const loadedLists = await loadLists();
+      hydratedListsRef.current = loadedLists; // não regrava o que acabou de ser lido
+      listsHydratedRef.current = true;
       setLists(loadedLists);
       let cat = await loadCatalog();
       const seeded = cat.length === 0 && loadedLists.length > 0;
@@ -101,6 +110,18 @@ function AppContent() {
     };
     init();
   }, []);
+
+  // ===========================
+  // PERSISTÊNCIA — fonte única de escrita das listas
+  // ===========================
+  // Todo mutador chama só setLists; este efeito grava. Antes o saveLists era
+  // chamado de dentro do updater do setState (nos listeners e na faxina), o que
+  // é efeito colateral numa função que o React pode reexecutar → escrita dupla.
+  useEffect(() => {
+    if (!listsHydratedRef.current) return;          // boot ainda não carregou
+    if (lists === hydratedListsRef.current) return; // é o próprio valor lido
+    saveLists(lists);
+  }, [lists]);
 
   // ===========================
   // LISTENERS: ITENS COMPARTILHADOS COMIGO
@@ -125,9 +146,7 @@ function AppContent() {
             }
             return { ...incoming, isSharedWithMe: true as const };
           });
-          const updated = [...mine, ...merged];
-          saveLists(updated);
-          return updated;
+          return [...mine, ...merged];
         });
       },
       () => showToast(t.toast.syncError),
@@ -150,7 +169,6 @@ function AppContent() {
             }
             return { ...incoming, isSharedWithMe: false as const };
           });
-          saveLists(updated);
           return updated;
         });
       },
@@ -175,14 +193,10 @@ function AppContent() {
     prevSharingRef.current = sharingEnabled;
     if (was && !sharingEnabled) {
       logEvent('SYNC', 'compartilhamento desativado — faxina local');
-      setLists(current => {
-        pendingReshareRef.current = current.filter(l => l.sharedWithUid || l.isSharedWithMe).length;
-        const purged = current
-          .filter(l => !l.isSharedWithMe)
-          .map(l => (l.sharedWithUid ? { ...l, sharedWithUid: null } : l));
-        saveLists(purged);
-        return purged;
-      });
+      pendingReshareRef.current = listsRef.current.filter(l => l.sharedWithUid || l.isSharedWithMe).length;
+      setLists(current => current
+        .filter(l => !l.isSharedWithMe)
+        .map(l => (l.sharedWithUid ? { ...l, sharedWithUid: null } : l)));
     } else if (!was && sharingEnabled && pendingReshareRef.current > 0) {
       showToast(t.toast.reshareHint(pendingReshareRef.current));
       pendingReshareRef.current = 0;
@@ -237,9 +251,7 @@ function AppContent() {
   // LISTAS — CRUD
   // ===========================
   const handleSaveList = async (list: ShoppingList) => {
-    const updated = [list, ...lists];
-    setLists(updated);
-    await saveLists(updated);
+    setLists([list, ...lists]);
     logEvent('LIST', 'criar', { id: list.id, nome: list.name, tipo: list.type, tag: list.tag_name });
   };
 
@@ -251,9 +263,7 @@ function AppContent() {
     } else if (!list.isCompleted && prev?.isCompleted) {
       stamped = { ...list, completedAt: null };
     }
-    const updated = lists.map(l => l.id === list.id ? stamped : l);
-    setLists(updated);
-    await saveLists(updated);
+    setLists(lists.map(l => l.id === list.id ? stamped : l));
     logEvent('LIST', 'update', prev ? {
       id: list.id,
       itens: prev.items.length === list.items.length ? list.items.length : `${prev.items.length}->${list.items.length}`,
@@ -277,9 +287,7 @@ function AppContent() {
 
   const handleDeleteList = async (id: number) => {
     const list = lists.find(l => l.id === id);
-    const updated = lists.filter(l => l.id !== id);
-    setLists(updated);
-    await saveLists(updated);
+    setLists(lists.filter(l => l.id !== id));
     logEvent('LIST', 'excluir', { id, nome: list?.name, itens: list?.items.length });
     if (list) await removeSharedList(list);
   };
