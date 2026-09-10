@@ -20,8 +20,10 @@ import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { ScreenName, ShoppingList } from './src/types';
-import { loadLists, loadSettings, saveLists } from './src/utils/storage';
+import { CatalogItem, ListItem, ScreenName, ShoppingList } from './src/types';
+import {
+  loadCatalog, loadLists, loadSettings, mergeIntoCatalog, saveCatalog, saveLists, seedCatalogFromLists,
+} from './src/utils/storage';
 import {
   listenToSharedListsWithMe, listenToMySharedLists,
   updateSharedList, deleteSharedListDoc,
@@ -59,6 +61,9 @@ function AppContent() {
   };
 
   const [lists, setLists] = useState<ShoppingList[]>([]);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const catalogRef = useRef<CatalogItem[]>([]);
+  catalogRef.current = catalog;
   const [activeScreen, setActiveScreen] = useState<ScreenName>('listas');
   const [screenHistory, setScreenHistory] = useState<ScreenName[]>([]);
 
@@ -73,7 +78,14 @@ function AppContent() {
       const settings = await loadSettings();
       setUserName(settings.displayName ?? '');
       setOnboardingDone(settings.onboardingDone ?? false);
-      setLists(await loadLists());
+      const loadedLists = await loadLists();
+      setLists(loadedLists);
+      let cat = await loadCatalog();
+      if (cat.length === 0 && loadedLists.length > 0) {
+        cat = seedCatalogFromLists(loadedLists);
+        saveCatalog(cat);
+      }
+      setCatalog(cat);
     };
     init();
   }, []);
@@ -228,6 +240,15 @@ function AppContent() {
     await syncSharedList(stamped);
   };
 
+  // Registra itens no catálogo universal (histórico que sobrevive à exclusão de listas).
+  const recordItems = async (items: ListItem[], type: 'compras' | 'tarefas') => {
+    if (!items.length) return;
+    const next = mergeIntoCatalog(catalogRef.current, items, type);
+    catalogRef.current = next;
+    setCatalog(next);
+    await saveCatalog(next);
+  };
+
   const handleDeleteList = async (id: number) => {
     const list = lists.find(l => l.id === id);
     const updated = lists.filter(l => l.id !== id);
@@ -246,9 +267,11 @@ function AppContent() {
           <ListsScreen
             userName={userName}
             lists={lists}
+            catalog={catalog}
             onSaveList={handleSaveList}
             onUpdateList={handleUpdateList}
             onDeleteList={handleDeleteList}
+            onRecordItems={recordItems}
             onOpenSettings={openSettings}
           />
         );

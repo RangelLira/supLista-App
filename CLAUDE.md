@@ -34,11 +34,12 @@ bundle exec pod install
 **supLista** is a React Native shopping/task list app (Android/iOS), forked from a larger productivity app (TaskFlow) and stripped down to just the lists feature. Package id `com.contestsoftware.suplista` (developer: Contest Software). The RN module name (`app.json` `name`, `getMainComponentName`, iOS `withModuleName`) is `supLista`. The iOS Xcode project/folder/target are still named `supList` — deliberately not renamed (invisible, risky Xcode surgery); only the bundle id and display name changed. All app logic lives in `App.tsx` and `src/`.
 
 ### State Management
-There is no external state library. `App.tsx` is the single source of truth — it holds the full `lists` array in `useState` and passes it down as props. All mutations go through handlers defined in `App.tsx`, which call `saveLists` from `src/utils/storage.ts` to persist to AsyncStorage after every change.
+There is no external state library. `App.tsx` is the single source of truth — it holds the full `lists` array in `useState` and passes it down as props. All mutations go through handlers defined in `App.tsx`, which call `saveLists` from `src/utils/storage.ts` to persist to AsyncStorage after every change. `App.tsx` also holds the **item catalog** (`catalog: CatalogItem[]`) and a `recordItems(items, type)` handler threaded down through `ListsScreen` → `ShoppingListScreen`; every item add/edit/inherit/search-add calls it so the catalog accumulates.
 
 ### Data Model (`src/types/index.ts`)
 - **`ShoppingList`** — the only content entity. Supports both shopping (`type: 'compras'`) and task (`type: 'tarefas'`) lists. `isArchived` exists on the type but nothing in the app currently sets it to `true` (the old archive flow was removed) — it's effectively always `false`; don't build new features assuming lists can be archived without first wiring an entry point. `notes?: string` is free-text (plain string).
-- **`ListItem`** — quantity, unit, checked state, optional price (`priceType: 'unit' | 'total'`).
+- **`ListItem`** — quantity, unit, checked state, optional price (`priceType: 'unit' | 'total'`). Price is always optional; it can be set/edited inline in `AddItemModal` (there is no separate price dialog).
+- **`CatalogItem`** — one distinct item the user has ever added (`name` + `type` key), with `unit`, `lastPrice`, `priceType`, `lastUsedAt`, `useCount`. Survives list deletion — it's the history behind "Pesquisar meus itens". Merge/prune logic in `mergeIntoCatalog` (`src/utils/storage.ts`), capped at 500 (LRU).
 
 ### Screens (`src/screens/`)
 Navigation is manual — `App.tsx` maintains `activeScreen: ScreenName` (`'listas' | 'config'`) and renders the matching screen. There is no navigation library and **no bottom tab bar** — this app has one primary screen (Listas), so navigation to Settings is a single hamburger button (see below).
@@ -53,8 +54,11 @@ A 3-white-bar hamburger button (`menuBtn`/`menuBtnBar` styles, positioned `absol
 Both `ListsScreen` and `ShoppingListScreen` receive the same `onOpenSettings` callback (threaded through as a prop); `SettingsScreen` receives `onGoHome`. When adding a new screen, wire its header the same way rather than introducing a different navigation affordance — this is the one deliberate exception to the "header stays plain" convention that most screens follow.
 
 ### Key Flows
-- **Startup**: `init()` in `App.tsx` loads settings + lists (no auto-migration or cleanup runs — there is no auto-delete-after-completion policy in this app; deleting a list is always a manual, final user action).
+- **Startup**: `init()` in `App.tsx` loads settings + lists + catalog (no auto-migration or cleanup runs — there is no auto-delete-after-completion policy in this app; deleting a list is always a manual, final user action). If the catalog is empty but lists exist, it's seeded once from those lists (`seedCatalogFromLists`).
+- **Creating a list**: `CreateListForm` always creates an **empty** list (no "inherit from previous list" — that concept moved into Adicionar Item, see below). After save the user stays on the **Listas** screen (does NOT auto-open the new list); they tap the card to enter it.
 - **Completing a list**: `handleUpdateList` in `App.tsx` stamps `completedAt` when `isCompleted` flips true→false or false→true (cleared on reopen).
+- **Adicionar Item** (`AddItemModal`): name + qty/unit + optional **price** (with per-unit/total toggle when qty > 1), all inline. Two extra buttons (add mode only): **Herdar item de lista** — active only when another list of the *same type* has items; opens `InheritItemsView` (full-screen, multi-select across several source lists, dedups against current items). **Pesquisar meus itens** — opens `SearchItemsView` (full-screen, autocomplete over the catalog; tap a result to add it immediately, "Concluído" to return). Both are full-screen conditional renders inside `ShoppingListScreen` driven by `subView` state, NOT `<Modal>` (ScrollView-in-Modal Android bug).
+- **Calculadora**: `ShoppingListScreen` renders `Total: R$ x,xx` (plain text, `colors.textPrimary`, at the end of the item list) whenever a *checked* item has a price. Sum is over **checked items only**. If any checked item has no price, a `* Existem itens com preço não informado.` line shows under it. Missing prices never block completing/reopening items or lists.
 - **No archiving, no backup**: both were deliberately removed. Lists live only in AsyncStorage on-device. If the user uninstalls the app or loses the device, list data is unrecoverable — this is disclosed in the Terms of Use (`src/content/termsOfService.ts`).
 
 ### Animation System
@@ -82,14 +86,16 @@ All colors and reusable styles are in `src/styles/theme.ts` (`colors` object + `
 
 **Card pattern:** List cards are non-expandable single-line rows. Tap → opens list detail (`ShoppingListScreen`). Swipe right → complete/reopen. Swipe left → delete.
 
-**List detail action row:** exactly 4 buttons in a single row (`actionBarRow`/`actionBarBtn` styles), positioned right below the progress bar and above the item list: Anotações | Compartilhar (or Sair if `isSharedWithMe`) | Excluir | Concluir/Reabrir. There is no Editar or Arquivar button — renaming a list is done by tapping its title in the header (`handleStartEditName`), and archiving doesn't exist. Only "Adicionar Item" stays fixed at the bottom.
+**List detail action row:** exactly 4 buttons in a single row (`actionBarRow`/`actionBarBtn` styles), positioned right below the progress bar and above the item list: Anotações | Compartilhar (or Sair if `isSharedWithMe`) | Excluir | Concluir/Reabrir. There is no Editar or Arquivar button — renaming a list is done by tapping its title in the header (`handleStartEditName`), and archiving doesn't exist. Only "Adicionar Item" stays fixed at the bottom. The list header subtitle shows only `Compras • 3/10` — no running total there; the total lives at the end of the item list (see "Calculadora" under Key Flows).
+
+**Item price display:** an item with a price shows `R$ x.xx` (green, `priceText`); tapping it opens the edit modal. An item without a price shows nothing (no "add price" button — that was removed; price is edited via `AddItemModal`).
 
 **Anotações** (short text) uses the small centered `modalOverlay`/`modalContent` card with a `TextInput` — fine, since a `TextInput` scrolls its own content natively.
 
 **Termos de Uso (and anything else with a long scrollable document)** is rendered as a **plain conditional full-screen view inside the normal component tree** (see `SettingsScreen.tsx`'s `subScreen === 'sobre' && showTerms` branch) — header + `ScrollView(flex:1)` + fixed bottom button — **not** wrapped in RN's `<Modal>`. A `ScrollView` inside `<Modal>` has a known Android bug where it renders full-screen but does not respond to scroll/swipe gestures at all (confirmed by hand: `presentationStyle="fullScreen"` + `ScrollView` inside `<Modal>` displayed correctly but never scrolled on a real Android device). If a screen needs both "full-screen" and "scrollable", make it a real screen/conditional render, not a `Modal`. This also means the small `modalOverlay`/`modalContent` card pattern's tap-outside-to-close trick (nesting a `TouchableOpacity` inside another) should stay reserved for short, non-scrolling forms only.
 
 ### Forms / Modals
-`CreateListForm`, `AddItemModal`, `AddPriceModal` are all defined inside `src/components/ShoppingList.tsx` and use the small centered `modalOverlay`/`modalContent` pattern from `globalStyles`.
+`CreateListForm` and `AddItemModal` are defined inside `src/components/ShoppingList.tsx` and use the small centered `modalOverlay`/`modalContent` pattern from `globalStyles` (`AddItemModal`'s card content is wrapped in a bounded `ScrollView` since the price field + tool buttons made it taller). The old `AddPriceModal` was removed — price is now a field inside `AddItemModal`. `InheritItemsView` and `SearchItemsView` (same file) are full-screen conditional renders, not modals.
 
 **Android back button rule:** Every full-screen `Modal` must include `onRequestClose={onClose}`. Without this prop, the Android hardware back button does not fire inside Modals.
 
@@ -97,7 +103,7 @@ All colors and reusable styles are in `src/styles/theme.ts` (`colors` object + `
 Used by `CreateListForm`. Renders 7 preset tag chips + 1 "Personalizar" chip in a 4×2 grid, always followed by a custom text input. See inline comments in the component for the sentinel/sync-guard details — behavior is unchanged from before the fork.
 
 ### Persistence
-AsyncStorage keys: `@suplista_lists` (lists), `@suplista_settings` (settings). All reads/writes go through `src/utils/storage.ts`.
+AsyncStorage keys: `@suplista_lists` (lists), `@suplista_settings` (settings), `@suplista_item_catalog` (item history for "Pesquisar meus itens"). All reads/writes go through `src/utils/storage.ts`.
 
 ### Internationalization (i18n)
 All user-visible strings **must** use the translation system. Never hardcode visible text.

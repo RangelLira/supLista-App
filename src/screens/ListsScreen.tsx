@@ -23,7 +23,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
-import { ShoppingList } from '../types';
+import { CatalogItem, ListItem, ShoppingList } from '../types';
 import { exitSharedList, shareList, unshareList } from '../utils/firestore';
 import { formatHeaderDate } from '../utils/dateUtils';
 
@@ -32,9 +32,11 @@ let hasPlayedAnimation = false;
 interface Props {
   userName: string;
   lists: ShoppingList[];
+  catalog: CatalogItem[];
   onSaveList: (list: ShoppingList) => void;
   onUpdateList: (list: ShoppingList) => void;
   onDeleteList: (id: number) => void;
+  onRecordItems: (items: ListItem[], type: 'compras' | 'tarefas') => void;
   onOpenSettings?: () => void;
 }
 
@@ -273,7 +275,7 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
-export default function ListsScreen({ userName, lists, onSaveList, onUpdateList, onDeleteList, onOpenSettings }: Props) {
+export default function ListsScreen({ userName, lists, catalog, onSaveList, onUpdateList, onDeleteList, onRecordItems, onOpenSettings }: Props) {
   const { colors, globalStyles } = useTheme();
   const { t, lang } = useLanguage();
   const { userId } = useFirebase();
@@ -530,6 +532,8 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
           onUpdate={onUpdateList}
           onDelete={onDeleteList}
           onOpenSettings={onOpenSettings}
+          catalog={catalog}
+          onRecordItems={onRecordItems}
           allLists={lists.filter(l => !l.isArchived)}
           onNavigateToList={(id) => {
             const target = lists.find(l => l.id === id);
@@ -650,9 +654,10 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
         visible
         onClose={() => setShowCreateForm(false)}
         onSave={(newList) => {
+          // Fluxo pós-criação: volta para a tela principal (não entra na lista).
           onSaveList(newList);
-          setSelectedList(newList);
           setShowCreateForm(false);
+          showToast(t.toast.listCreated);
         }}
         existingLists={lists}
       />

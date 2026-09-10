@@ -34,6 +34,18 @@ export interface ShoppingList {
   completedAt?: string | null; // ISO timestamp de quando foi concluída
 }
 
+// Catálogo universal de itens já adicionados (persiste mesmo após excluir listas).
+// Alimenta a busca "Pesquisar meus itens" dentro de Adicionar Item.
+export interface CatalogItem {
+  name: string;
+  type: 'compras' | 'tarefas';
+  unit: string | null;
+  lastPrice: number | null;
+  priceType?: 'unit' | 'total';
+  lastUsedAt: number; // Date.now()
+  useCount: number;
+}
+
 export type ScreenName = 'listas' | 'config';
 
 export const AVAILABLE_UNITS = [

@@ -8,8 +8,11 @@ import {
   saveSettings,
   loadLists,
   saveLists,
+  loadCatalog,
+  mergeIntoCatalog,
+  seedCatalogFromLists,
 } from '../../src/utils/storage';
-import { ShoppingList } from '../../src/types';
+import { CatalogItem, ListItem, ShoppingList } from '../../src/types';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -119,5 +122,66 @@ describe('saveLists / loadLists', () => {
     mockGetItem.mockResolvedValueOnce(null);
     const lists = await loadLists();
     expect(lists).toEqual([]);
+  });
+});
+
+// ===========================
+// catálogo de itens
+// ===========================
+
+describe('mergeIntoCatalog', () => {
+  const item = (over: Partial<ListItem> = {}): ListItem => ({
+    id: 1, name: 'Arroz', quantity: 1, unit: 'kg', isChecked: false, price: null, ...over,
+  });
+
+  it('adiciona item novo', () => {
+    const out = mergeIntoCatalog([], [item()], 'compras');
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: 'Arroz', type: 'compras', unit: 'kg', useCount: 1 });
+  });
+
+  it('incrementa useCount e atualiza preço/unidade de item conhecido', () => {
+    const seed: CatalogItem[] = [
+      { name: 'Arroz', type: 'compras', unit: 'kg', lastPrice: null, priceType: 'unit', lastUsedAt: 1, useCount: 1 },
+    ];
+    const out = mergeIntoCatalog(seed, [item({ name: ' arroz ', price: 9.9, priceType: 'unit' })], 'compras');
+    expect(out).toHaveLength(1);
+    expect(out[0].useCount).toBe(2);
+    expect(out[0].lastPrice).toBe(9.9);
+    expect(out[0].lastUsedAt).toBeGreaterThan(1);
+  });
+
+  it('separa mesmo nome por tipo de lista', () => {
+    let cat = mergeIntoCatalog([], [item({ name: 'Comprar leite' })], 'compras');
+    cat = mergeIntoCatalog(cat, [item({ name: 'Comprar leite' })], 'tarefas');
+    expect(cat).toHaveLength(2);
+  });
+
+  it('poda para no máximo 500 entradas mantendo as mais recentes', () => {
+    const many: ListItem[] = Array.from({ length: 600 }, (_, i) => item({ id: i, name: `Item ${i}` }));
+    const out = mergeIntoCatalog([], many, 'compras');
+    expect(out).toHaveLength(500);
+  });
+});
+
+describe('seedCatalogFromLists / loadCatalog', () => {
+  it('semeia a partir dos itens das listas', () => {
+    const lists: ShoppingList[] = [
+      {
+        id: 1, name: 'A', type: 'compras', suppliers: [], createdAt: '', isCompleted: false,
+        isArchived: false, totalSpent: 0, completedAt: null,
+        items: [
+          { id: 1, name: 'Arroz', quantity: 1, unit: 'kg', isChecked: false, price: 5, priceType: 'unit' },
+          { id: 2, name: 'Feijão', quantity: 1, unit: null, isChecked: true, price: null },
+        ],
+      },
+    ];
+    const cat = seedCatalogFromLists(lists);
+    expect(cat.map(c => c.name).sort()).toEqual(['Arroz', 'Feijão']);
+  });
+
+  it('loadCatalog retorna [] quando vazio', async () => {
+    mockGetItem.mockResolvedValueOnce(null);
+    expect(await loadCatalog()).toEqual([]);
   });
 });
