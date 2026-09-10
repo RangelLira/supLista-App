@@ -70,6 +70,11 @@ On first mount: header falls from top (spring), progress bar animates from 100% 
 
 **DEV RESET button**: `ListsScreen` exposes a `RESET` button in the header (top-right, opposite side from the hamburger) that re-triggers the animation sequence. Only rendered inside `{__DEV__ && ...}`.
 
+### Dev tools (`src/dev/`, `__DEV__` only — never in release)
+Settings → Sobre shows two extra buttons inside `{__DEV__ && ...}` ("🐞 Log" / "👥 Fake user"). They open `DevPanel` (`src/dev/DevPanel.tsx`), a full-screen conditional render (not `<Modal>`) driven by `showDev` state in `SettingsScreen`. `DevPanel` is loaded via a **conditional `require`** (`__DEV__ ? require('../dev/DevPanel').default : null`) so Metro drops it from release bundles.
+- **devLog** (`src/dev/devLog.ts`): ring buffer (5000 lines) persisted to `@suplista_devlog`, plus a `console.warn`/`console.error` hook. `initDevLog()` is called once from `App.tsx` `init()`; `logEvent(tag, msg, data?)` is a no-op outside `__DEV__` and is sprinkled through `App.tsx` handlers (`handleSaveList`/`handleUpdateList`/`handleDeleteList`/`recordItems`/`syncSharedList`/listeners/nav). Log tab: copy last 1000 lines / share / clear.
+- **fakeData** (`src/dev/fakeData.ts` + `pools.ts`): `generateFakeData({seed})` builds ~280 lists / ~4300 items (1 list of 1000, ~9 lists >100, rest ≤10), preset + custom tags, both types, no sharing. Deterministic per seed. Returns `{ lists, catalog, report }`; the report is a plain-text summary shown in DevPanel (copy / share). "Limpar tudo" wipes `@suplista_lists` + `@suplista_item_catalog` (keeps settings/onboarding). After Fake user / Limpar tudo, `DevSettings.reload()` restarts the JS.
+
 **Swipe animation rule**: After a card flies off (PanResponder dx > 80 or < -80), reset `translateX` via `Animated.timing(translateX, {toValue: 0, duration: 100})` — never via `translateX.setValue(0)`. The `setValue` call can be lost in transit when `useNativeDriver: true` is active, causing the card to stay invisible on its next render.
 
 ### Card Ordering (stable)

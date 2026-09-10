@@ -25,6 +25,11 @@ import { propagateDisplayName, setUserDisplayName } from '../utils/firestore';
 import { termsOfService } from '../content/termsOfService';
 import SharingScreen from './SharingScreen';
 
+// Painel de ferramentas de DEV — carregado só em builds de desenvolvimento.
+// Em release, __DEV__ é false e o Metro elimina o require (nada é empacotado).
+const DevPanel: React.ComponentType<{ initialTab?: 'menu' | 'log'; onClose: () => void }> | null =
+  __DEV__ ? require('../dev/DevPanel').default : null;
+
 type SubScreen = null | 'perfil' | 'preferencias' | 'compartilhamento' | 'sobre';
 
 const CONTACT_EMAIL = 'contato.contestsoftware@gmail.com';
@@ -60,6 +65,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
   const [localDisplayName, setLocalDisplayName] = useState('');
   const [showTerms, setShowTerms] = useState(false);
+  const [showDev, setShowDev] = useState<'menu' | 'log' | null>(null);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
@@ -354,6 +360,13 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   }
 
   // ===========================
+  // PAINEL DE DEV (só __DEV__) — tela cheia, render condicional
+  // ===========================
+  if (subScreen === 'sobre' && showDev && DevPanel) {
+    return <DevPanel initialTab={showDev} onClose={() => setShowDev(null)} />;
+  }
+
+  // ===========================
   // TERMOS DE USO (tela cheia, dentro do fluxo normal — não usa <Modal>
   // porque ScrollView dentro de Modal tem um bug conhecido de não rolar no Android)
   // ===========================
@@ -438,6 +451,24 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
             <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(true)}>
               <Text style={globalStyles.buttonPrimaryText}>Ver termos de uso</Text>
             </TouchableOpacity>
+
+            {__DEV__ && (
+              <>
+                <View style={styles.aboutDivider} />
+                <View style={styles.devRow}>
+                  <TouchableOpacity
+                    style={[styles.devBtn, { backgroundColor: colors.bgSecondary }]}
+                    onPress={() => setShowDev('log')}>
+                    <Text style={styles.devBtnText}>🐞 Log</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.devBtn, { backgroundColor: colors.warning }]}
+                    onPress={() => setShowDev('menu')}>
+                    <Text style={styles.devBtnText}>👥 Fake user</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
 
           <Text style={styles.aboutCopyright}>© 2026 supLista. Todos os direitos reservados.</Text>
@@ -629,4 +660,9 @@ function createStyles(c: typeof import('../styles/theme').darkColors) { return S
   },
 
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+
+  // DEV (só __DEV__)
+  devRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  devBtn: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  devBtnText: { color: 'white', fontSize: 13, fontWeight: '700' },
 }); }

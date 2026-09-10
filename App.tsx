@@ -28,6 +28,7 @@ import {
   listenToSharedListsWithMe, listenToMySharedLists,
   updateSharedList, deleteSharedListDoc,
 } from './src/utils/firestore';
+import { initDevLog, logEvent } from './src/dev/devLog';
 
 function AppContent() {
   const { colors, theme } = useTheme();
@@ -44,9 +45,11 @@ function AppContent() {
       if (list.isSharedWithMe && list.ownerUid) {
         // Receptor editando — propaga para o documento do dono
         await updateSharedList(list, list.ownerUid);
+        logEvent('SYNC', 'push (receptor)', { id: list.id });
       } else if (!list.isSharedWithMe && list.sharedWithUid) {
         // Dono editando — propaga para o próprio documento
         await updateSharedList(list, userId);
+        logEvent('SYNC', 'push (dono)', { id: list.id });
       }
     } catch (err) {
       console.warn('[syncSharedList] falha ao sincronizar lista compartilhada:', err);
@@ -75,17 +78,26 @@ function AppContent() {
   // ===========================
   useEffect(() => {
     const init = async () => {
+      initDevLog();
       const settings = await loadSettings();
       setUserName(settings.displayName ?? '');
       setOnboardingDone(settings.onboardingDone ?? false);
       const loadedLists = await loadLists();
       setLists(loadedLists);
       let cat = await loadCatalog();
-      if (cat.length === 0 && loadedLists.length > 0) {
+      const seeded = cat.length === 0 && loadedLists.length > 0;
+      if (seeded) {
         cat = seedCatalogFromLists(loadedLists);
         saveCatalog(cat);
       }
       setCatalog(cat);
+      logEvent('APP', 'init', {
+        listas: loadedLists.length,
+        itens: loadedLists.reduce((s, l) => s + l.items.length, 0),
+        catalogo: cat.length,
+        catalogoSemeado: seeded,
+        onboarding: settings.onboardingDone ?? false,
+      });
     };
     init();
   }, []);
@@ -100,6 +112,7 @@ function AppContent() {
     const unsubLists = listenToSharedListsWithMe(
       userId,
       (sharedLists) => {
+        logEvent('SYNC', 'snapshot: compartilhadas comigo', { docs: sharedLists.length });
         setLists(current => {
           const mine = current.filter(l => !l.isSharedWithMe);
           const merged = sharedLists.map(incoming => {
@@ -125,6 +138,7 @@ function AppContent() {
     const unsubMyLists = listenToMySharedLists(
       userId,
       (sharedLists) => {
+        logEvent('SYNC', 'snapshot: minhas compartilhadas', { docs: sharedLists.length });
         setLists(current => {
           const updated = current.map(l => {
             if (l.isSharedWithMe) return l; // essas vêm do outro listener
@@ -160,6 +174,7 @@ function AppContent() {
     const was = prevSharingRef.current;
     prevSharingRef.current = sharingEnabled;
     if (was && !sharingEnabled) {
+      logEvent('SYNC', 'compartilhamento desativado — faxina local');
       setLists(current => {
         pendingReshareRef.current = current.filter(l => l.sharedWithUid || l.isSharedWithMe).length;
         const purged = current
@@ -202,6 +217,7 @@ function AppContent() {
   // NAVEGAÇÃO
   // ===========================
   const openSettings = () => {
+    logEvent('NAV', 'abrir configurações', { de: activeScreen });
     setScreenHistory(prev => [...prev, activeScreen]);
     setActiveScreen('config');
   };
@@ -224,6 +240,7 @@ function AppContent() {
     const updated = [list, ...lists];
     setLists(updated);
     await saveLists(updated);
+    logEvent('LIST', 'criar', { id: list.id, nome: list.name, tipo: list.type, tag: list.tag_name });
   };
 
   const handleUpdateList = async (list: ShoppingList) => {
@@ -237,6 +254,14 @@ function AppContent() {
     const updated = lists.map(l => l.id === list.id ? stamped : l);
     setLists(updated);
     await saveLists(updated);
+    logEvent('LIST', 'update', prev ? {
+      id: list.id,
+      itens: prev.items.length === list.items.length ? list.items.length : `${prev.items.length}->${list.items.length}`,
+      marcados: `${prev.items.filter(i => i.isChecked).length}/${list.items.length}`,
+      ...(prev.name !== list.name ? { nome: `"${prev.name}"->"${list.name}"` } : {}),
+      ...(prev.isCompleted !== list.isCompleted ? { concluida: list.isCompleted } : {}),
+      ...((prev.notes ?? '') !== (list.notes ?? '') ? { notas: (list.notes ?? '').length } : {}),
+    } : { id: list.id, semPrev: true });
     await syncSharedList(stamped);
   };
 
@@ -247,6 +272,7 @@ function AppContent() {
     catalogRef.current = next;
     setCatalog(next);
     await saveCatalog(next);
+    logEvent('CATALOG', 'record', { itens: items.length, tipo: type, catalogo: next.length });
   };
 
   const handleDeleteList = async (id: number) => {
@@ -254,6 +280,7 @@ function AppContent() {
     const updated = lists.filter(l => l.id !== id);
     setLists(updated);
     await saveLists(updated);
+    logEvent('LIST', 'excluir', { id, nome: list?.name, itens: list?.items.length });
     if (list) await removeSharedList(list);
   };
 
