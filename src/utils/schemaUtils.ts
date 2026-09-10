@@ -5,6 +5,20 @@
 // todos os campos com valores válidos (evita crashes por undefined).
 
 import { ShoppingList } from '../types';
+import { nextId } from './id';
+
+// Um id só serve como chave estável se for um número finito. Dados corrompidos
+// ou de versões muito antigas podem trazer id undefined/null/string — nesse caso
+// gera um novo (evita key duplicada e seleção/exclusão errada).
+const coerceId = (v: any, seedIso?: string): number => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  // Para listas: tenta derivar de createdAt (estável entre reinícios).
+  if (seedIso) {
+    const t = Date.parse(seedIso);
+    if (Number.isFinite(t)) return t;
+  }
+  return nextId();
+};
 
 /**
  * Garante que uma ShoppingList carregada do AsyncStorage tenha todos os campos.
@@ -21,12 +35,12 @@ export const migrateListSchema = (raw: any): ShoppingList => {
   }
 
   return {
-    id: raw.id,
+    id: coerceId(raw.id, raw.createdAt),
     name: raw.name ?? '',
     type: raw.type ?? 'compras',
     suppliers: raw.suppliers ?? [],
     items: (raw.items ?? []).map((item: any) => ({
-      id: item.id,
+      id: coerceId(item.id),
       name: item.name ?? '',
       quantity: item.quantity ?? 1,
       unit: item.unit ?? null,

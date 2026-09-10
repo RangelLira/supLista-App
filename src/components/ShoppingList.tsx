@@ -23,6 +23,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
 import { CatalogItem, ShoppingList, ListItem, AVAILABLE_UNITS } from '../types';
+import { nextId } from '../utils/id';
 import { normalizePrice } from '../utils/priceUtils';
 import SwipeRow from './SwipeRow';
 import TagPicker from './TagPicker';
@@ -268,9 +269,8 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
       return;
     }
 
-    const now = Date.now();
     const newList: ShoppingList = {
-      id: now,
+      id: nextId(),
       name: listName.trim(),
       type: listType,
       tag_name: tagName.trim() || 'Geral',
@@ -424,7 +424,7 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
 
     const savedItem: ListItem = editItem
       ? { ...editItem, name: itemName.trim(), quantity: listType === 'compras' ? qtyNum : 1, unit: listType === 'compras' ? selectedUnit : null, price: parsedPrice, priceType }
-      : { id: Date.now(), name: itemName.trim(), quantity: listType === 'compras' ? qtyNum : 1, unit: listType === 'compras' ? selectedUnit : null, isChecked: false, price: parsedPrice, priceType };
+      : { id: nextId(), name: itemName.trim(), quantity: listType === 'compras' ? qtyNum : 1, unit: listType === 'compras' ? selectedUnit : null, isChecked: false, price: parsedPrice, priceType };
 
     if (!editItem) {
       // Já existe item com o mesmo nome? (em compras, também precisa ser a mesma unidade)
@@ -629,9 +629,8 @@ function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onCo
   const chosen = Object.values(selected);
 
   const confirm = () => {
-    const base = Date.now();
-    const items: ListItem[] = chosen.map((it, i) => ({
-      id: base + i + 1,
+    const items: ListItem[] = chosen.map(it => ({
+      id: nextId(),
       name: it.name,
       quantity: it.quantity,
       unit: it.unit,
@@ -748,7 +747,7 @@ function SearchItemsView({ catalog, existingItems, onAdd, onDone }: SearchItemsV
   const add = (e: CatalogItem) => {
     if (inList(e.name)) return;
     onAdd({
-      id: Date.now() + addedNames.length,
+      id: nextId(),
       name: e.name,
       quantity: 1,
       unit: e.unit,

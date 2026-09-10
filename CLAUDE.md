@@ -143,7 +143,7 @@ Real-time sharing uses Firebase Firestore. The Firebase project is `supApps` (Co
 **Critical rule:** When processing Firestore snapshots, always process the snapshot data directly — never make additional queries inside a snapshot callback.
 
 ### ID Generation
-IDs use `Date.now()` (timestamp in ms). Risk: collision if two items are created within the same millisecond. Do not rely on IDs being unique across users in shared scenarios.
+List and item IDs come from `nextId()` (`src/utils/id.ts`) — a millisecond timestamp that's forced strictly increasing, so two entities created in the same ms (create list + add item, inherit several items, fast taps) never collide within a session, and a new session's `Date.now()` is always above the previous session's IDs. Never use bare `Date.now()` for an id. `migrateListSchema` repairs a missing/non-numeric id on load (derives from `createdAt` when possible, else `nextId()`). IDs are still not unique across users — don't rely on that in shared scenarios. The fake-data generator (`src/dev/fakeData.ts`) keeps its own decreasing-counter scheme for determinism.
 
 ### Schema Safety
 Fields may be `undefined` on data loaded from older versions of the app. Always use nullish coalescing. `migrateListSchema` in `src/utils/schemaUtils.ts` is called automatically in `loadLists()` at startup.
