@@ -21,7 +21,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
-import { CatalogItem, ShoppingList, ListItem, AVAILABLE_UNITS } from '../types';
+import { ShoppingList, ListItem, AVAILABLE_UNITS, TASK_UNIT } from '../types';
 import { nextId } from '../utils/id';
 import { normalizePrice } from '../utils/priceUtils';
 import SwipeRow from './SwipeRow';
@@ -232,7 +232,6 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
   const nameInputRef = useRef<TextInput>(null);
 
   const [listName, setListName] = useState('');
-  const [listType, setListType] = useState<'compras' | 'tarefas'>('compras');
   const [tagName, setTagName] = useState('');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [customInputFocused, setCustomInputFocused] = useState(false);
@@ -271,19 +270,18 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
     const newList: ShoppingList = {
       id: nextId(),
       name: listName.trim(),
-      type: listType,
       tag_name: tagName.trim() || 'Geral',
       suppliers: [],
       items: [],
       createdAt: new Date().toISOString(),
       isCompleted: false,
       isArchived: false,
+      archivedAt: null,
       totalSpent: 0,
     };
 
     onSave(newList);
     setListName('');
-    setListType('compras');
     setTagName('');
     onClose();
   };
@@ -309,7 +307,7 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
             style={globalStyles.input}
             value={listName}
             onChangeText={setListName}
-            placeholder={listType === 'compras' ? t.lists.placeholderShopping : t.lists.placeholderTasks}
+            placeholder={t.lists.placeholderShopping}
             placeholderTextColor="#666"
             maxLength={40}
           />
@@ -317,25 +315,6 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
           {/* TAG */}
           <Text style={globalStyles.inputLabel}>{t.lists.tagLabel}</Text>
           <TagPicker value={tagName} onChange={setTagName} onInputFocusChange={setCustomInputFocused} />
-
-          {/* TIPO DE LISTA */}
-          <Text style={globalStyles.inputLabel}>{t.lists.typeLabel}</Text>
-          <View style={styles.typeRow}>
-            <TouchableOpacity
-              style={[styles.typeButton, listType === 'compras' && styles.typeButtonSelected]}
-              onPress={() => setListType('compras')}>
-              <Text style={[styles.typeButtonText, listType === 'compras' && styles.typeButtonTextSelected]}>
-                {t.lists.typeShopping}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.typeButton, listType === 'tarefas' && styles.typeButtonSelected]}
-              onPress={() => setListType('tarefas')}>
-              <Text style={[styles.typeButtonText, listType === 'tarefas' && styles.typeButtonTextSelected]}>
-                {t.lists.typeTasks}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
 
         {!keyboardVisible && !customInputFocused && (
@@ -360,17 +339,15 @@ interface AddItemModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (item: ListItem) => void;
-  listType: 'compras' | 'tarefas';
   editItem?: ListItem | null;
   existingItems?: ListItem[];
-  allLists?: ShoppingList[];
-  currentListId?: number;
+  canInherit?: boolean;
   onOpenInherit?: () => void;
   onOpenSearch?: () => void;
 }
 
-function AddItemModal({ visible, onClose, onSave, listType, editItem, existingItems = [],
-  allLists = [], currentListId, onOpenInherit, onOpenSearch }: AddItemModalProps) {
+function AddItemModal({ visible, onClose, onSave, editItem, existingItems = [],
+  canInherit = false, onOpenInherit, onOpenSearch }: AddItemModalProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -408,29 +385,35 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
 
   const getUnitLabel = () => t.units[selectedUnit as keyof typeof t.units] ?? (AVAILABLE_UNITS.find(u => u.value === selectedUnit)?.label || 'Unidade');
 
+  const isTask = selectedUnit === TASK_UNIT;
   const qtyNum = parseInt(quantity, 10) || 1;
-  const canInherit = allLists.some(l => l.id !== currentListId && !l.isSharedWithMe && l.type === listType && l.items.length > 0);
 
   const handleSave = () => {
     if (!itemName.trim()) { Alert.alert(t.common.error, t.shoppingItem.errorRequired); return; }
 
-    // Preço é sempre opcional. Só valida quando o campo tem algo digitado.
+    // Preço é sempre opcional (e não existe para item-tarefa). Só valida se digitado.
     let parsedPrice: number | null = null;
-    if (listType === 'compras' && price.trim()) {
+    if (!isTask && price.trim()) {
       parsedPrice = normalizePrice(price);
       if (parsedPrice === null) { Alert.alert(t.common.error, t.shoppingItem.priceErrorRequired); return; }
     }
 
+    const base = {
+      name: itemName.trim(),
+      quantity: isTask ? 1 : qtyNum,
+      unit: selectedUnit,
+      price: parsedPrice,
+      priceType,
+    };
     const savedItem: ListItem = editItem
-      ? { ...editItem, name: itemName.trim(), quantity: listType === 'compras' ? qtyNum : 1, unit: listType === 'compras' ? selectedUnit : null, price: parsedPrice, priceType }
-      : { id: nextId(), name: itemName.trim(), quantity: listType === 'compras' ? qtyNum : 1, unit: listType === 'compras' ? selectedUnit : null, isChecked: false, price: parsedPrice, priceType };
+      ? { ...editItem, ...base }
+      : { id: nextId(), isChecked: false, ...base };
 
     if (!editItem) {
-      // Já existe item com o mesmo nome? (em compras, também precisa ser a mesma unidade)
+      // Já existe item com mesmo nome e mesma unidade?
       const norm = (s: string) => s.trim().toLowerCase();
       const dup = existingItems.some(i =>
-        norm(i.name) === norm(itemName) &&
-        (listType === 'tarefas' || (i.unit ?? 'unidade') === selectedUnit),
+        norm(i.name) === norm(itemName) && (i.unit ?? 'unidade') === selectedUnit,
       );
       if (dup) {
         Alert.alert(t.alerts.itemExists, t.alerts.itemExistsMsg(itemName.trim()), [
@@ -464,18 +447,18 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
       }]}>
         <View style={[globalStyles.modalContent, { maxHeight: winH * 0.7 }]}>
          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Text style={[globalStyles.inputLabel, { marginTop: 4 }]}>{listType === 'compras' ? t.lists.addItem + ':' : t.lists.addTask + ':'}</Text>
+          <Text style={[globalStyles.inputLabel, { marginTop: 4 }]}>{t.shoppingItem.addToList}</Text>
           <TextInput
             ref={nameInputRef}
             style={globalStyles.input}
             value={itemName}
             onChangeText={setItemName}
-            placeholder={listType === 'compras' ? t.shoppingItem.placeholderShopping : t.shoppingItem.placeholderTask}
+            placeholder={t.shoppingItem.placeholderShopping}
             placeholderTextColor="#666"
           />
 
-          {listType === 'compras' && (
-            <View style={styles.quantityRow}>
+          <View style={styles.quantityRow}>
+            {!isTask && (
               <View style={styles.quantityContainer}>
                 <Text style={globalStyles.inputLabel}>{t.shoppingItem.qtyLabel}</Text>
                 <TextInput
@@ -486,20 +469,20 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
                   maxLength={4}
                 />
               </View>
-              <View style={styles.unitContainer}>
-                <Text style={globalStyles.inputLabel}>{t.shoppingItem.unitLabel}</Text>
-                <TouchableOpacity
-                  style={styles.unitSelector}
-                  onPress={() => { Keyboard.dismiss(); setShowUnitPicker(true); }}>
-                  <Text style={styles.unitText}>{getUnitLabel()}</Text>
-                  <Text style={styles.unitArrow}>▼</Text>
-                </TouchableOpacity>
-              </View>
+            )}
+            <View style={styles.unitContainer}>
+              <Text style={globalStyles.inputLabel}>{t.shoppingItem.unitLabel}</Text>
+              <TouchableOpacity
+                style={styles.unitSelector}
+                onPress={() => { Keyboard.dismiss(); setShowUnitPicker(true); }}>
+                <Text style={styles.unitText}>{getUnitLabel()}</Text>
+                <Text style={styles.unitArrow}>▼</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
 
-          {/* Preço — sempre opcional, disponível já na criação do item */}
-          {listType === 'compras' && (
+          {/* Preço — opcional; não aparece para item-tarefa */}
+          {!isTask && (
             <>
               <Text style={globalStyles.inputLabel}>{t.shoppingItem.priceLabel}</Text>
               <TextInput
@@ -590,14 +573,13 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
 interface InheritItemsViewProps {
   sourceLists: ShoppingList[];
   existingItems: ListItem[];
-  listType: 'compras' | 'tarefas';
   onCancel: () => void;
   onConfirm: (items: ListItem[]) => void;
 }
 
 const normText = (s: string) => s.trim().toLowerCase();
 
-function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onConfirm }: InheritItemsViewProps) {
+function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: InheritItemsViewProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -611,8 +593,7 @@ function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onCo
   }, [onCancel]);
 
   const isDup = (it: ListItem) => existingItems.some(e =>
-    normText(e.name) === normText(it.name) &&
-    (listType === 'tarefas' || (e.unit ?? 'unidade') === (it.unit ?? 'unidade')));
+    normText(e.name) === normText(it.name) && (e.unit ?? 'unidade') === (it.unit ?? 'unidade'));
 
   const toggle = (listId: number, it: ListItem) => {
     const key = `${listId}::${it.id}`;
@@ -667,7 +648,7 @@ function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onCo
           <View key={l.id}>
             <View style={styles.subGroupHeaderRow}>
               <Text style={styles.subGroupTitle} numberOfLines={1}>
-                {l.type === 'tarefas' ? '📋' : '🛒'} {l.name}
+                {l.isArchived ? '🗄️ ' : ''}{l.name}
               </Text>
               <TouchableOpacity onPress={() => toggleAll(l)}>
                 <Text style={styles.subSelectAll}>{t.inheritItems.selectAll}</Text>
@@ -691,9 +672,9 @@ function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onCo
                   <Text style={styles.pickMeta}>
                     {dup
                       ? t.itemSearch.alreadyInList
-                      : l.type === 'compras'
-                        ? `${it.quantity}${it.unit && it.unit !== 'unidade' ? ' ' + it.unit : ''}`
-                        : ''}
+                      : it.unit === TASK_UNIT
+                        ? t.units.tarefa
+                        : `${it.quantity}${it.unit && it.unit !== 'unidade' ? ' ' + it.unit : ''}`}
                   </Text>
                 </TouchableOpacity>
               );
@@ -718,60 +699,71 @@ function InheritItemsView({ sourceLists, existingItems, listType, onCancel, onCo
 }
 
 // ===========================
-// SUB-TELA: PESQUISAR MEUS ITENS (histórico universal)
+// SUB-TELA: BUSCAR ITENS (varre as listas ativas + arquivadas do usuário)
 // ===========================
+export interface PoolItem { name: string; unit: string | null }
+
 interface SearchItemsViewProps {
-  catalog: CatalogItem[];
+  pool: PoolItem[];
   existingItems: ListItem[];
-  onAdd: (item: ListItem) => void;
-  onDone: () => void;
+  onCancel: () => void;
+  onConfirm: (items: ListItem[]) => void;
 }
 
-function SearchItemsView({ catalog, existingItems, onAdd, onDone }: SearchItemsViewProps) {
+function SearchItemsView({ pool, existingItems, onCancel, onConfirm }: SearchItemsViewProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const searchRef = useRef<TextInput>(null);
 
   const [query, setQuery] = useState('');
-  const [addedNames, setAddedNames] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Record<string, PoolItem>>({});
 
   useEffect(() => {
-    const h = BackHandler.addEventListener('hardwareBackPress', () => { onDone(); return true; });
+    const h = BackHandler.addEventListener('hardwareBackPress', () => { onCancel(); return true; });
     const focusTimer = setTimeout(() => searchRef.current?.focus(), 150);
     return () => { h.remove(); clearTimeout(focusTimer); };
-  }, [onDone]);
+  }, [onCancel]);
 
-  const inList = (name: string) =>
-    existingItems.some(e => normText(e.name) === normText(name)) || addedNames.includes(normText(name));
+  const key = (e: PoolItem) => `${normText(e.name)}::${e.unit ?? ''}`;
+  const inList = (e: PoolItem) => existingItems.some(x =>
+    normText(x.name) === normText(e.name) && (x.unit ?? 'unidade') === (e.unit ?? 'unidade'));
 
   const results = useMemo(() => {
     const q = normText(query);
-    return catalog
+    return pool
       .filter(e => !q || normText(e.name).includes(q))
-      .sort((a, b) => b.useCount - a.useCount || b.lastUsedAt - a.lastUsedAt)
-      .slice(0, 50);
-  }, [catalog, query]);
+      .slice(0, 80);
+  }, [pool, query]);
 
-  const add = (e: CatalogItem) => {
-    if (inList(e.name)) return;
-    onAdd({
+  const chosen = Object.values(selected);
+
+  const toggle = (e: PoolItem) => {
+    if (inList(e)) return;
+    setSelected(prev => {
+      const next = { ...prev };
+      if (next[key(e)]) delete next[key(e)]; else next[key(e)] = e;
+      return next;
+    });
+  };
+
+  const confirm = () => {
+    onConfirm(chosen.map(e => ({
       id: nextId(),
       name: e.name,
       quantity: 1,
       unit: e.unit,
       isChecked: false,
       price: null,
-      priceType: e.priceType ?? 'unit',
-    });
-    setAddedNames(prev => [...prev, normText(e.name)]);
+      priceType: 'unit' as const,
+    })));
   };
 
   return (
     <View style={styles.subScreen}>
       <View style={globalStyles.header}>
         <Text style={globalStyles.headerTitle}>{t.itemSearch.title}</Text>
-        <TouchableOpacity style={styles.subBackBtn} onPress={onDone}>
+        <TouchableOpacity style={styles.subBackBtn} onPress={onCancel}>
           <Text style={styles.subBackText}>‹</Text>
         </TouchableOpacity>
       </View>
@@ -787,29 +779,32 @@ function SearchItemsView({ catalog, existingItems, onAdd, onDone }: SearchItemsV
 
       <ScrollView
         style={styles.subContent}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+        contentContainerStyle={styles.subContentPad}
         keyboardShouldPersistTaps="handled">
-        {catalog.length === 0 ? (
+        {pool.length === 0 ? (
           <Text style={styles.subEmpty}>{t.itemSearch.empty}</Text>
         ) : results.length === 0 ? (
           <Text style={styles.subEmpty}>{t.itemSearch.noResults}</Text>
         ) : (
-          results.map((e, idx) => {
-            const already = inList(e.name);
-            const justAdded = addedNames.includes(normText(e.name));
+          results.map(e => {
+            const already = inList(e);
+            const checked = !!selected[key(e)];
             return (
               <TouchableOpacity
-                key={`${e.name}-${idx}`}
-                style={[styles.pickRow, already && styles.pickRowDisabled]}
+                key={key(e)}
+                style={[styles.pickRow, checked && styles.pickRowChecked, already && styles.pickRowDisabled]}
                 disabled={already}
-                onPress={() => add(e)}
+                onPress={() => toggle(e)}
                 activeOpacity={0.7}>
+                <View style={[styles.checkboxView, { marginHorizontal: 0 }, checked && styles.checkboxViewChecked]}>
+                  {checked && <Text style={styles.checkboxMark}>✓</Text>}
+                </View>
                 <Text style={styles.pickName} numberOfLines={1}>{e.name}</Text>
                 <Text style={styles.pickMeta}>
-                  {justAdded
-                    ? `✓ ${t.itemSearch.added}`
-                    : already
-                      ? t.itemSearch.alreadyInList
+                  {already
+                    ? t.itemSearch.alreadyInList
+                    : e.unit === TASK_UNIT
+                      ? t.units.tarefa
                       : (e.unit && e.unit !== 'unidade' ? e.unit : '')}
                 </Text>
               </TouchableOpacity>
@@ -819,8 +814,14 @@ function SearchItemsView({ catalog, existingItems, onAdd, onDone }: SearchItemsV
       </ScrollView>
 
       <View style={styles.subFooter}>
-        <TouchableOpacity style={globalStyles.buttonPrimary} onPress={onDone}>
-          <Text style={globalStyles.buttonPrimaryText}>{t.itemSearch.done}</Text>
+        <TouchableOpacity
+          style={[globalStyles.buttonPrimary, chosen.length === 0 && { opacity: 0.4 }]}
+          disabled={chosen.length === 0}
+          onPress={confirm}>
+          <Text style={globalStyles.buttonPrimaryText}>{t.itemSearch.add(chosen.length)}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[globalStyles.buttonSecondary, { marginTop: 8 }]} onPress={onCancel}>
+          <Text style={globalStyles.buttonSecondaryText}>{t.common.cancel}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -836,20 +837,18 @@ interface ShoppingListScreenProps {
   onUpdate: (list: ShoppingList) => void;
   onDelete: (id: number) => void;
   allLists?: ShoppingList[];
-  catalog?: CatalogItem[];
   onNavigateToList?: (id: number) => void;
-  onRecordItems?: (items: ListItem[], type: 'compras' | 'tarefas') => void;
-  // Action grid callbacks (Sprint 13)
   onComplete?: () => void;
   onReopen?: () => void;
+  onArchive?: () => void;
   onShare?: () => void;
   onOpenSettings?: () => void;
   isSharedWithMe?: boolean;
   sharedWithUid?: string | null;
 }
 
-export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists = [], catalog = [], onNavigateToList,
-  onRecordItems, onComplete, onReopen, onShare, onOpenSettings,
+export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists = [], onNavigateToList,
+  onComplete, onReopen, onArchive, onShare, onOpenSettings,
   isSharedWithMe = false, sharedWithUid = null,
 }: ShoppingListScreenProps) {
   const { colors, globalStyles } = useTheme();
@@ -889,7 +888,23 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
     }, 600);
   };
 
-  const isCompras = list.type === 'compras';
+  // Pool para "Buscar itens": nomes distintos das listas do próprio usuário
+  // (ativas + arquivadas), nunca de listas compartilhadas comigo.
+  const itemPool = useMemo<PoolItem[]>(() => {
+    const map = new Map<string, PoolItem>();
+    allLists.filter(l => !l.isSharedWithMe).forEach(l =>
+      l.items.forEach(it => {
+        const k = `${normText(it.name)}::${it.unit ?? ''}`;
+        if (!map.has(k) && it.name.trim()) map.set(k, { name: it.name, unit: it.unit });
+      }),
+    );
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allLists]);
+
+  const inheritSources = useMemo(
+    () => allLists.filter(l => l.id !== list.id && !l.isSharedWithMe && l.items.length > 0),
+    [allLists, list.id],
+  );
 
   // L5 — swipe no header para navegar entre listas
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -1002,27 +1017,18 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
     onUpdate(updated);
   };
 
-  // Só registra no histórico de itens do PRÓPRIO usuário — itens de uma lista
-  // compartilhada comigo não entram na minha busca/herança (segurança).
-  const record = (items: ListItem[]) => {
-    if (!isSharedWithMe) onRecordItems?.(items, list.type);
-  };
-
   const addItem = (item: ListItem) => {
     onUpdate({ ...list, items: [item, ...list.items] });
-    record([item]);
   };
 
-  // Adiciona vários de uma vez (Herdar itens / Pesquisar meus itens)
+  // Adiciona vários de uma vez (Herdar itens / Buscar itens)
   const addItems = (items: ListItem[]) => {
     if (!items.length) return;
     onUpdate({ ...list, items: [...items, ...list.items] });
-    record(items);
   };
 
   const updateItem = (item: ListItem) => {
     onUpdate({ ...list, items: list.items.map(i => i.id === item.id ? item : i) });
-    record([item]);
   };
 
   const removeItem = (itemId: number) => {
@@ -1061,26 +1067,20 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   if (subView === 'inherit') {
     return (
       <InheritItemsView
-        // Só listas do próprio usuário — nunca herda de lista compartilhada
-        // comigo (evita clonar a lista do parceiro num toque).
-        sourceLists={allLists.filter(l => l.id !== list.id && !l.isSharedWithMe && l.type === list.type && l.items.length > 0)}
+        sourceLists={inheritSources}
         existingItems={list.items}
-        listType={list.type}
         onCancel={() => setSubView(null)}
-        onConfirm={(items) => {
-          addItems(items);
-          setSubView(null);
-        }}
+        onConfirm={(items) => { addItems(items); setSubView(null); }}
       />
     );
   }
   if (subView === 'search') {
     return (
       <SearchItemsView
-        catalog={catalog.filter(e => e.type === list.type)}
+        pool={itemPool}
         existingItems={list.items}
-        onAdd={(item) => addItems([item])}
-        onDone={() => setSubView(null)}
+        onCancel={() => setSubView(null)}
+        onConfirm={(items) => { addItems(items); setSubView(null); }}
       />
     );
   }
@@ -1110,8 +1110,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           </TouchableOpacity>
         )}
         <Text style={globalStyles.headerSubtitle}>
-          {isCompras ? t.lists.shoppingLabel : t.lists.tasksLabel}
-          {` • ${checkedItems.length}/${list.items.length}`}
+          {t.lists.headerCount(checkedItems.length, list.items.length)}
         </Text>
         {onOpenSettings && (
           <TouchableOpacity style={styles.menuBtn} onPress={onOpenSettings}>
@@ -1214,12 +1213,12 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
                   ]}>
                     {item.name}
                   </Text>
-                  {isCompras && (
+                  {item.unit !== TASK_UNIT && (
                     <Text style={styles.itemQuantity}>{formatQuantity(item)}</Text>
                   )}
                 </TouchableOpacity>
 
-                {isCompras && item.price != null && (
+                {item.price != null && (
                   <View style={styles.itemPrice}>
                     <TouchableOpacity
                       onPress={() => !list.isCompleted && setEditingItem(item)}
@@ -1235,7 +1234,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           {/* Calculadora — aparece sozinha ao haver item concluído com preço.
               Soma só os itens CONCLUÍDOS. O aviso surge quando algum concluído
               está sem preço. Falta de preço nunca impede concluir. */}
-          {isCompras && hasPricedChecked && (
+          {hasPricedChecked && (
             <View style={styles.calcWrap}>
               <Text style={styles.calcTotal}>
                 {t.calc.total}: R$ {total.toFixed(2).replace('.', ',')}
@@ -1247,18 +1246,27 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           )}
       </ScrollView>
 
-      {/* Adicionar item (roxo) — única coisa fixa na parte inferior */}
-      {!list.isCompleted && (
+      {/* Barra inferior fixa: aberta → "Adicionar item"; concluída (e minha) →
+          "Arquivar Lista". Convidado numa lista concluída não vê botão. */}
+      {!list.isCompleted ? (
         <View style={styles.bottomContainer}>
           <View style={styles.addItemSection}>
             <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowAddItem(true)}>
-              <Text style={globalStyles.buttonPrimaryText}>
-                {isCompras ? t.lists.addItem : t.lists.addTask}
-              </Text>
+              <Text style={globalStyles.buttonPrimaryText}>{t.lists.addItem}</Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      ) : !isSharedWithMe && onArchive ? (
+        <View style={styles.bottomContainer}>
+          <View style={styles.addItemSection}>
+            <TouchableOpacity
+              style={globalStyles.buttonSecondary}
+              onPress={() => { onArchive(); onBack(); }}>
+              <Text style={globalStyles.buttonSecondaryText}>{t.lists.archiveBtn}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
 
       {/* Só monta um <Modal> quando ele está de fato visível. Ter vários <Modal>
           montados ao mesmo tempo faz o Android medir errado o que está aberto
@@ -1268,13 +1276,11 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           visible
           editItem={editingItem}
           existingItems={list.items}
-          allLists={allLists}
-          currentListId={list.id}
+          canInherit={inheritSources.length > 0}
           onOpenInherit={() => setSubView('inherit')}
           onOpenSearch={() => setSubView('search')}
           onClose={() => { setShowAddItem(false); setEditingItem(null); }}
           onSave={(item) => editingItem ? updateItem(item) : addItem(item)}
-          listType={list.type || 'compras'}
         />
       )}
 

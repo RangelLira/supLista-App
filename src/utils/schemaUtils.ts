@@ -34,10 +34,11 @@ export const migrateListSchema = (raw: any): ShoppingList => {
     }
   }
 
+  const isArchived = raw.isArchived ?? false;
+
   return {
     id: coerceId(raw.id, raw.createdAt),
     name: raw.name ?? '',
-    type: raw.type ?? 'compras',
     suppliers: raw.suppliers ?? [],
     items: (raw.items ?? []).map((item: any) => ({
       id: coerceId(item.id),
@@ -50,7 +51,8 @@ export const migrateListSchema = (raw: any): ShoppingList => {
     })),
     createdAt: raw.createdAt ?? new Date().toISOString(),
     isCompleted: raw.isCompleted ?? false,
-    isArchived: raw.isArchived ?? false,
+    isArchived,
+    archivedAt: raw.archivedAt ?? (isArchived ? (raw.createdAt ?? new Date().toISOString()) : null),
     totalSpent: raw.totalSpent ?? 0,
     sharedWithUid,
     ownerUid: raw.ownerUid ?? undefined,

@@ -23,7 +23,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
-import { CatalogItem, ListItem, ShoppingList } from '../types';
+import { ShoppingList } from '../types';
 import { exitSharedList, shareList, unshareList } from '../utils/firestore';
 import { formatHeaderDate } from '../utils/dateUtils';
 
@@ -32,11 +32,10 @@ let hasPlayedAnimation = false;
 interface Props {
   userName: string;
   lists: ShoppingList[];
-  catalog: CatalogItem[];
   onSaveList: (list: ShoppingList) => void;
   onUpdateList: (list: ShoppingList) => void;
   onDeleteList: (id: number) => void;
-  onRecordItems: (items: ListItem[], type: 'compras' | 'tarefas') => void;
+  onArchiveList: (id: number) => void;
   onOpenSettings?: () => void;
 }
 
@@ -275,7 +274,7 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
-export default function ListsScreen({ userName, lists, catalog, onSaveList, onUpdateList, onDeleteList, onRecordItems, onOpenSettings }: Props) {
+export default function ListsScreen({ userName, lists, onSaveList, onUpdateList, onDeleteList, onArchiveList, onOpenSettings }: Props) {
   const { colors, globalStyles } = useTheme();
   const { t, lang } = useLanguage();
   const { userId } = useFirebase();
@@ -420,9 +419,25 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
     );
   };
 
+  // Concluir com itens abertos → confirma (D1). Reabrir e "tudo marcado" não confirmam.
+  // completedAt é carimbado/limpo só em App.tsx (handleUpdateList) — fonte única.
+  const doComplete = (list: ShoppingList, completed: boolean) =>
+    onUpdateList({ ...list, isCompleted: completed });
+
+  const confirmComplete = (list: ShoppingList, completed: boolean) => {
+    const openItems = list.items.filter(i => !i.isChecked).length;
+    if (completed && openItems > 0) {
+      Alert.alert(t.alerts.concludeOpenTitle, t.alerts.concludeOpenMsg, [
+        { text: t.common.cancel, style: 'cancel' },
+        { text: t.alerts.concludeAnyway, onPress: () => doComplete(list, true) },
+      ]);
+    } else {
+      doComplete(list, completed);
+    }
+  };
+
   const handleToggleComplete = (list: ShoppingList) => {
-    // completedAt é carimbado/limpo só em App.tsx (handleUpdateList) — fonte única.
-    onUpdateList({ ...list, isCompleted: !list.isCompleted });
+    confirmComplete(list, !list.isCompleted);
   };
 
   const formatListTimestamp = (iso: string) => {
@@ -482,17 +497,16 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
             {list.name}
           </Text>
 
-          {/* BADGES à direita, direita→esquerda: tipo | vínculo | partilha */}
-          <View style={styles.listBadgesRow}>
-            {(list.sharedWithUid || list.isSharedWithMe) && (
-              syncingListId === list.id ? (
+          {/* BADGE de compartilhamento (só quando há vínculo) */}
+          {(list.sharedWithUid || list.isSharedWithMe) && (
+            <View style={styles.listBadgesRow}>
+              {syncingListId === list.id ? (
                 <ActivityIndicator size="small" color={colors.primary} style={{ width: 14 }} />
               ) : (
                 <Text style={[styles.listBadgeIcon, syncSuccessListId === list.id && { color: colors.success }]}>👥</Text>
-              )
-            )}
-            <Text style={styles.listBadgeIcon}>{list.type === 'tarefas' ? '📋' : '🛒'}</Text>
-          </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* BARRA DE PROGRESSO */}
@@ -529,15 +543,14 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
           onUpdate={onUpdateList}
           onDelete={onDeleteList}
           onOpenSettings={onOpenSettings}
-          catalog={catalog}
-          onRecordItems={onRecordItems}
-          allLists={lists.filter(l => !l.isArchived)}
+          allLists={lists}
           onNavigateToList={(id) => {
             const target = lists.find(l => l.id === id);
             if (target) setSelectedList(target);
           }}
-          onComplete={() => onUpdateList({ ...currentList, isCompleted: true })}
+          onComplete={() => confirmComplete(currentList, true)}
           onReopen={() => onUpdateList({ ...currentList, isCompleted: false })}
+          onArchive={() => onArchiveList(currentList.id)}
           onShare={() => {
             if (currentList.isSharedWithMe) {
               if (!currentList.ownerUid) return;

@@ -39,9 +39,15 @@ describe('generateFakeData — pisos exigidos', () => {
 });
 
 describe('generateFakeData — variedade', () => {
-  it('usa os dois tipos de lista', () => {
-    expect(r.lists.some(l => l.type === 'compras')).toBe(true);
-    expect(r.lists.some(l => l.type === 'tarefas')).toBe(true);
+  it('mistura itens de compra e itens-tarefa', () => {
+    const items = r.lists.flatMap(l => l.items);
+    expect(items.some(i => i.unit === 'tarefa')).toBe(true);
+    expect(items.some(i => i.unit !== 'tarefa')).toBe(true);
+  });
+
+  it('gera listas arquivadas e não-arquivadas', () => {
+    expect(r.lists.some(l => l.isArchived)).toBe(true);
+    expect(r.lists.some(l => !l.isArchived)).toBe(true);
   });
 
   it('mistura tags preset e personalizadas', () => {

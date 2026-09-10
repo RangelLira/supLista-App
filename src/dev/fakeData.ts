@@ -4,17 +4,17 @@
 // Só carregado sob __DEV__. Cria um cenário de uso intenso (sem compartilhamento):
 //   • >= 100 listas, >= 4000 itens
 //   • 1 lista com 1000 itens, >= 4 listas com > 100 itens, resto com <= 10
-//   • mistura os 7 tags preset + tags personalizadas
-// PRNG com seed fixa → duas execuções com a mesma seed produzem o mesmo cenário
-// (o relatório bate com os dados).
+//   • mistura os 7 tags preset + tags personalizadas; itens de compra + tarefas
+//   • algumas listas concluídas e algumas ARQUIVADAS
+// PRNG com seed fixa → duas execuções com a mesma seed produzem o mesmo cenário.
 
-import { CatalogItem, ListItem, ShoppingList } from '../types';
-import { seedCatalogFromLists } from '../utils/storage';
+import { ListItem, ShoppingList, TASK_UNIT } from '../types';
 import {
   CUSTOM_TAGS, GROCERY, LIST_NAMES_SHOPPING, LIST_NAMES_TASKS, TASKS, UNITS,
 } from './pools';
 
 const PRESET_TAGS = ['Trabalho', 'Pessoal', 'Saúde', 'Família', 'Financeiro', 'Estudos', 'Lazer'];
+const LIST_NAMES = [...LIST_NAMES_SHOPPING, ...LIST_NAMES_TASKS];
 
 // mulberry32 — PRNG determinístico, suficiente para dados de teste.
 /* eslint-disable no-bitwise */
@@ -33,12 +33,10 @@ export interface FakeDataOptions {
   seed?: number;
   baselineLists?: number;
   baselineItems?: number;
-  baselineCatalog?: number;
 }
 
 export interface FakeDataResult {
   lists: ShoppingList[];
-  catalog: CatalogItem[];
   report: string;
 }
 
@@ -58,20 +56,24 @@ export function generateFakeData(opts: FakeDataOptions = {}): FakeDataResult {
 
   const allTags = [...PRESET_TAGS, ...CUSTOM_TAGS];
 
-  const makeItems = (n: number, type: 'compras' | 'tarefas'): ListItem[] => {
-    const pool = type === 'compras' ? GROCERY : TASKS;
+  const makeItems = (n: number): ListItem[] => {
     const items: ListItem[] = [];
     for (let j = 0; j < n; j++) {
-      const hasPrice = type === 'compras' && chance(0.6);
-      items.push({
-        id: nextId(),
-        name: pick(pool),
-        quantity: type === 'compras' ? int(1, 12) : 1,
-        unit: type === 'compras' ? pick(UNITS) : null,
-        isChecked: chance(0.5),
-        price: hasPrice ? Math.round(rnd() * 4900 + 50) / 100 : null,
-        priceType: chance(0.8) ? 'unit' : 'total',
-      });
+      const isTask = chance(0.3);
+      if (isTask) {
+        items.push({
+          id: nextId(), name: pick(TASKS), quantity: 1, unit: TASK_UNIT,
+          isChecked: chance(0.5), price: null, priceType: 'unit',
+        });
+      } else {
+        const hasPrice = chance(0.55);
+        items.push({
+          id: nextId(), name: pick(GROCERY), quantity: int(1, 12), unit: pick(UNITS),
+          isChecked: chance(0.5),
+          price: hasPrice ? Math.round(rnd() * 4900 + 50) / 100 : null,
+          priceType: chance(0.8) ? 'unit' : 'total',
+        });
+      }
     }
     return items;
   };
@@ -79,19 +81,18 @@ export function generateFakeData(opts: FakeDataOptions = {}): FakeDataResult {
   let seq = 0;
   const makeList = (nItems: number): ShoppingList => {
     seq += 1;
-    const type: 'compras' | 'tarefas' = chance(0.65) ? 'compras' : 'tarefas';
-    const base = type === 'compras' ? pick(LIST_NAMES_SHOPPING) : pick(LIST_NAMES_TASKS);
     const createdAt = new Date(NOW - int(0, 365) * DAY).toISOString();
-    const isCompleted = chance(0.2);
+    const isCompleted = chance(0.25);
+    const isArchived = isCompleted && chance(0.4); // ~10% do total
     return {
       id: nextId(),
-      name: `${base} #${seq}`,
-      type,
+      name: `${pick(LIST_NAMES)} #${seq}`,
       suppliers: [],
-      items: makeItems(nItems, type),
+      items: makeItems(nItems),
       createdAt,
       isCompleted,
-      isArchived: false,
+      isArchived,
+      archivedAt: isArchived ? createdAt : null,
       totalSpent: 0,
       completedAt: isCompleted ? createdAt : null,
       tag_name: pick(allTags),
@@ -103,7 +104,6 @@ export function generateFakeData(opts: FakeDataOptions = {}): FakeDataResult {
   lists.push(makeList(1000));                        // 1 gigante
   for (let i = 0; i < 8; i++) lists.push(makeList(int(120, 320))); // 8 grandes (> 100)
 
-  // Listas normais (0–10 itens) até bater os pisos: >= 4300 itens e >= 130 normais.
   const TARGET_ITEMS = 4300;
   const MIN_NORMAL = 130;
   const MAX_NORMAL = 500;
@@ -114,17 +114,16 @@ export function generateFakeData(opts: FakeDataOptions = {}): FakeDataResult {
     normalCount += 1;
   }
 
-  const catalog = seedCatalogFromLists(lists);
-  return { lists, catalog, report: buildReport(lists, catalog, opts) };
+  return { lists, report: buildReport(lists, opts) };
 }
 
-function buildReport(lists: ShoppingList[], catalog: CatalogItem[], opts: FakeDataOptions): string {
+function buildReport(lists: ShoppingList[], opts: FakeDataOptions): string {
   const L = lists.length;
   const items = lists.flatMap(l => l.items);
   const I = items.length || 1;
-  const compras = lists.filter(l => l.type === 'compras').length;
-  const tarefas = lists.filter(l => l.type === 'tarefas').length;
+  const tasks = items.filter(i => i.unit === 'tarefa').length;
   const completed = lists.filter(l => l.isCompleted).length;
+  const archived = lists.filter(l => l.isArchived).length;
   const checked = items.filter(i => i.isChecked).length;
   const priced = items.filter(i => i.price != null).length;
   const empty = lists.filter(l => l.items.length === 0).length;
@@ -157,8 +156,6 @@ function buildReport(lists: ShoppingList[], catalog: CatalogItem[], opts: FakeDa
       nameToLists.set(it.name, arr);
     });
   });
-  // Prioriza nomes que estão em poucas listas (2–8): mais fáceis de achar e
-  // conferir na navegação do que um nome que aparece em 15+ listas.
   const sample = [...nameToLists.entries()]
     .filter(([, ls]) => ls.length >= 2 && ls.length <= 8)
     .sort((a, b) => a[1].length - b[1].length)
@@ -178,21 +175,17 @@ function buildReport(lists: ShoppingList[], catalog: CatalogItem[], opts: FakeDa
   p('BASELINE (antes da injeção)');
   p(`  Listas armazenadas: ${opts.baselineLists ?? 0}`);
   p(`  Itens armazenados:  ${opts.baselineItems ?? 0}`);
-  p(`  Catálogo:           ${opts.baselineCatalog ?? 0} entradas`);
   p();
   p('GERADO');
-  p(`  Listas:           ${L}`);
-  p(`  Itens:            ${items.length}`);
-  p(`    compras:        ${compras} listas`);
-  p(`    tarefas:        ${tarefas} listas`);
-  p(`  Concluídas:       ${completed}   Abertas: ${L - completed}`);
-  p(`  Listas vazias:    ${empty}`);
-  p(`  Itens marcados:   ${checked} (${((checked / I) * 100).toFixed(1)}%)`);
-  p(`  Itens com preço:  ${priced} (${((priced / I) * 100).toFixed(1)}%)`);
-  p(`  Catálogo semeado: ${catalog.length} entradas (teto 500 / LRU)`);
+  p(`  Listas:            ${L}   (arquivadas: ${archived})`);
+  p(`  Itens:             ${items.length}   (tarefas: ${tasks}, compra: ${items.length - tasks})`);
+  p(`  Concluídas:        ${completed}   Abertas: ${L - completed}`);
+  p(`  Listas vazias:     ${empty}`);
+  p(`  Itens marcados:    ${checked} (${((checked / I) * 100).toFixed(1)}%)`);
+  p(`  Itens com preço:   ${priced} (${((priced / I) * 100).toFixed(1)}%)`);
   p();
   p(`LISTAS GRANDES (> 100 itens) — ${big.length}`);
-  big.forEach(l => p(`  id ${l.id}  ${pad(l.name, 26)} ${String(l.items.length).padStart(4)} itens  [${l.tag_name}]  ${l.type}`));
+  big.forEach(l => p(`  id ${l.id}  ${pad(l.name, 26)} ${String(l.items.length).padStart(4)} itens  [${l.tag_name}]${l.isArchived ? '  (arquivada)' : ''}`));
   p();
   p('DISTRIBUIÇÃO DE TAMANHO');
   buckets.forEach(([label, fn]) => {
@@ -205,7 +198,7 @@ function buildReport(lists: ShoppingList[], catalog: CatalogItem[], opts: FakeDa
     p(`  ${pad(tag, 16)} ${String(n).padStart(5)}   (${PRESET_TAGS.includes(tag) ? 'preset' : 'custom'})`);
   });
   p();
-  p('AMOSTRA PARA TESTAR "PESQUISAR MEUS ITENS"  (nomes em poucas listas)');
+  p('AMOSTRA PARA TESTAR "BUSCAR ITENS"  (nomes em poucas listas)');
   sample.forEach(([name, ls]) => {
     const bySize = [...ls].sort((a, b) => a.items.length - b.items.length);
     const shown = bySize.slice(0, 3).map(l => `"${l.name}"`).join(', ');
@@ -214,16 +207,14 @@ function buildReport(lists: ShoppingList[], catalog: CatalogItem[], opts: FakeDa
   });
   p();
   p('STORAGE (após salvar)');
-  p(`  @suplista_lists          ${L} registros`);
-  p(`  @suplista_item_catalog   ${catalog.length} entradas`);
+  p(`  @suplista_lists   ${L} registros (${archived} arquivadas)`);
   p();
   p('COMO TESTAR');
-  p('  • Navegação: role a lista; entre/saia; swipe no cabeçalho da lista');
-  p('    para navegar entre listas vizinhas.');
-  p('  • Busca: abra uma lista → Adicionar Item → "Pesquisar meus itens" e');
-  p('    digite um nome da amostra acima.');
+  p('  • Navegação: role a lista; entre/saia; swipe no cabeçalho da lista.');
+  p('  • Busca: abra uma lista → Adicionar item → "Buscar itens".');
+  p('  • Arquivo: Config → Arquivo de Listas (as arquivadas aparecem lá).');
   p('  • Storage: feche e reabra o app — as listas devem persistir.');
-  p('  • Baseline: Sobre → Fake user → "Limpar tudo" zera listas e catálogo.');
+  p('  • Baseline: Sobre → Fake user → "Limpar tudo" zera as listas.');
   p('════════════════════════════════════════════════');
   return out.join('\n');
 }

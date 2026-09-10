@@ -20,10 +20,9 @@ import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import ListsScreen from './src/screens/ListsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { CatalogItem, ListItem, ScreenName, ShoppingList } from './src/types';
-import {
-  loadCatalog, loadLists, loadSettings, mergeIntoCatalog, saveCatalog, saveLists, seedCatalogFromLists,
-} from './src/utils/storage';
+import ArchiveScreen from './src/screens/ArchiveScreen';
+import { ScreenName, ShoppingList } from './src/types';
+import { loadLists, loadSettings, purgeLegacyCatalog, saveLists } from './src/utils/storage';
 import {
   listenToSharedListsWithMe, listenToMySharedLists,
   updateSharedList, deleteSharedListDoc,
@@ -94,9 +93,6 @@ function AppContent() {
   // e nunca regrava exatamente o array que acabou de ser lido.
   const listsHydratedRef = useRef(false);
   const hydratedListsRef = useRef<ShoppingList[] | null>(null);
-  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-  const catalogRef = useRef<CatalogItem[]>([]);
-  catalogRef.current = catalog;
   const [activeScreen, setActiveScreen] = useState<ScreenName>('listas');
   const [screenHistory, setScreenHistory] = useState<ScreenName[]>([]);
 
@@ -116,18 +112,11 @@ function AppContent() {
       hydratedListsRef.current = loadedLists; // não regrava o que acabou de ser lido
       listsHydratedRef.current = true;
       setLists(loadedLists);
-      let cat = await loadCatalog();
-      const seeded = cat.length === 0 && loadedLists.length > 0;
-      if (seeded) {
-        cat = seedCatalogFromLists(loadedLists);
-        saveCatalog(cat);
-      }
-      setCatalog(cat);
+      purgeLegacyCatalog(); // limpa o storage do catálogo antigo (removido)
       logEvent('APP', 'init', {
         listas: loadedLists.length,
         itens: loadedLists.reduce((s, l) => s + l.items.length, 0),
-        catalogo: cat.length,
-        catalogoSemeado: seeded,
+        arquivadas: loadedLists.filter(l => l.isArchived).length,
         onboarding: settings.onboardingDone ?? false,
       });
     };
@@ -259,8 +248,14 @@ function AppContent() {
     setActiveScreen('config');
   };
 
-  // Fecha Configurações e volta para a tela anterior (mesmo efeito do botão físico voltar)
-  const closeSettings = () => {
+  const openArchive = () => {
+    setScreenHistory(prev => [...prev, activeScreen]);
+    setActiveScreen('arquivo');
+  };
+
+  // Volta uma tela (mesmo efeito do botão físico voltar): desempilha o histórico
+  // ou cai em 'listas'. Usado pela hamburger de Configurações e pelo ‹ do Arquivo.
+  const goBack = () => {
     if (screenHistory.length > 0) {
       const prev = screenHistory[screenHistory.length - 1];
       setScreenHistory(h => h.slice(0, -1));
@@ -270,12 +265,17 @@ function AppContent() {
     }
   };
 
+  const goHome = () => {
+    setScreenHistory([]);
+    setActiveScreen('listas');
+  };
+
   // ===========================
   // LISTAS — CRUD
   // ===========================
   const handleSaveList = async (list: ShoppingList) => {
     setLists([list, ...lists]);
-    logEvent('LIST', 'criar', { id: list.id, nome: list.name, tipo: list.type, tag: list.tag_name });
+    logEvent('LIST', 'criar', { id: list.id, nome: list.name, tag: list.tag_name });
   };
 
   const handleUpdateList = async (list: ShoppingList) => {
@@ -298,22 +298,35 @@ function AppContent() {
     syncSharedList(stamped);
   };
 
-  // Registra itens no catálogo universal (histórico que sobrevive à exclusão de listas).
-  const recordItems = async (items: ListItem[], type: 'compras' | 'tarefas') => {
-    if (!items.length) return;
-    const next = mergeIntoCatalog(catalogRef.current, items, type);
-    catalogRef.current = next;
-    setCatalog(next);
-    await saveCatalog(next);
-    logEvent('CATALOG', 'record', { itens: items.length, tipo: type, catalogo: next.length });
-  };
-
   const handleDeleteList = async (id: number) => {
     const list = lists.find(l => l.id === id);
     cancelPendingSync(id); // não deixa um push pendente recriar o doc após o delete
     setLists(lists.filter(l => l.id !== id));
     logEvent('LIST', 'excluir', { id, nome: list?.name, itens: list?.items.length });
     if (list) await removeSharedList(list);
+  };
+
+  // Arquivar: só listas concluídas e que são MINHAS. Sai da tela principal.
+  // Se estava compartilhada, o vínculo é encerrado (a cópia do parceiro some).
+  const handleArchiveList = async (id: number) => {
+    const list = lists.find(l => l.id === id);
+    if (!list || !list.isCompleted || list.isSharedWithMe) return;
+    cancelPendingSync(id);
+    setLists(lists.map(l => l.id === id
+      ? { ...l, isArchived: true, archivedAt: new Date().toISOString(), sharedWithUid: null }
+      : l));
+    logEvent('LIST', 'arquivar', { id, nome: list.name });
+    if (list.sharedWithUid) await removeSharedList(list); // encerra o compartilhamento
+  };
+
+  // Recuperar do arquivo: volta pra tela principal como CONCLUÍDA.
+  const handleUnarchiveList = async (id: number) => {
+    const list = lists.find(l => l.id === id);
+    if (!list) return;
+    setLists(lists.map(l => l.id === id
+      ? { ...l, isArchived: false, archivedAt: null, isCompleted: true }
+      : l));
+    logEvent('LIST', 'recuperar', { id, nome: list.name });
   };
 
   // ===========================
@@ -326,11 +339,10 @@ function AppContent() {
           <ListsScreen
             userName={userName}
             lists={lists}
-            catalog={catalog}
             onSaveList={handleSaveList}
             onUpdateList={handleUpdateList}
             onDeleteList={handleDeleteList}
-            onRecordItems={recordItems}
+            onArchiveList={handleArchiveList}
             onOpenSettings={openSettings}
           />
         );
@@ -338,7 +350,18 @@ function AppContent() {
         return (
           <SettingsScreen
             onChangeUserName={(name) => setUserName(name)}
-            onGoHome={closeSettings}
+            onGoHome={goBack}
+            onOpenArchive={openArchive}
+          />
+        );
+      case 'arquivo':
+        return (
+          <ArchiveScreen
+            lists={lists}
+            onUnarchive={handleUnarchiveList}
+            onDelete={handleDeleteList}
+            onBack={goBack}
+            onGoHome={goHome}
           />
         );
     }

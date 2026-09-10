@@ -15,12 +15,12 @@ export interface ListItem {
 export interface ShoppingList {
   id: number;
   name: string;
-  type: 'compras' | 'tarefas';
   suppliers: string[];
   items: ListItem[];
   createdAt: string;
   isCompleted: boolean;
   isArchived: boolean;
+  archivedAt?: string | null; // ISO timestamp de quando foi arquivada
   totalSpent: number;
   // Compartilhamento
   sharedWithUid?: string | null; // UID único do parceiro (máx. 1 parceiro)
@@ -34,21 +34,13 @@ export interface ShoppingList {
   completedAt?: string | null; // ISO timestamp de quando foi concluída
 }
 
-// Catálogo universal de itens já adicionados (persiste mesmo após excluir listas).
-// Alimenta a busca "Pesquisar meus itens" dentro de Adicionar Item.
-export interface CatalogItem {
-  name: string;
-  type: 'compras' | 'tarefas';
-  unit: string | null;
-  lastPrice: number | null;
-  priceType?: 'unit' | 'total';
-  lastUsedAt: number; // Date.now()
-  useCount: number;
-}
+export type ScreenName = 'listas' | 'config' | 'arquivo';
 
-export type ScreenName = 'listas' | 'config';
-
+// "tarefa" é uma "unidade": um item classificado como tarefa aparece só com o
+// nome (sem quantidade). Não existe mais lista de compras vs lista de tarefas —
+// uma lista pode misturar itens de compra e tarefas.
 export const AVAILABLE_UNITS = [
+  { value: 'tarefa', label: 'Tarefa' },
   { value: 'unidade', label: 'Unidade' },
   { value: 'kg', label: 'Kg' },
   { value: 'g', label: 'g' },
@@ -59,3 +51,5 @@ export const AVAILABLE_UNITS = [
   { value: 'porção', label: 'Porção' },
   { value: 'pedaço', label: 'Pedaço' },
 ];
+
+export const TASK_UNIT = 'tarefa';

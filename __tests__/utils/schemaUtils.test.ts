@@ -8,10 +8,6 @@ describe('migrateListSchema', () => {
   describe('campos obrigatórios com dados mínimos', () => {
     const minimal = { id: 1, name: 'Mercado' };
 
-    it('preenche type com "compras" se ausente', () => {
-      expect(migrateListSchema(minimal).type).toBe('compras');
-    });
-
     it('preenche suppliers com [] se ausente', () => {
       expect(migrateListSchema(minimal).suppliers).toEqual([]);
     });
@@ -24,8 +20,9 @@ describe('migrateListSchema', () => {
       expect(migrateListSchema(minimal).isCompleted).toBe(false);
     });
 
-    it('preenche isArchived com false se ausente', () => {
+    it('preenche isArchived/archivedAt se ausentes', () => {
       expect(migrateListSchema(minimal).isArchived).toBe(false);
+      expect(migrateListSchema(minimal).archivedAt).toBeNull();
     });
 
     it('preenche totalSpent com 0 se ausente', () => {

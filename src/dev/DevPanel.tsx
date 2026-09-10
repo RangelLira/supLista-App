@@ -23,9 +23,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
 import { HEADER_TOP_PADDING } from '../styles/theme';
-import {
-  loadCatalog, loadLists, mergeIntoCatalog, saveCatalog, saveLists,
-} from '../utils/storage';
+import { loadLists, saveLists } from '../utils/storage';
 import { clearLog, getLogCount, getLogText, logEvent } from './devLog';
 import { generateFakeData } from './fakeData';
 
@@ -105,27 +103,15 @@ export default function DevPanel({ initialTab = 'menu', onClose }: Props) {
     setBusy(true);
     try {
       const baseline = await loadLists();
-      const baseCat = await loadCatalog();
       const baselineItems = baseline.reduce((s, l) => s + l.items.length, 0);
 
-      const { lists, catalog, report: rpt } = generateFakeData({
+      const { lists, report: rpt } = generateFakeData({
         baselineLists: baseline.length,
         baselineItems,
-        baselineCatalog: baseCat.length,
       });
 
       const finalLists = mode === 'append' ? [...lists, ...baseline] : lists;
       await saveLists(finalLists);
-
-      if (mode === 'append') {
-        const comprasItems = lists.filter(l => l.type === 'compras').flatMap(l => l.items);
-        const tarefasItems = lists.filter(l => l.type === 'tarefas').flatMap(l => l.items);
-        let cat = mergeIntoCatalog(baseCat, comprasItems, 'compras');
-        cat = mergeIntoCatalog(cat, tarefasItems, 'tarefas');
-        await saveCatalog(cat);
-      } else {
-        await saveCatalog(catalog);
-      }
 
       logEvent('DEV', 'fake user gerado', {
         modo: mode,

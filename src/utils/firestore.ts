@@ -166,7 +166,6 @@ export const deleteShareConnection = async (shareId: string): Promise<void> => {
 export const toSharedDoc = (list: ShoppingList) => ({
   id: list.id,
   name: list.name ?? '',
-  type: list.type ?? 'compras',
   suppliers: list.suppliers ?? [],
   items: (list.items ?? []).map(i => ({
     id: i.id,

@@ -54,9 +54,10 @@ interface Props {
   onChangeUserName: (name: string) => void;
   // Fecha Configurações e volta para a tela de Listas
   onGoHome?: () => void;
+  onOpenArchive: () => void;
 }
 
-export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
+export default function SettingsScreen({ onChangeUserName, onGoHome, onOpenArchive }: Props) {
   const { colors, globalStyles, theme, setTheme, accentColor, setAccentColor } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, userId, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
@@ -128,13 +129,14 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
           {[
             { key: 'perfil', label: t.settings.menuProfile, subtitle: t.settings.menuProfileSubtitle },
             { key: 'preferencias', label: t.settings.menuOptions, subtitle: t.settings.menuOptionsSubtitle },
+            { key: 'arquivo', label: t.settings.menuArchive, subtitle: t.settings.menuArchiveSubtitle },
             { key: 'compartilhamento', label: t.settings.menuShare, subtitle: t.settings.menuShareSubtitle },
             { key: 'sobre', label: t.settings.menuAbout, subtitle: t.settings.menuAboutSubtitle },
           ].map(item => (
             <TouchableOpacity
               key={item.key}
               style={styles.menuItem}
-              onPress={() => setSubScreen(item.key as SubScreen)}>
+              onPress={() => (item.key === 'arquivo' ? onOpenArchive() : setSubScreen(item.key as SubScreen))}>
               <View style={styles.menuInfo}>
                 <Text style={styles.menuLabel}>{item.label}</Text>
                 <Text style={styles.menuSubtitle}>{item.subtitle}</Text>

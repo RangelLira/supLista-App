@@ -8,7 +8,6 @@ import { ShoppingList } from '../../src/types';
 const base: ShoppingList = {
   id: 1,
   name: 'Feira',
-  type: 'compras',
   suppliers: [],
   items: [
     { id: 10, name: 'Arroz', quantity: 2, unit: 'kg', isChecked: true, price: 12.9, priceType: 'unit' },
@@ -35,7 +34,7 @@ describe('toSharedDoc', () => {
     const d = toSharedDoc(base);
     expect(d.id).toBe(1);
     expect(d.name).toBe('Feira');
-    expect(d.type).toBe('compras');
+    expect((d as Record<string, unknown>).type).toBeUndefined();
     expect(d.sharedWithUid).toBe('partner');
     expect(d.items).toHaveLength(2);
     expect(d.items[0].price).toBe(12.9);
