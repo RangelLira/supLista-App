@@ -34,7 +34,7 @@ bundle exec pod install
 **supLista** is a React Native shopping/task list app (Android/iOS), forked from a larger productivity app (TaskFlow) and stripped down to just the lists feature. Package id `com.contestsoftware.suplista` (developer: Contest Software). The RN module name (`app.json` `name`, `getMainComponentName`, iOS `withModuleName`) is `supLista`. The iOS Xcode project/folder/target are still named `supList` — deliberately not renamed (invisible, risky Xcode surgery); only the bundle id and display name changed. All app logic lives in `App.tsx` and `src/`.
 
 ### State Management
-There is no external state library. `App.tsx` is the single source of truth — it holds the full `lists` array in `useState` and passes it down as props. All mutations go through handlers defined in `App.tsx`, which call `saveLists` from `src/utils/storage.ts` to persist to AsyncStorage after every change. `App.tsx` also holds the **item catalog** (`catalog: CatalogItem[]`) and a `recordItems(items, type)` handler threaded down through `ListsScreen` → `ShoppingListScreen`; every item add/edit/inherit/search-add calls it so the catalog accumulates.
+There is no external state library. `App.tsx` is the single source of truth — it holds the full `lists` array in `useState` and passes it down as props. Mutation handlers in `App.tsx` (`handleSaveList`/`handleUpdateList`/`handleDeleteList`) only call `setLists`; a **single `useEffect(() => saveLists(lists), [lists])`** persists to AsyncStorage (never call `saveLists` from inside a `setState` updater — the updater must stay pure). `App.tsx` also holds the **item catalog** (`catalog: CatalogItem[]`) and a `recordItems(items, type)` handler threaded down through `ListsScreen` → `ShoppingListScreen`; every item add/edit/inherit/search-add calls it so the catalog accumulates.
 
 ### Data Model (`src/types/index.ts`)
 - **`ShoppingList`** — the only content entity. Supports both shopping (`type: 'compras'`) and task (`type: 'tarefas'`) lists. `isArchived` exists on the type but nothing in the app currently sets it to `true` (the old archive flow was removed) — it's effectively always `false`; don't build new features assuming lists can be archived without first wiring an entry point. `notes?: string` is free-text (plain string).
@@ -108,7 +108,10 @@ All colors and reusable styles are in `src/styles/theme.ts` (`colors` object + `
 Used by `CreateListForm`. Renders 7 preset tag chips + 1 "Personalizar" chip in a 4×2 grid, always followed by a custom text input. See inline comments in the component for the sentinel/sync-guard details — behavior is unchanged from before the fork.
 
 ### Persistence
-AsyncStorage keys: `@suplista_lists` (lists), `@suplista_settings` (settings), `@suplista_item_catalog` (item history for "Pesquisar meus itens"). All reads/writes go through `src/utils/storage.ts`.
+AsyncStorage keys: `@suplista_lists` (lists), `@suplista_settings` (settings), `@suplista_item_catalog` (item history for "Pesquisar meus itens"), `@suplista_devlog` (dev log, `__DEV__` only). All reads/writes go through `src/utils/storage.ts` (except the dev log — `src/dev/devLog.ts`).
+
+### Tests
+`npm test` (jest, `preset: react-native`). `jest.setup.js` mocks the native modules the app loads at boot (AsyncStorage, `@react-native-firebase/auth`+`firestore`, Google Sign-In, Clipboard, SVG) — without it, importing `App.tsx` in a suite throws `NativeModule … is null`. Pure logic lives in testable utils (`priceUtils`, `dateUtils`, `schemaUtils`, `storage`, `src/dev/*`); `__tests__/App.test.tsx` is a full-tree smoke test. `testTimeout` is 30s because the first (uncached) transform of the whole tree for `App.test` can exceed jest's 5s default.
 
 ### Internationalization (i18n)
 All user-visible strings **must** use the translation system. Never hardcode visible text.
