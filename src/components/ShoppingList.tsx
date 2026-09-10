@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -186,6 +187,16 @@ function createStyles(c: typeof darkColors) {
   });
 }
 
+// Foco adiado. `autoFocus` dentro de um <Modal transparent> no Android sobe o
+// teclado enquanto o modal ainda está fazendo layout (com adjustResize a janela
+// é redimensionada no meio da animação) -> overlay colapsa e o card aparece
+// espremido no canto. Focar só depois de `onShow` (modal já apresentado) evita
+// a corrida. Ver também o comentário em `modalOverlay` no tema.
+const focusAfterShow =
+  (ref: React.RefObject<TextInput | null>) => () => {
+    setTimeout(() => ref.current?.focus(), 50);
+  };
+
 // ===========================
 // FORMULÁRIO: CRIAR LISTA
 // ===========================
@@ -200,6 +211,8 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: winW, height: winH } = useWindowDimensions();
+  const nameInputRef = useRef<TextInput>(null);
 
   const [listName, setListName] = useState('');
   const [listType, setListType] = useState<'compras' | 'tarefas'>('compras');
@@ -276,7 +289,12 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onShow={focusAfterShow(nameInputRef)}
+      onRequestClose={onClose}>
       <View style={styles.modalContainer}>
         <View style={globalStyles.modalHeader}>
           <Text style={globalStyles.modalTitle}>{t.lists.createTitle}</Text>
@@ -287,12 +305,12 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
           {/* TÍTULO */}
           <Text style={globalStyles.inputLabel}>{t.lists.fieldTitle}</Text>
           <TextInput
+            ref={nameInputRef}
             style={globalStyles.input}
             value={listName}
             onChangeText={setListName}
             placeholder={listType === 'compras' ? t.lists.placeholderShopping : t.lists.placeholderTasks}
             placeholderTextColor="#666"
-            autoFocus
             maxLength={40}
           />
 
@@ -356,9 +374,12 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
         )}
       </View>
 
-      {/* MODAL SELECIONAR LISTA PARA HERDAR */}
-      <Modal visible={showInheritModal} animationType="fade" transparent>
-        <View style={globalStyles.modalOverlay}>
+      {/* SELECIONAR LISTA PARA HERDAR — overlay condicional dentro do próprio
+          modal de criação, NÃO um <Modal> aninhado (no Android o modal interno
+          tem bug de backdrop/medição). O back de hardware já é tratado no
+          BackHandler acima (fecha showInheritModal antes de fechar o form). */}
+      {showInheritModal && (
+        <View style={[globalStyles.modalOverlay, { width: winW, height: winH }]}>
           <View style={globalStyles.modalContent}>
             <Text style={[globalStyles.textTitle, { textAlign: 'center', marginBottom: 16 }]}>
               {t.lists.inheritModalTitle}
@@ -388,7 +409,7 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      )}
     </Modal>
   );
 }
@@ -409,6 +430,8 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: winW, height: winH } = useWindowDimensions();
+  const nameInputRef = useRef<TextInput>(null);
 
   const [itemName, setItemName] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -463,17 +486,23 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={globalStyles.modalOverlay}>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      statusBarTranslucent
+      onShow={focusAfterShow(nameInputRef)}
+      onRequestClose={onClose}>
+      <View style={[globalStyles.modalOverlay, { width: winW, height: winH }]}>
         <View style={globalStyles.modalContent}>
           <Text style={[globalStyles.inputLabel, { marginTop: 4 }]}>{listType === 'compras' ? t.lists.addItem + ':' : t.lists.addTask + ':'}</Text>
           <TextInput
+            ref={nameInputRef}
             style={globalStyles.input}
             value={itemName}
             onChangeText={setItemName}
             placeholder={listType === 'compras' ? t.shoppingItem.placeholderShopping : t.shoppingItem.placeholderTask}
             placeholderTextColor="#666"
-            autoFocus
           />
 
           {listType === 'compras' && (
@@ -578,6 +607,8 @@ interface AddPriceModalProps {
 function AddPriceModal({ visible, item, onClose, onSave }: AddPriceModalProps) {
   const { globalStyles } = useTheme();
   const { t } = useLanguage();
+  const { width: winW, height: winH } = useWindowDimensions();
+  const priceInputRef = useRef<TextInput>(null);
 
   const [price, setPrice] = useState('');
   const [priceType, setPriceType] = useState<'unit' | 'total'>('unit');
@@ -603,8 +634,14 @@ function AddPriceModal({ visible, item, onClose, onSave }: AddPriceModalProps) {
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={globalStyles.modalOverlay}>
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      statusBarTranslucent
+      onShow={focusAfterShow(priceInputRef)}
+      onRequestClose={onClose}>
+      <View style={[globalStyles.modalOverlay, { width: winW, height: winH }]}>
         <View style={globalStyles.modalContent}>
           <Text style={[globalStyles.textTitle, { textAlign: 'center' }]}>
             {item?.price ? t.common.edit : t.shoppingItem.addPrice}
@@ -614,13 +651,13 @@ function AddPriceModal({ visible, item, onClose, onSave }: AddPriceModalProps) {
           </Text>
           <Text style={globalStyles.inputLabel}>{t.shoppingItem.priceLabel}</Text>
           <TextInput
+            ref={priceInputRef}
             style={globalStyles.input}
             value={price}
             onChangeText={setPrice}
             placeholder="0,00"
             placeholderTextColor="#666"
             keyboardType="decimal-pad"
-            autoFocus
           />
           {hasMultipleQty && (
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
@@ -677,6 +714,8 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   const { t } = useLanguage();
   const { showToast } = useToast();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: winW, height: winH } = useWindowDimensions();
+  const notesInputRef = useRef<TextInput>(null);
 
   const [showAddItem, setShowAddItem] = useState(false);
   const [editingItem, setEditingItem] = useState<ListItem | null>(null);
@@ -1036,29 +1075,39 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         </View>
       )}
 
-      <AddItemModal
-        visible={showAddItem || !!editingItem}
-        editItem={editingItem}
-        existingItems={list.items}
-        onClose={() => { setShowAddItem(false); setEditingItem(null); }}
-        onSave={(item) => editingItem ? updateItem(item) : addItem(item)}
-        listType={list.type || 'compras'}
-      />
-      <AddPriceModal
-        visible={!!priceModalItem}
-        item={priceModalItem}
-        onClose={() => setPriceModalItem(null)}
-        onSave={addPrice}
-      />
+      {/* Só monta um <Modal> quando ele está de fato visível. Ter vários <Modal>
+          montados ao mesmo tempo faz o Android medir errado o que está aberto
+          (card espremido / backdrop pela metade). */}
+      {(showAddItem || !!editingItem) && (
+        <AddItemModal
+          visible
+          editItem={editingItem}
+          existingItems={list.items}
+          onClose={() => { setShowAddItem(false); setEditingItem(null); }}
+          onSave={(item) => editingItem ? updateItem(item) : addItem(item)}
+          listType={list.type || 'compras'}
+        />
+      )}
+      {!!priceModalItem && (
+        <AddPriceModal
+          visible
+          item={priceModalItem}
+          onClose={() => setPriceModalItem(null)}
+          onSave={addPrice}
+        />
+      )}
 
       {/* MODAL DE ANOTAÇÕES */}
+      {showNotes && (
       <Modal
-        visible={showNotes}
+        visible
         animationType="fade"
         transparent
+        statusBarTranslucent
+        onShow={focusAfterShow(notesInputRef)}
         onRequestClose={() => { saveNotes(); setShowNotes(false); }}>
         <TouchableOpacity
-          style={globalStyles.modalOverlay}
+          style={[globalStyles.modalOverlay, { width: winW, height: winH }]}
           activeOpacity={1}
           onPress={() => { saveNotes(); setShowNotes(false); }}>
           <TouchableOpacity activeOpacity={1} style={globalStyles.modalContent} onPress={() => {}}>
@@ -1066,6 +1115,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
               {t.common.notes}
             </Text>
             <TextInput
+              ref={notesInputRef}
               style={[styles.notesInput, { minHeight: 160, maxHeight: 280 }]}
               value={notesText}
               onChangeText={handleNotesChange}
@@ -1074,7 +1124,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
               placeholderTextColor={colors.textMuted}
               editable={!list.isCompleted}
               textAlignVertical="top"
-              autoFocus
             />
             <TouchableOpacity
               style={[globalStyles.buttonPrimary, { marginTop: 16 }]}
@@ -1084,6 +1133,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+      )}
     </View>
   );
 }

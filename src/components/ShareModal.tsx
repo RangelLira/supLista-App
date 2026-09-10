@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useFirebase } from '../contexts/FirebaseContext';
@@ -32,6 +33,7 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
   const { t } = useLanguage();
   const { userId, sharingEnabled } = useFirebase();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: winW, height: winH } = useWindowDimensions();
 
   const [connections, setConnections] = useState<ShareConnection[]>([]);
   const [loadingUid, setLoadingUid] = useState<string | null>(null);
@@ -97,8 +99,8 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
 
   if (!sharingEnabled) {
     return (
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        <TouchableOpacity style={styles.overlay} onPress={onClose} activeOpacity={1}>
+      <Modal visible={visible} transparent statusBarTranslucent animationType="fade" onRequestClose={onClose}>
+        <TouchableOpacity style={[styles.overlay, { width: winW, height: winH }]} onPress={onClose} activeOpacity={1}>
           <View style={styles.sheet}>
             <Text style={styles.title}>{t.common.share}</Text>
             <Text style={styles.emptyText}>{t.sharing.modalDisabled}</Text>
@@ -112,8 +114,8 @@ export default function ShareModal({ visible, onClose, listName, currentSharedWi
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity style={styles.overlay} onPress={onClose} activeOpacity={1}>
+    <Modal visible={visible} transparent statusBarTranslucent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={[styles.overlay, { width: winW, height: winH }]} onPress={onClose} activeOpacity={1}>
         <View style={styles.sheet}>
           <Text style={styles.title}>{t.sharing.modalTitle}</Text>
 

@@ -643,9 +643,11 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
         </View>
       )}
 
-      {/* MODAL CRIAR LISTA */}
+      {/* MODAL CRIAR LISTA — montado só quando aberto (evitar vários <Modal>
+          montados ao mesmo tempo, que quebram a medição no Android). */}
+      {showCreateForm && (
       <CreateListForm
-        visible={showCreateForm}
+        visible
         onClose={() => setShowCreateForm(false)}
         onSave={(newList) => {
           onSaveList(newList);
@@ -654,10 +656,12 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
         }}
         existingLists={lists}
       />
+      )}
 
       {/* MODAL COMPARTILHAR LISTA */}
+      {sharingList !== null && (
       <ShareModal
-        visible={sharingList !== null}
+        visible
         onClose={() => setSharingList(null)}
         listName={sharingList?.name ?? ''}
         currentSharedWithUid={sharingList?.sharedWithUid ?? null}
@@ -688,6 +692,7 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
           }
         }}
       />
+      )}
     </View>
   );
 }

@@ -14,6 +14,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
@@ -41,6 +42,7 @@ import { loadSettings } from '../utils/storage';
 function QRModal({ visible, code, onClose }: { visible: boolean; code: string; onClose: () => void }) {
   const { t } = useLanguage();
   const { colors } = useTheme();
+  const { width: winW, height: winH } = useWindowDimensions();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -49,8 +51,8 @@ function QRModal({ visible, code, onClose }: { visible: boolean; code: string; o
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={qrModalStyles.overlay}>
+    <Modal visible={visible} transparent statusBarTranslucent animationType="fade" onRequestClose={onClose}>
+      <View style={[qrModalStyles.overlay, { width: winW, height: winH }]}>
         <View style={[qrModalStyles.container, { backgroundColor: colors.bgCard }]}>
           <Text style={[qrModalStyles.title, { color: colors.textPrimary }]}>{t.sharing.qrTitle}</Text>
           <Text style={[qrModalStyles.subtitle, { color: colors.textSecondary }]}>
@@ -492,12 +494,14 @@ export default function SharingScreen() {
 
       </ScrollView>
 
-      {/* MODAL: EXIBIR QR CODE */}
-      <QRModal
-        visible={showQRModal}
-        code={inviteCode ?? ''}
-        onClose={() => setShowQRModal(false)}
-      />
+      {/* MODAL: EXIBIR QR CODE — montado só quando aberto */}
+      {showQRModal && (
+        <QRModal
+          visible
+          code={inviteCode ?? ''}
+          onClose={() => setShowQRModal(false)}
+        />
+      )}
 
     </>
   );

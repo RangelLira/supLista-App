@@ -198,8 +198,19 @@ export function createGlobalStyles(c: typeof darkColors) {
       textAlign: 'center',
       marginTop: 40,
     },
+    // IMPORTANTE: nada de `flex: 1` aqui. Dentro de um <Modal transparent> no
+    // Android, a janela nativa do modal às vezes reporta altura 0/obsoleta no
+    // primeiro layout (corrida com o teclado do `autoFocus` + adjustResize).
+    // Um container `flex: 1` colapsa para o tamanho do conteúdo -> card espremido
+    // no canto e backdrop pela metade. Posição absoluta ancorada nas 4 bordas +
+    // dimensão explícita da janela (ver `useWindowDimensions` nos componentes)
+    // garante que o overlay sempre cubra a tela toda.
     modalOverlay: {
-      flex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.7)',
       justifyContent: 'center',
       alignItems: 'center',
