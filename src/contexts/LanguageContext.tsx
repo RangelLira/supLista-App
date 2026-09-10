@@ -227,6 +227,12 @@ const translations = {
       aboutContactTitle: 'Contato',
       aboutSiteLabel: 'Site oficial',
       aboutReportIssue: 'Reportar problema (GitHub)',
+      aboutVersion: 'Versão 1.0',
+      aboutTagline: '"Faça suas próprias escolhas"',
+      aboutDevelopedBy: 'Desenvolvido por',
+      aboutViewTerms: 'Ver termos de uso',
+      aboutRights: '© 2026 supLista. Todos os direitos reservados.',
+      termsCloseBtn: 'Fechar',
       backBtn: '← Voltar',
       comingSoon: 'Em desenvolvimento',
       // Perfil
@@ -795,6 +801,12 @@ const translations = {
       aboutContactTitle: 'Contact',
       aboutSiteLabel: 'Official website',
       aboutReportIssue: 'Report an issue (GitHub)',
+      aboutVersion: 'Version 1.0',
+      aboutTagline: '"Make your own choices"',
+      aboutDevelopedBy: 'Developed by',
+      aboutViewTerms: 'View terms of use',
+      aboutRights: '© 2026 supLista. All rights reserved.',
+      termsCloseBtn: 'Close',
       backBtn: '← Back',
       comingSoon: 'Coming soon',
       // Profile
@@ -1363,6 +1375,12 @@ const translations = {
       aboutContactTitle: 'Contacto',
       aboutSiteLabel: 'Sitio oficial',
       aboutReportIssue: 'Reportar un problema (GitHub)',
+      aboutVersion: 'Versión 1.0',
+      aboutTagline: '"Toma tus propias decisiones"',
+      aboutDevelopedBy: 'Desarrollado por',
+      aboutViewTerms: 'Ver términos de uso',
+      aboutRights: '© 2026 supLista. Todos los derechos reservados.',
+      termsCloseBtn: 'Cerrar',
       backBtn: '← Volver',
       comingSoon: 'En desarrollo',
       // Perfil
@@ -1715,6 +1733,9 @@ const translations = {
     },
   },
 } as const;
+
+// Exportado só para o teste de paridade de chaves (__tests__/i18n.test.ts).
+export const _translations = translations;
 
 type Translations = typeof translations.pt;
 

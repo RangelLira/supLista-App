@@ -421,11 +421,8 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
   };
 
   const handleToggleComplete = (list: ShoppingList) => {
-    if (list.isCompleted) {
-      onUpdateList({ ...list, isCompleted: false, completedAt: null });
-    } else {
-      onUpdateList({ ...list, isCompleted: true, completedAt: new Date().toISOString() });
-    }
+    // completedAt é carimbado/limpo só em App.tsx (handleUpdateList) — fonte única.
+    onUpdateList({ ...list, isCompleted: !list.isCompleted });
   };
 
   const formatListTimestamp = (iso: string) => {
@@ -539,8 +536,8 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
             const target = lists.find(l => l.id === id);
             if (target) setSelectedList(target);
           }}
-          onComplete={() => onUpdateList({ ...currentList, isCompleted: true, completedAt: new Date().toISOString() })}
-          onReopen={() => onUpdateList({ ...currentList, isCompleted: false, completedAt: null })}
+          onComplete={() => onUpdateList({ ...currentList, isCompleted: true })}
+          onReopen={() => onUpdateList({ ...currentList, isCompleted: false })}
           onShare={() => {
             if (currentList.isSharedWithMe) {
               if (!currentList.ownerUid) return;

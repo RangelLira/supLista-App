@@ -383,7 +383,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
         </ScrollView>
         <View style={styles.termsBottomBar}>
           <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(false)}>
-            <Text style={globalStyles.buttonPrimaryText}>Fechar</Text>
+            <Text style={globalStyles.buttonPrimaryText}>{t.settings.termsCloseBtn}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -411,12 +411,12 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
         <View style={styles.aboutContainer}>
           <View style={styles.aboutTop}>
             <Text style={styles.aboutAppName}>supLista</Text>
-            <Text style={styles.aboutVersion}>Versão 1.0</Text>
-            <Text style={styles.aboutTagline}>"Faça suas próprias escolhas"</Text>
+            <Text style={styles.aboutVersion}>{t.settings.aboutVersion}</Text>
+            <Text style={styles.aboutTagline}>{t.settings.aboutTagline}</Text>
 
             <View style={styles.aboutDivider} />
 
-            <Text style={styles.aboutLabel}>Desenvolvido por</Text>
+            <Text style={styles.aboutLabel}>{t.settings.aboutDevelopedBy}</Text>
             <Text style={styles.aboutDeveloper}>Contest Software - Rangel Lira</Text>
 
             <View style={styles.aboutDivider} />
@@ -449,7 +449,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
             <View style={styles.aboutDivider} />
 
             <TouchableOpacity style={globalStyles.buttonPrimary} onPress={() => setShowTerms(true)}>
-              <Text style={globalStyles.buttonPrimaryText}>Ver termos de uso</Text>
+              <Text style={globalStyles.buttonPrimaryText}>{t.settings.aboutViewTerms}</Text>
             </TouchableOpacity>
 
             {__DEV__ && (
@@ -471,7 +471,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
             )}
           </View>
 
-          <Text style={styles.aboutCopyright}>© 2026 supLista. Todos os direitos reservados.</Text>
+          <Text style={styles.aboutCopyright}>{t.settings.aboutRights}</Text>
         </View>
       </View>
     );

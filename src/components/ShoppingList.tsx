@@ -255,7 +255,7 @@ export function CreateListForm({ visible, onClose, onSave, existingLists = [] }:
   }, []);
 
   const handleSave = () => {
-    if (!listName.trim()) { Alert.alert('Erro', t.lists.nameLabel.replace(' *', '')); return; }
+    if (!listName.trim()) { Alert.alert(t.common.error, t.lists.nameLabel.replace(' *', '')); return; }
 
     const today = new Date().toISOString().split('T')[0];
     const duplicate = existingLists.some(l => {
@@ -1029,8 +1029,10 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   };
 
   const formatQuantity = (item: ListItem) => {
-    if (!item.unit || item.unit === 'unidade') return `Qtd: ${item.quantity}`;
-    return `Qtd: ${item.quantity} ${item.unit}`;
+    const q = `${t.shoppingItem.qtyLabel} ${item.quantity}`;
+    if (!item.unit || item.unit === 'unidade') return q;
+    const unit = t.units[item.unit as keyof typeof t.units] ?? item.unit;
+    return `${q} ${unit}`;
   };
 
   if (subView === 'inherit') {
