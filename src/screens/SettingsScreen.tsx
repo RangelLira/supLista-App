@@ -18,7 +18,6 @@ import Svg, { Path } from 'react-native-svg';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
-import { useToast } from '../hooks/useToast';
 import { AccentColor, ACCENT_PRESETS, HEADER_TOP_PADDING } from '../styles/theme';
 import { loadSettings, saveSettings } from '../utils/storage';
 import { propagateDisplayName, setUserDisplayName } from '../utils/firestore';
@@ -61,9 +60,9 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
   const { colors, globalStyles, theme, setTheme, accentColor, setAccentColor } = useTheme();
   const { lang, setLanguage, t } = useLanguage();
   const { user, userId, isGoogleConnected, signInWithGoogle, signOutGoogle } = useFirebase();
-  const { showToast } = useToast();
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
   const [localDisplayName, setLocalDisplayName] = useState('');
+  const [nameSaved, setNameSaved] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showDev, setShowDev] = useState<'menu' | 'log' | null>(null);
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -96,14 +95,15 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
       try {
         await setUserDisplayName(userId, name);
         await propagateDisplayName(userId, name);
-        showToast(t.settings.profileNameSaved);
       } catch (e) {
         console.warn('[handleSaveDisplayName] falha ao propagar nome:', e);
         Alert.alert(t.common.error, t.settings.profileNamePropagateError);
+        return;
       }
-    } else {
-      showToast(t.settings.profileNameSaved);
     }
+    // Retorno inline (sem toast): o botão vira "✓ Salvo" por 2s.
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2000);
   };
 
   // ===========================
@@ -182,7 +182,9 @@ export default function SettingsScreen({ onChangeUserName, onGoHome }: Props) {
               style={[globalStyles.buttonPrimary, !localDisplayName.trim() && { opacity: 0.5 }]}
               disabled={!localDisplayName.trim()}
               onPress={handleSaveDisplayName}>
-              <Text style={globalStyles.buttonPrimaryText}>{t.settings.profileNameSave}</Text>
+              <Text style={globalStyles.buttonPrimaryText}>
+                {nameSaved ? `✓ ${t.settings.profileNameSaved}` : t.settings.profileNameSave}
+              </Text>
             </TouchableOpacity>
           </View>
 

@@ -654,7 +654,6 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
           // Fluxo pós-criação: volta para a tela principal (não entra na lista).
           onSaveList(newList);
           setShowCreateForm(false);
-          showToast(t.toast.listCreated);
         }}
         existingLists={lists}
       />
@@ -677,12 +676,10 @@ export default function ListsScreen({ userName, lists, catalog, onSaveList, onUp
               await unshareList(sharingList, userId);
               onUpdateList({ ...sharingList, sharedWithUid: null });
               setSharingList(prev => prev ? { ...prev, sharedWithUid: null } : null);
-              showToast(t.toast.shareDisabled);
             } else {
               await shareList(sharingList, userId, partnerUid);
               onUpdateList({ ...sharingList, sharedWithUid: partnerUid });
               setSharingList(prev => prev ? { ...prev, sharedWithUid: partnerUid } : null);
-              showToast(t.toast.shareEnabled);
             }
             setSyncSuccessListId(listId);
             setTimeout(() => setSyncSuccessListId(null), 1000);

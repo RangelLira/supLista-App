@@ -20,7 +20,6 @@ import {
 } from 'react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../hooks/useToast';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
 import { CatalogItem, ShoppingList, ListItem, AVAILABLE_UNITS } from '../types';
 import { nextId } from '../utils/id';
@@ -410,7 +409,7 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
   const getUnitLabel = () => t.units[selectedUnit as keyof typeof t.units] ?? (AVAILABLE_UNITS.find(u => u.value === selectedUnit)?.label || 'Unidade');
 
   const qtyNum = parseInt(quantity, 10) || 1;
-  const canInherit = allLists.some(l => l.id !== currentListId && l.type === listType && l.items.length > 0);
+  const canInherit = allLists.some(l => l.id !== currentListId && !l.isSharedWithMe && l.type === listType && l.items.length > 0);
 
   const handleSave = () => {
     if (!itemName.trim()) { Alert.alert(t.common.error, t.shoppingItem.errorRequired); return; }
@@ -454,8 +453,16 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
       statusBarTranslucent
       onShow={focusAfterShow(nameInputRef)}
       onRequestClose={onClose}>
-      <View style={[globalStyles.modalOverlay, { width: winW, height: winH }]}>
-        <View style={[globalStyles.modalContent, { maxHeight: winH * 0.85 }]}>
+      {/* Card ancorado no topo (não centralizado): com o teclado aberto — que sobe
+          sozinho por causa do autofocus — um card centralizado fica atrás dele.
+          No topo, o campo de nome fica sempre visível e os campos de baixo são
+          alcançados rolando o ScrollView interno. */}
+      <View style={[globalStyles.modalOverlay, {
+        width: winW, height: winH,
+        justifyContent: 'flex-start',
+        paddingTop: HEADER_TOP_PADDING + 8,
+      }]}>
+        <View style={[globalStyles.modalContent, { maxHeight: winH * 0.7 }]}>
          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Text style={[globalStyles.inputLabel, { marginTop: 4 }]}>{listType === 'compras' ? t.lists.addItem + ':' : t.lists.addTask + ':'}</Text>
           <TextInput
@@ -481,7 +488,9 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
               </View>
               <View style={styles.unitContainer}>
                 <Text style={globalStyles.inputLabel}>{t.shoppingItem.unitLabel}</Text>
-                <TouchableOpacity style={styles.unitSelector} onPress={() => setShowUnitPicker(true)}>
+                <TouchableOpacity
+                  style={styles.unitSelector}
+                  onPress={() => { Keyboard.dismiss(); setShowUnitPicker(true); }}>
                   <Text style={styles.unitText}>{getUnitLabel()}</Text>
                   <Text style={styles.unitArrow}>▼</Text>
                 </TouchableOpacity>
@@ -845,7 +854,6 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
 }: ShoppingListScreenProps) {
   const { colors, globalStyles } = useTheme();
   const { t } = useLanguage();
-  const { showToast } = useToast();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { width: winW, height: winH } = useWindowDimensions();
   const notesInputRef = useRef<TextInput>(null);
@@ -938,9 +946,28 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
 
   const handleSaveName = () => {
     if (nameSavedRef.current) return;
+    const trimmed = nameInput.trim();
+
+    if (trimmed && trimmed !== list.name) {
+      // Mesma regra do "criar lista": bloqueia nome igual ao de outra lista sua
+      // criada no mesmo dia (não vale para listas compartilhadas comigo).
+      const day = (list.createdAt ?? '').split('T')[0];
+      const clash = allLists.some(l =>
+        l.id !== list.id && !l.isSharedWithMe &&
+        l.name.trim().toLowerCase() === trimmed.toLowerCase() &&
+        (l.createdAt ?? '').split('T')[0] === day,
+      );
+      if (clash) {
+        nameSavedRef.current = true;
+        setEditingName(false);
+        setNameInput(list.name);
+        Alert.alert(t.alerts.listNameTaken, t.alerts.listNameTakenMsg);
+        return;
+      }
+    }
+
     nameSavedRef.current = true;
     setEditingName(false);
-    const trimmed = nameInput.trim();
     if (trimmed && trimmed !== list.name) {
       onUpdate({ ...list, name: trimmed });
     }
@@ -969,37 +996,33 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   }, 0);
   const progress = list.items.length > 0 ? checkedItems.length / list.items.length : 0;
 
-  const prevCheckedCountRef = useRef(checkedItems.length);
-  useEffect(() => {
-    const prev = prevCheckedCountRef.current;
-    prevCheckedCountRef.current = checkedItems.length;
-    if (list.items.length > 0 && checkedItems.length === list.items.length && prev < checkedItems.length) {
-      showToast(t.toast.allListItemsDone);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkedItems.length, list.items.length]);
-
   const toggleItem = (itemId: number) => {
     if (list.isCompleted) return;
     const updated = { ...list, items: list.items.map(i => i.id === itemId ? { ...i, isChecked: !i.isChecked } : i) };
     onUpdate(updated);
   };
 
+  // Só registra no histórico de itens do PRÓPRIO usuário — itens de uma lista
+  // compartilhada comigo não entram na minha busca/herança (segurança).
+  const record = (items: ListItem[]) => {
+    if (!isSharedWithMe) onRecordItems?.(items, list.type);
+  };
+
   const addItem = (item: ListItem) => {
     onUpdate({ ...list, items: [item, ...list.items] });
-    onRecordItems?.([item], list.type);
+    record([item]);
   };
 
   // Adiciona vários de uma vez (Herdar itens / Pesquisar meus itens)
   const addItems = (items: ListItem[]) => {
     if (!items.length) return;
     onUpdate({ ...list, items: [...items, ...list.items] });
-    onRecordItems?.(items, list.type);
+    record(items);
   };
 
   const updateItem = (item: ListItem) => {
     onUpdate({ ...list, items: list.items.map(i => i.id === item.id ? item : i) });
-    onRecordItems?.([item], list.type);
+    record([item]);
   };
 
   const removeItem = (itemId: number) => {
@@ -1038,14 +1061,15 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   if (subView === 'inherit') {
     return (
       <InheritItemsView
-        sourceLists={allLists.filter(l => l.id !== list.id && l.type === list.type && l.items.length > 0)}
+        // Só listas do próprio usuário — nunca herda de lista compartilhada
+        // comigo (evita clonar a lista do parceiro num toque).
+        sourceLists={allLists.filter(l => l.id !== list.id && !l.isSharedWithMe && l.type === list.type && l.items.length > 0)}
         existingItems={list.items}
         listType={list.type}
         onCancel={() => setSubView(null)}
         onConfirm={(items) => {
           addItems(items);
           setSubView(null);
-          showToast(t.toast.itemsInherited(items.length));
         }}
       />
     );
@@ -1055,7 +1079,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
       <SearchItemsView
         catalog={catalog.filter(e => e.type === list.type)}
         existingItems={list.items}
-        onAdd={(item) => { addItems([item]); showToast(t.toast.itemAdded); }}
+        onAdd={(item) => addItems([item])}
         onDone={() => setSubView(null)}
       />
     );
