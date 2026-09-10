@@ -79,3 +79,7 @@ android/app/google-services.json
 
 # Notas de build com dados sensíveis (fingerprints, credenciais) — nunca versionar
 docs/build-signing.local.md
+
+# Screenshots de depuração locais
+erro_tela.jpeg
+*.local.jpeg
