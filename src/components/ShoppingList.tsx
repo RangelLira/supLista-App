@@ -23,6 +23,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/useToast';
 import { darkColors, HEADER_TOP_PADDING } from '../styles/theme';
 import { CatalogItem, ShoppingList, ListItem, AVAILABLE_UNITS } from '../types';
+import { normalizePrice } from '../utils/priceUtils';
 import SwipeRow from './SwipeRow';
 import TagPicker from './TagPicker';
 
@@ -575,39 +576,6 @@ function AddItemModal({ visible, onClose, onSave, listType, editItem, existingIt
 }
 
 // ===========================
-// MODAL: ADICIONAR PREÇO
-// ===========================
-// Normaliza entrada de preço BR/US: "25,90" → 25.90, "1.600,00" → 1600.00
-// Rejeita: ",90", ".90", "99,99,999", "88.88.9"
-function normalizePrice(input: string): number | null {
-  const trimmed = input.trim();
-  if (!trimmed || !/^\d/.test(trimmed)) return null;
-
-  const commaCount = (trimmed.match(/,/g) || []).length;
-  if (commaCount > 1) return null;
-
-  let normalized: string;
-  if (commaCount === 1) {
-    const parts = trimmed.split(',');
-    if (parts[1].includes('.')) return null;
-    normalized = trimmed.replace(/\./g, '').replace(',', '.');
-  } else {
-    const dotParts = trimmed.split('.');
-    if (dotParts.length === 1) {
-      normalized = trimmed;
-    } else if (dotParts.length === 2) {
-      normalized = dotParts[1].length <= 2 ? trimmed : trimmed.replace(/\./g, '');
-    } else {
-      if (!dotParts.slice(1).every(p => p.length === 3)) return null;
-      normalized = trimmed.replace(/\./g, '');
-    }
-  }
-
-  const value = parseFloat(normalized);
-  return isNaN(value) || value < 0 ? null : value;
-}
-
-// ===========================
 // SUB-TELA: HERDAR ITENS DE OUTRAS LISTAS
 // ===========================
 interface InheritItemsViewProps {
@@ -994,8 +962,10 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
   }, [editingName, editingItem, showAddItem, subView, showNotes]);
 
   const checkedItems = list.items.filter(i => i.isChecked);
+  // A calculadora aparece quando há item MARCADO com preço (inclui preço 0,00).
+  const hasPricedChecked = checkedItems.some(i => i.price != null);
   const total = checkedItems.reduce((sum, i) => {
-    if (!i.price) return sum;
+    if (i.price == null) return sum;
     return sum + (i.priceType === 'total' ? i.price : i.price * i.quantity);
   }, 0);
   const progress = list.items.length > 0 ? checkedItems.length / list.items.length : 0;
@@ -1240,7 +1210,7 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
           {/* Calculadora — aparece sozinha ao haver item concluído com preço.
               Soma só os itens CONCLUÍDOS. O aviso surge quando algum concluído
               está sem preço. Falta de preço nunca impede concluir. */}
-          {isCompras && total > 0 && (
+          {isCompras && hasPricedChecked && (
             <View style={styles.calcWrap}>
               <Text style={styles.calcTotal}>
                 {t.calc.total}: R$ {total.toFixed(2).replace('.', ',')}
