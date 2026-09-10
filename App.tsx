@@ -39,23 +39,46 @@ function AppContent() {
   // ===========================
   // HELPERS DE SYNC — COMPARTILHAMENTO
   // ===========================
-  const syncSharedList = async (list: ShoppingList) => {
+  // Um timer de push por lista: edições rápidas (marcar vários itens, digitar
+  // notas) viram UMA escrita no Firestore ~700ms após a última. O estado local
+  // já foi pro AsyncStorage na hora; só a propagação pro parceiro é adiada.
+  const syncTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  useEffect(() => () => {
+    Object.values(syncTimersRef.current).forEach(clearTimeout);
+  }, []);
+
+  const syncSharedList = (list: ShoppingList) => {
     if (!userId) return;
-    try {
-      if (list.isSharedWithMe && list.ownerUid) {
-        // Receptor editando — propaga para o documento do dono
-        await updateSharedList(list, list.ownerUid);
-        logEvent('SYNC', 'push (receptor)', { id: list.id });
-      } else if (!list.isSharedWithMe && list.sharedWithUid) {
-        // Dono editando — propaga para o próprio documento
-        await updateSharedList(list, userId);
-        logEvent('SYNC', 'push (dono)', { id: list.id });
+    const isShared = (l: ShoppingList) =>
+      (l.isSharedWithMe && !!l.ownerUid) || (!l.isSharedWithMe && !!l.sharedWithUid);
+    if (!isShared(list)) return;
+
+    const id = list.id;
+    if (syncTimersRef.current[id]) clearTimeout(syncTimersRef.current[id]);
+    syncTimersRef.current[id] = setTimeout(async () => {
+      delete syncTimersRef.current[id];
+      // Sempre a versão mais recente — se a lista foi editada de novo, excluída
+      // ou deixou de ser compartilhada nesses 700ms, o push reflete isso.
+      const live = listsRef.current.find(l => l.id === id);
+      if (!live || !isShared(live)) return;
+      const asReceiver = !!(live.isSharedWithMe && live.ownerUid);
+      try {
+        await updateSharedList(live, asReceiver ? live.ownerUid! : userId);
+        logEvent('SYNC', 'push', { id, via: asReceiver ? 'receptor' : 'dono' });
+      } catch (err) {
+        console.warn('[syncSharedList] falha ao sincronizar lista compartilhada:', err);
+        showToast(t.toast.syncError);
       }
-    } catch (err) {
-      console.warn('[syncSharedList] falha ao sincronizar lista compartilhada:', err);
-      showToast(t.toast.syncError);
+    }, 700);
+  };
+
+  const cancelPendingSync = (id: number) => {
+    if (syncTimersRef.current[id]) {
+      clearTimeout(syncTimersRef.current[id]);
+      delete syncTimersRef.current[id];
     }
   };
+
   const removeSharedList = async (list: ShoppingList) => {
     if (!userId || list.isSharedWithMe || !list.sharedWithUid) return;
     try { await deleteSharedListDoc(userId, list.id); } catch (err) {
@@ -272,7 +295,7 @@ function AppContent() {
       ...(prev.isCompleted !== list.isCompleted ? { concluida: list.isCompleted } : {}),
       ...((prev.notes ?? '') !== (list.notes ?? '') ? { notas: (list.notes ?? '').length } : {}),
     } : { id: list.id, semPrev: true });
-    await syncSharedList(stamped);
+    syncSharedList(stamped);
   };
 
   // Registra itens no catálogo universal (histórico que sobrevive à exclusão de listas).
@@ -287,6 +310,7 @@ function AppContent() {
 
   const handleDeleteList = async (id: number) => {
     const list = lists.find(l => l.id === id);
+    cancelPendingSync(id); // não deixa um push pendente recriar o doc após o delete
     setLists(lists.filter(l => l.id !== id));
     logEvent('LIST', 'excluir', { id, nome: list?.name, itens: list?.items.length });
     if (list) await removeSharedList(list);

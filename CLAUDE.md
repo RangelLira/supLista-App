@@ -142,6 +142,8 @@ Real-time sharing uses Firebase Firestore. The Firebase project is `supApps` (Co
 
 **Critical rule:** When processing Firestore snapshots, always process the snapshot data directly — never make additional queries inside a snapshot callback.
 
+**Sync write path:** `handleUpdateList` calls `syncSharedList(list)` on every edit, but it's **debounced per list id (~700ms)** — checking many items / typing notes coalesces into one Firestore write. The timer reads the *live* list from `listsRef` when it fires, so it always pushes current state and self-cancels if the list was unshared or deleted meanwhile (`cancelPendingSync` on delete). Writes go through `toSharedDoc(list)` (`src/utils/firestore.ts`) — an explicit whitelist that keeps local-only fields (`isSharedWithMe`) and any `undefined` out of the shared doc; `ownerUid` always comes from the caller's argument.
+
 ### ID Generation
 List and item IDs come from `nextId()` (`src/utils/id.ts`) — a millisecond timestamp that's forced strictly increasing, so two entities created in the same ms (create list + add item, inherit several items, fast taps) never collide within a session, and a new session's `Date.now()` is always above the previous session's IDs. Never use bare `Date.now()` for an id. `migrateListSchema` repairs a missing/non-numeric id on load (derives from `createdAt` when possible, else `nextId()`). IDs are still not unique across users — don't rely on that in shared scenarios. The fake-data generator (`src/dev/fakeData.ts`) keeps its own decreasing-counter scheme for determinism.
 

@@ -158,12 +158,41 @@ export const deleteShareConnection = async (shareId: string): Promise<void> => {
 // LISTAS COMPARTILHADAS
 // ===========================
 
+/**
+ * Só os campos que pertencem ao documento compartilhado. Whitelist explícita:
+ * mantém fora campos locais (isSharedWithMe), o ownerUid vem sempre do parâmetro
+ * de quem chama, e nada fica undefined (o Firestore rejeita undefined).
+ */
+export const toSharedDoc = (list: ShoppingList) => ({
+  id: list.id,
+  name: list.name ?? '',
+  type: list.type ?? 'compras',
+  suppliers: list.suppliers ?? [],
+  items: (list.items ?? []).map(i => ({
+    id: i.id,
+    name: i.name ?? '',
+    quantity: i.quantity ?? 1,
+    unit: i.unit ?? null,
+    isChecked: i.isChecked ?? false,
+    price: i.price ?? null,
+    priceType: i.priceType ?? 'unit',
+  })),
+  createdAt: list.createdAt ?? new Date().toISOString(),
+  isCompleted: list.isCompleted ?? false,
+  isArchived: list.isArchived ?? false,
+  totalSpent: list.totalSpent ?? 0,
+  tag_name: list.tag_name ?? 'Geral',
+  notes: list.notes ?? null,
+  completedAt: list.completedAt ?? null,
+  sharedWithUid: list.sharedWithUid ?? null,
+});
+
 export const shareList = async (list: ShoppingList, ownerUid: string, partnerUid: string): Promise<void> => {
   await firestore()
     .collection('sharedLists')
     .doc(`${ownerUid}_${list.id}`)
     .set({
-      ...list,
+      ...toSharedDoc(list),
       ownerUid,
       sharedWithUid: partnerUid,
       updatedAt: Date.now(),
@@ -184,7 +213,7 @@ export const updateSharedList = async (list: ShoppingList, ownerUid: string): Pr
   await firestore()
     .collection('sharedLists')
     .doc(`${ownerUid}_${list.id}`)
-    .set({ ...list, ownerUid, updatedAt: Date.now() }, { merge: true });
+    .set({ ...toSharedDoc(list), ownerUid, updatedAt: Date.now() }, { merge: true });
 };
 
 export const listenToSharedListsWithMe = (
