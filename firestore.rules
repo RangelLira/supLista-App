@@ -13,13 +13,18 @@ service cloud.firestore {
     // ── Códigos de convite (one-time, 24h) ────────────────────
     // Qualquer autenticado pode ler (para validar um código recebido).
     // Só o dono pode criar.
-    // Qualquer autenticado pode atualizar (para marcar used:true) e deletar
-    // (para limpar códigos expirados via lookupInviteCode).
+    // update: só marcar used:true (nada mais muda) — feito por quem usa o código.
+    // delete: só o dono, ou qualquer um se o código já expirou (limpeza).
     match /invites/{code} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
                     && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if request.auth != null;
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used'])
+                    && request.resource.data.used == true;
+      allow delete: if request.auth != null
+                    && (resource.data.ownerUid == request.auth.uid
+                        || resource.data.get('expiresAt', 0) < request.time.toMillis());
     }
 
     // ── Solicitações de conexão ────────────────────────────────
@@ -55,6 +60,9 @@ service cloud.firestore {
     // ── Listas compartilhadas ──────────────────────────────────
     // Dono e receptor lêem. Dono cria e deleta. Ambos atualizam (edição
     // colaborativa). O receptor faz update com sharedWithUid:null para "sair".
+    // No update: ownerUid é imutável (o receptor não pode "roubar"/quebrar o
+    // acesso do dono) e o receptor só pode manter o vínculo ou sair (null),
+    // nunca reatribuir a lista para um terceiro.
     match /sharedLists/{docId} {
       allow read: if request.auth != null
                   && (resource.data.ownerUid      == request.auth.uid
@@ -63,7 +71,11 @@ service cloud.firestore {
                     && request.resource.data.ownerUid == request.auth.uid;
       allow update: if request.auth != null
                     && (resource.data.ownerUid      == request.auth.uid
-                        || resource.data.sharedWithUid == request.auth.uid);
+                        || resource.data.sharedWithUid == request.auth.uid)
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && (resource.data.ownerUid == request.auth.uid
+                        || request.resource.data.sharedWithUid == resource.data.sharedWithUid
+                        || request.resource.data.sharedWithUid == null);
       allow delete: if request.auth != null
                     && resource.data.ownerUid == request.auth.uid;
     }
