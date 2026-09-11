@@ -161,4 +161,4 @@ Firebase Auth supports two modes:
 These all existed in the original TaskFlow app and were removed entirely in this fork, along with their dependencies (`react-native-fs`, `@notifee/react-native`). Don't re-introduce partial versions of these without an explicit product decision; the data model, storage layer, and Settings screen were all deliberately simplified to match.
 
 ### Onboarding (`src/screens/OnboardingScreen.tsx`)
-4-step flow: language/theme → google → (manual_profile | sharing) → terms. No backup or water steps. `manual_profile` still collects a `birthDate` and writes it to storage, but nothing in the app displays or edits it after onboarding (the Settings > Perfil birthdate field was removed) — it's currently write-only, orphaned data pending a product decision on whether to drop it from onboarding too.
+4-step flow: language/theme → google → (manual_profile | sharing) → terms. No backup or water steps. `manual_profile` (used when the user skips Google sign-in) only collects a display name — the old `birthDate` field was dropped from this step; nothing in the app collects or displays a birth date anymore.
