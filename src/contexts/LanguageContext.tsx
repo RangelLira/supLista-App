@@ -172,6 +172,7 @@ const translations = {
       selectAll: 'Selecionar todos',
       add: (n: number) => `Adicionar ${n} ${n === 1 ? 'item' : 'itens'}`,
       empty: 'Nenhuma outra lista sua com itens.',
+      itemCount: (n: number) => `${n} ${n === 1 ? 'item' : 'itens'}`,
     },
     itemSearch: {
       button: 'Buscar itens',
@@ -767,6 +768,7 @@ const translations = {
       selectAll: 'Select all',
       add: (n: number) => `Add ${n} ${n === 1 ? 'item' : 'items'}`,
       empty: 'No other list of yours has items.',
+      itemCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     },
     itemSearch: {
       button: 'Find items',
@@ -1362,6 +1364,7 @@ const translations = {
       selectAll: 'Seleccionar todos',
       add: (n: number) => `Agregar ${n} ${n === 1 ? 'artículo' : 'artículos'}`,
       empty: 'Ninguna otra lista tuya tiene artículos.',
+      itemCount: (n: number) => `${n} ${n === 1 ? 'artículo' : 'artículos'}`,
     },
     itemSearch: {
       button: 'Buscar artículos',

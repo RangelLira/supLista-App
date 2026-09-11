@@ -190,6 +190,19 @@ function createStyles(c: typeof darkColors) {
     searchInput: { backgroundColor: c.bgCard, borderWidth: 1, borderColor: c.border, borderRadius: 8, padding: 12, color: c.textPrimary, fontSize: 16, margin: 16, marginBottom: 8 },
     subEmpty: { color: c.textSecondary, fontSize: 14, textAlign: 'center', marginTop: 40, paddingHorizontal: 24 },
 
+    // Herdar itens — Nível 1 (lista de listas)
+    subListRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, paddingHorizontal: 14, backgroundColor: c.bgCard, borderRadius: 10, borderWidth: 1, borderColor: c.border, marginBottom: 8 },
+    subListName: { color: c.textPrimary, fontSize: 15, fontWeight: '600' },
+    subListMeta: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
+    subListBadge: { backgroundColor: c.primary, borderRadius: 10, minWidth: 22, height: 22, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
+    subListBadgeText: { color: 'white', fontSize: 12, fontWeight: '700' },
+    subListChevron: { color: c.textSecondary, fontSize: 20, fontWeight: '300' },
+    subListInfo: { flex: 1 },
+    // Herdar itens — Nível 2 (itens de uma lista), sobreposto por cima do Nível 1
+    // (que continua montado por baixo — mantém a posição de scroll sem código de
+    // restauração manual). View cheia comum, não Modal (ver regra em CLAUDE.md).
+    subOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: c.bgMain },
+
     quantityRow: { flexDirection: 'row', gap: 12 },
     quantityContainer: { flex: 1 },
     unitContainer: { flex: 1 },
@@ -585,13 +598,26 @@ function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: I
   const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // chave de seleção: `${listId}::${itemId}`
+  // chave de seleção: `${listId}::${itemId}` — vive aqui (acima dos dois níveis)
+  // pra sobreviver à troca de lista aberta: dá pra herdar da Lista A, voltar,
+  // abrir a Lista B e continuar marcando, tudo pro mesmo "carrinho".
   const [selected, setSelected] = useState<Record<string, ListItem>>({});
 
+  // Nível 2: qual lista está aberta (null = só o Nível 1, lista de listas).
+  // O Nível 1 (FlatList) NUNCA desmonta — o Nível 2 é uma view cheia sobreposta
+  // por cima (ver subOverlay) — então a posição de scroll do Nível 1 se mantém
+  // sozinha ao voltar, sem precisar guardar/restaurar offset manualmente.
+  const [openListId, setOpenListId] = useState<number | null>(null);
+  const openList = sourceLists.find(l => l.id === openListId) ?? null;
+
   useEffect(() => {
-    const h = BackHandler.addEventListener('hardwareBackPress', () => { onCancel(); return true; });
+    const h = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (openListId !== null) { setOpenListId(null); return true; }
+      onCancel();
+      return true;
+    });
     return () => h.remove();
-  }, [onCancel]);
+  }, [onCancel, openListId]);
 
   const isDup = (it: ListItem) => existingItems.some(e =>
     normText(e.name) === normText(it.name) && (e.unit ?? 'unidade') === (it.unit ?? 'unidade'));
@@ -617,6 +643,10 @@ function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: I
     });
   };
 
+  // Quantos itens já marcados de UMA lista — vira o badge no card do Nível 1.
+  const countSelectedInList = (l: ShoppingList) =>
+    l.items.reduce((n, it) => n + (selected[`${l.id}::${it.id}`] ? 1 : 0), 0);
+
   const chosen = Object.values(selected);
 
   const confirm = () => {
@@ -634,6 +664,8 @@ function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: I
 
   return (
     <View style={styles.subScreen}>
+      {/* NÍVEL 1 — lista de listas (FlatList: até centenas de listas com o Fake
+          user, precisa virtualizar). Tocar num card abre o Nível 2 por cima. */}
       <View style={globalStyles.header}>
         <Text style={globalStyles.headerTitle}>{t.inheritItems.title}</Text>
         <TouchableOpacity style={styles.subBackBtn} onPress={onCancel}>
@@ -641,30 +673,78 @@ function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: I
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.subContent} contentContainerStyle={styles.subContentPad}>
-        {sourceLists.length === 0 && (
-          <Text style={styles.subEmpty}>{t.inheritItems.empty}</Text>
-        )}
-        {sourceLists.map(l => (
-          <View key={l.id}>
-            <View style={styles.subGroupHeaderRow}>
-              <Text style={styles.subGroupTitle} numberOfLines={1}>
-                {l.isArchived ? '🗄️ ' : ''}{l.name}
-              </Text>
-              <TouchableOpacity onPress={() => toggleAll(l)}>
-                <Text style={styles.subSelectAll}>{t.inheritItems.selectAll}</Text>
-              </TouchableOpacity>
-            </View>
-            {l.items.map(it => {
-              const key = `${l.id}::${it.id}`;
+      <FlatList
+        style={styles.subContent}
+        contentContainerStyle={styles.subContentPad}
+        data={sourceLists}
+        keyExtractor={l => String(l.id)}
+        ListEmptyComponent={<Text style={styles.subEmpty}>{t.inheritItems.empty}</Text>}
+        renderItem={({ item: l }) => {
+          const n = countSelectedInList(l);
+          return (
+            <TouchableOpacity style={styles.subListRow} activeOpacity={0.7} onPress={() => setOpenListId(l.id)}>
+              <View style={styles.subListInfo}>
+                <Text style={styles.subListName} numberOfLines={1}>
+                  {l.isArchived ? '🗄️ ' : ''}{l.name}
+                </Text>
+                <Text style={styles.subListMeta}>{t.inheritItems.itemCount(l.items.length)}</Text>
+              </View>
+              {n > 0 && (
+                <View style={styles.subListBadge}>
+                  <Text style={styles.subListBadgeText}>{n}</Text>
+                </View>
+              )}
+              <Text style={styles.subListChevron}>›</Text>
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      <View style={styles.subFooter}>
+        <TouchableOpacity
+          style={[globalStyles.buttonPrimary, chosen.length === 0 && { opacity: 0.4 }]}
+          disabled={chosen.length === 0}
+          onPress={confirm}>
+          <Text style={globalStyles.buttonPrimaryText}>{t.inheritItems.add(chosen.length)}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[globalStyles.buttonSecondary, { marginTop: 8 }]} onPress={onCancel}>
+          <Text style={globalStyles.buttonSecondaryText}>{t.common.cancel}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* NÍVEL 2 — itens de UMA lista, sobreposto em tela cheia. View comum (não
+          Modal — ScrollView/FlatList dentro de Modal não rola no Android, ver
+          CLAUDE.md), e o Nível 1 continua montado por baixo. */}
+      {openList && (
+        <View style={styles.subOverlay}>
+          <View style={globalStyles.header}>
+            <Text style={globalStyles.headerTitle} numberOfLines={1}>{openList.name}</Text>
+            <TouchableOpacity style={styles.subBackBtn} onPress={() => setOpenListId(null)}>
+              <Text style={styles.subBackText}>‹</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.subGroupHeaderRow}>
+            <Text style={styles.subListMeta}>{t.inheritItems.itemCount(openList.items.length)}</Text>
+            <TouchableOpacity onPress={() => toggleAll(openList)}>
+              <Text style={styles.subSelectAll}>{t.inheritItems.selectAll}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            style={styles.subContent}
+            contentContainerStyle={styles.subContentPad}
+            data={openList.items}
+            keyExtractor={it => String(it.id)}
+            renderItem={({ item: it }) => {
+              const key = `${openList.id}::${it.id}`;
               const dup = isDup(it);
               const checked = !!selected[key];
               return (
                 <TouchableOpacity
-                  key={key}
                   style={[styles.pickRow, checked && styles.pickRowChecked, dup && styles.pickRowDisabled]}
                   disabled={dup}
-                  onPress={() => toggle(l.id, it)}
+                  onPress={() => toggle(openList.id, it)}
                   activeOpacity={0.7}>
                   <View style={[styles.checkboxView, { marginHorizontal: 0 }, checked && styles.checkboxViewChecked]}>
                     {checked && <Text style={styles.checkboxMark}>✓</Text>}
@@ -679,22 +759,22 @@ function InheritItemsView({ sourceLists, existingItems, onCancel, onConfirm }: I
                   </Text>
                 </TouchableOpacity>
               );
-            })}
-          </View>
-        ))}
-      </ScrollView>
+            }}
+          />
 
-      <View style={styles.subFooter}>
-        <TouchableOpacity
-          style={[globalStyles.buttonPrimary, chosen.length === 0 && { opacity: 0.4 }]}
-          disabled={chosen.length === 0}
-          onPress={confirm}>
-          <Text style={globalStyles.buttonPrimaryText}>{t.inheritItems.add(chosen.length)}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[globalStyles.buttonSecondary, { marginTop: 8 }]} onPress={onCancel}>
-          <Text style={globalStyles.buttonSecondaryText}>{t.common.cancel}</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.subFooter}>
+            <TouchableOpacity
+              style={[globalStyles.buttonPrimary, chosen.length === 0 && { opacity: 0.4 }]}
+              disabled={chosen.length === 0}
+              onPress={confirm}>
+              <Text style={globalStyles.buttonPrimaryText}>{t.inheritItems.add(chosen.length)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[globalStyles.buttonSecondary, { marginTop: 8 }]} onPress={() => setOpenListId(null)}>
+              <Text style={globalStyles.buttonSecondaryText}>{t.common.back}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
