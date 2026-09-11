@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import DeviceInfo from 'react-native-device-info';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ThemeType, useTheme } from '../contexts/ThemeContext';
 import { useFirebase } from '../contexts/FirebaseContext';
@@ -415,7 +416,7 @@ export default function SettingsScreen({ onChangeUserName, onGoHome, onOpenArchi
         <View style={styles.aboutContainer}>
           <View style={styles.aboutTop}>
             <Text style={styles.aboutAppName}>supLista</Text>
-            <Text style={styles.aboutVersion}>{t.settings.aboutVersion}</Text>
+            <Text style={styles.aboutVersion}>{t.settings.aboutVersion(DeviceInfo.getVersion())}</Text>
             <Text style={styles.aboutTagline}>{t.settings.aboutTagline}</Text>
 
             <View style={styles.aboutDivider} />

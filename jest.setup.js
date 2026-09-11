@@ -73,6 +73,10 @@ jest.mock('@react-native-firebase/firestore', () => {
   return { __esModule: true, default: firestoreMock };
 });
 
+jest.mock('react-native-device-info', () =>
+  require('react-native-device-info/jest/react-native-device-info-mock'),
+);
+
 jest.mock('react-native-qrcode-svg', () => 'QRCode');
 
 jest.mock('react-native-svg', () => {
