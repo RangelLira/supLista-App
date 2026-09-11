@@ -5,7 +5,7 @@
 export const termsOfService: Record<'pt' | 'en' | 'es', string> = {
 
   pt: `TERMOS DE USO — SUPLISTA
-Versão 1.0 — Setembro de 2026
+Versão 1.1 — Setembro de 2026
 
 Leia atentamente estes Termos de Uso antes de utilizar o aplicativo supLista. Ao aceitar, você concorda com todas as condições descritas abaixo.
 
@@ -19,7 +19,7 @@ Estes termos podem ser atualizados periodicamente. Notificaremos sobre alteraç�
 ─────────────────────────────────
 2. DESCRIÇÃO DO SERVIÇO
 ─────────────────────────────────
-O supLista é um aplicativo de listas de compras e tarefas. Ele funciona de forma local no seu aparelho, com uma funcionalidade opcional de compartilhamento em tempo real via Firebase (Google) para uso entre pessoas conectadas.
+O supLista é um aplicativo de listas versáteis: você pode misturar itens de compra e tarefas na mesma lista, sem categorias fixas. Ele funciona de forma local no seu aparelho, com uma funcionalidade opcional de compartilhamento em tempo real via Firebase (Google) para uso entre pessoas conectadas.
 
 O supLista é oferecido gratuitamente. Funcionalidades adicionais podem ser introduzidas futuramente, com ou sem custo.
 
@@ -59,6 +59,8 @@ IMPORTANTE: o supLista não possui backup em nuvem. Suas listas existem apenas n
 
 Isso significa que desinstalar o aplicativo, resetar, perder ou trocar de aparelho sem transferir os dados apaga permanentemente suas listas — não há como recuperá-las. Da mesma forma, excluir uma lista dentro do app é uma ação definitiva.
 
+Se preferir manter uma lista concluída sem excluí-la, use a função Arquivar (Configurações > Arquivo de Listas): uma lista arquivada fica guardada até você decidir recuperá-la ou excluí-la definitivamente.
+
 Não nos responsabilizamos por perda de dados decorrente de:
 • Desinstalação do aplicativo;
 • Falha, reset ou troca de dispositivo;
@@ -94,7 +96,7 @@ Ao tocar em "Li e aceito os Termos de Uso", você declara ter lido, compreendido
 // ─────────────────────────────────────────────────────────────────────────────
 
   en: `TERMS OF USE — SUPLISTA
-Version 1.0 — September 2026
+Version 1.1 — September 2026
 
 Please read these Terms of Use carefully before using the supLista application. By accepting, you agree to all the conditions described below.
 
@@ -108,7 +110,7 @@ These terms may be updated periodically. We will notify you of relevant changes.
 ─────────────────────────────────
 2. DESCRIPTION OF SERVICE
 ─────────────────────────────────
-supLista is a shopping and task list application. It works locally on your device, with an optional real-time sharing feature via Firebase (Google) for use between connected people.
+supLista is a versatile list app: you can mix shopping items and tasks in the same list, with no fixed categories. It works locally on your device, with an optional real-time sharing feature via Firebase (Google) for use between connected people.
 
 supLista is offered free of charge. Additional features may be introduced in the future, with or without cost.
 
@@ -148,6 +150,8 @@ IMPORTANT: supLista does not have cloud backup. Your lists exist only in your de
 
 This means uninstalling the app, resetting, losing, or replacing your device without transferring the data permanently erases your lists — there is no way to recover them. Likewise, deleting a list inside the app is a final action.
 
+If you'd rather keep a completed list without deleting it, use the Archive feature (Settings > List Archive): an archived list stays stored until you decide to recover or permanently delete it.
+
 We are not responsible for data loss resulting from:
 • Uninstalling the app;
 • Device failure, reset, or replacement;
@@ -183,7 +187,7 @@ By tapping "I have read and accept the Terms of Use", you declare that you have 
 // ─────────────────────────────────────────────────────────────────────────────
 
   es: `TÉRMINOS DE USO — SUPLISTA
-Versión 1.0 — Septiembre de 2026
+Versión 1.1 — Septiembre de 2026
 
 Lee atentamente estos Términos de Uso antes de utilizar la aplicación supLista. Al aceptar, estás de acuerdo con todas las condiciones descritas a continuación.
 
@@ -197,7 +201,7 @@ Estos términos pueden actualizarse periódicamente. Te notificaremos sobre camb
 ─────────────────────────────────
 2. DESCRIPCIÓN DEL SERVICIO
 ─────────────────────────────────
-supLista es una aplicación de listas de compras y tareas. Funciona de forma local en tu dispositivo, con una funcionalidad opcional de compartido en tiempo real a través de Firebase (Google) para uso entre personas conectadas.
+supLista es una aplicación de listas versátiles: puedes mezclar artículos de compra y tareas en la misma lista, sin categorías fijas. Funciona de forma local en tu dispositivo, con una funcionalidad opcional de compartido en tiempo real a través de Firebase (Google) para uso entre personas conectadas.
 
 supLista se ofrece de forma gratuita. En el futuro pueden introducirse funcionalidades adicionales, con o sin costo.
 
@@ -236,6 +240,8 @@ Al usar la función de compartido, parte de tus datos transitará por los servid
 IMPORTANTE: supLista no tiene copia de seguridad en la nube. Tus listas existen únicamente en el almacenamiento local de tu dispositivo.
 
 Esto significa que desinstalar la app, restablecer, perder o cambiar de dispositivo sin transferir los datos borra permanentemente tus listas — no hay forma de recuperarlas. Del mismo modo, eliminar una lista dentro de la app es una acción definitiva.
+
+Si prefieres mantener una lista completada sin eliminarla, usa la función Archivar (Configuración > Archivo de Listas): una lista archivada queda guardada hasta que decidas recuperarla o eliminarla de forma definitiva.
 
 No somos responsables por la pérdida de datos derivada de:
 • Desinstalación de la app;
