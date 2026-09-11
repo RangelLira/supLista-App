@@ -80,6 +80,11 @@ android/app/google-services.json
 # Notas de build com dados sensíveis (fingerprints, credenciais) — nunca versionar
 docs/build-signing.local.md
 
+# Memória de projeto entre agentes/sessões (decisões, estado atual, pendências).
+# Fica de fora do histórico de commits de propósito — é um rascunho de trabalho,
+# não documentação pública. CLAUDE.md continua sendo a referência versionada.
+PROJECT.md
+
 # Screenshots de depuração locais
 erro_tela.jpeg
 debug-crash.jpeg
