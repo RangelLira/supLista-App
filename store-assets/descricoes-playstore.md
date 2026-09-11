@@ -6,10 +6,13 @@ Listas de compras e tarefas numa lista só. Sem anúncios, com compartilhamento.
 
 ## Descrição completa (máx. 4000 caracteres)
 
-supLista é um app de listas de compras e tarefas — tudo numa lista só. Rápido, sem cadastro obrigatório, sem anúncios, sem rastreamento.
+supLista é um app de listas de compras e tarefas, planejamento e organização — tudo numa lista só. Rápido, sem cadastro obrigatório, sem anúncios, sem rastreamento.
 
-UMA LISTA PARA TUDO
+UMA ÚNICA LISTA PARA TUDO!
 Numa mesma lista, misture itens de mercado (com quantidade, unidade e preço, acompanhando o total gasto) e itens de tarefa simples (só o nome, sem quantidade). Não precisa escolher um tipo de lista — organize do seu jeito.
+
+PERSONALIZE DO SEU JEITO!
+O supLista conta com opções de tema Claro, Escuro ou Automático, e ainda 4 opções de cores principais.
 
 COMPARTILHAMENTO EM TEMPO REAL (OPCIONAL)
 Conecte-se a outra pessoa por um código de convite e compartilhe uma lista. As alterações de qualquer lado aparecem na hora nos dois aparelhos, perfeito para a lista do mercado da família. O compartilhamento usa a sua conta Google apenas para identificar você; se não quiser, o app funciona 100% offline no seu aparelho.
@@ -34,7 +37,7 @@ Política de privacidade: https://rangellira.github.io/supLista-App/privacy.html
 GRATUITO E DE CÓDIGO ABERTO
 O supLista é gratuito e o código-fonte é público: https://github.com/RangelLira/supLista-App
 
-Desenvolvido por Contest Software.
+Desenvolvido por Contest Software - Rangel Lira.
 
 ---
 
@@ -48,6 +51,9 @@ supLista is a shopping and task list app — everything in one list. Fast, no ma
 
 ONE LIST FOR EVERYTHING
 Mix grocery items (with quantity, unit and price, tracking the running total) and simple task items (just a name, no quantity) in the same list. No need to pick a list type — organize it your way.
+
+MAKE IT YOURS
+supLista comes with Light, Dark or Automatic theme options, plus 4 accent colors to choose from.
 
 REAL-TIME SHARING (OPTIONAL)
 Connect with another person via an invite code and share a list. Changes from either side show up instantly on both phones, perfect for the family grocery list. Sharing uses your Google account only to identify you; if you'd rather not, the app works 100% offline on your device.
@@ -72,7 +78,7 @@ Privacy policy: https://rangellira.github.io/supLista-App/privacy.html
 FREE AND OPEN SOURCE
 supLista is free and its source code is public: https://github.com/RangelLira/supLista-App
 
-Made by Contest Software.
+Made by Contest Software - Rangel Lira.
 
 ---
 
@@ -86,6 +92,9 @@ supLista es una app de listas de compras y tareas: todo en una sola lista. Rápi
 
 UNA LISTA PARA TODO
 En la misma lista, combina artículos de supermercado (con cantidad, unidad y precio, siguiendo el total gastado) y tareas simples (solo el nombre, sin cantidad). No hace falta elegir un tipo de lista: organízala como quieras.
+
+PERSONALÍZALA A TU MANERA
+supLista tiene tema Claro, Oscuro o Automático, además de 4 colores de acento para elegir.
 
 USO COMPARTIDO EN TIEMPO REAL (OPCIONAL)
 Conéctate con otra persona mediante un código de invitación y comparte una lista. Los cambios de cualquier lado aparecen al instante en ambos teléfonos, perfecto para la lista del supermercado de la familia. El uso compartido usa tu cuenta de Google solo para identificarte; si prefieres no hacerlo, la app funciona 100% sin conexión en tu dispositivo.
@@ -110,4 +119,4 @@ Política de privacidad: https://rangellira.github.io/supLista-App/privacy.html
 GRATIS Y DE CÓDIGO ABIERTO
 supLista es gratis y su código fuente es público: https://github.com/RangelLira/supLista-App
 
-Hecho por Contest Software.
+Hecho por Contest Software - Rangel Lira.
