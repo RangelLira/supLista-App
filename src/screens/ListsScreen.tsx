@@ -9,7 +9,7 @@ import {
   Animated,
   BackHandler,
   Easing,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -602,51 +602,60 @@ export default function ListsScreen({ userName, lists, onSaveList, onUpdateList,
             )}
           </Animated.View>
 
-          <ScrollView contentContainerStyle={globalStyles.scrollContent}>
-            {/* TÍTULO DA SEÇÃO + BARRA */}
-            <Animated.View style={{ opacity: eventsOpacity }}>
-              <Text style={styles.sectionTitle}>{t.lists.sectionOpen}</Text>
-              {total > 0 && (
-                <View style={styles.progressBarContainer}>
-                  <Animated.View style={[styles.progressBarFill, {
-                    width: progressWidth.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-                  }]} />
-                </View>
-              )}
-            </Animated.View>
+          <FlatList
+            data={allDisplayedLists}
+            keyExtractor={item => String(item.id)}
+            contentContainerStyle={globalStyles.scrollContent}
+            // LISTAS — ordem estável, sem reorganização ao concluir. FlatList
+            // virtualiza (essencial pro "Fake user": listas com centenas de
+            // cards não travam a rolagem como o ScrollView antigo travava).
+            renderItem={({ item }) => (
+              <Animated.View style={{ opacity: contentOpacity }}>
+                {renderList(item)}
+              </Animated.View>
+            )}
+            ListHeaderComponent={
+              <View>
+                {/* TÍTULO DA SEÇÃO + BARRA */}
+                <Animated.View style={{ opacity: eventsOpacity }}>
+                  <Text style={styles.sectionTitle}>{t.lists.sectionOpen}</Text>
+                  {total > 0 && (
+                    <View style={styles.progressBarContainer}>
+                      <Animated.View style={[styles.progressBarFill, {
+                        width: progressWidth.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
+                      }]} />
+                    </View>
+                  )}
+                </Animated.View>
 
-            <Animated.View style={{ opacity: textFadeOpacity }}>
-              {/* SAUDAÇÃO — com listas abertas */}
-              {!showMantra && (
-                <View style={styles.greetingContainer}>
-                  <Animated.Text style={[styles.greetingHello, { opacity: greetingOpacity, transform: [{ translateX: greetingX }] }]}>
-                    {t.home.greetingHello(userName || '...')}
-                  </Animated.Text>
-                  <Animated.Text style={[styles.greetingSubtitle, { opacity: subtitleOpacity, transform: [{ translateX: subtitleX }] }]}>
-                    {t.lists.greetingSubtitle}
-                  </Animated.Text>
-                </View>
-              )}
+                <Animated.View style={{ opacity: textFadeOpacity }}>
+                  {/* SAUDAÇÃO — com listas abertas */}
+                  {!showMantra && (
+                    <View style={styles.greetingContainer}>
+                      <Animated.Text style={[styles.greetingHello, { opacity: greetingOpacity, transform: [{ translateX: greetingX }] }]}>
+                        {t.home.greetingHello(userName || '...')}
+                      </Animated.Text>
+                      <Animated.Text style={[styles.greetingSubtitle, { opacity: subtitleOpacity, transform: [{ translateX: subtitleX }] }]}>
+                        {t.lists.greetingSubtitle}
+                      </Animated.Text>
+                    </View>
+                  )}
 
-              {/* MANTRA — tudo concluído ou lista vazia */}
-              {showMantra && (
-                <View style={styles.greetingContainer}>
-                  <Animated.Text style={[styles.greetingHello, { opacity: greetingOpacity, transform: [{ translateX: greetingX }] }]}>
-                    ✅ {t.lists.allDoneTitle}
-                  </Animated.Text>
-                  <Animated.Text style={[styles.greetingSubtitle, { opacity: subtitleOpacity, transform: [{ translateX: subtitleX }] }]}>
-                    {completedListsCount > 0 ? t.lists.allDoneSubtitle : t.lists.emptySubtitle}
-                  </Animated.Text>
-                </View>
-              )}
-            </Animated.View>
-
-            {/* LISTAS — ordem estável, sem reorganização ao concluir */}
-            <Animated.View style={{ opacity: contentOpacity }}>
-              {allDisplayedLists.map(renderList)}
-            </Animated.View>
-
-          </ScrollView>
+                  {/* MANTRA — tudo concluído ou lista vazia */}
+                  {showMantra && (
+                    <View style={styles.greetingContainer}>
+                      <Animated.Text style={[styles.greetingHello, { opacity: greetingOpacity, transform: [{ translateX: greetingX }] }]}>
+                        ✅ {t.lists.allDoneTitle}
+                      </Animated.Text>
+                      <Animated.Text style={[styles.greetingSubtitle, { opacity: subtitleOpacity, transform: [{ translateX: subtitleX }] }]}>
+                        {completedListsCount > 0 ? t.lists.allDoneSubtitle : t.lists.emptySubtitle}
+                      </Animated.Text>
+                    </View>
+                  )}
+                </Animated.View>
+              </View>
+            }
+          />
 
           {/* BOTÃO FIXO INFERIOR */}
           <View style={styles.bottomBar}>

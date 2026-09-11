@@ -7,6 +7,7 @@ import {
   Animated,
   Alert,
   BackHandler,
+  FlatList,
   Keyboard,
   Modal,
   PanResponder,
@@ -1166,75 +1167,78 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
         </TouchableOpacity>
       </View>
 
-      {/* CONTEÚDO — itens */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={globalStyles.scrollContent}>
-
-          {list.items.length === 0 && (
-            <Text style={globalStyles.emptyText}>{t.lists.noItems}</Text>
-          )}
-
-          {list.items.map(item => (
-            <SwipeRow
-              key={item.id}
-              disabled={list.isCompleted}
-              onSwipeRight={() => toggleItem(item.id)}
-              onSwipeLeft={() => removeItem(item.id)}
-              rightIcon="✓"
-              leftIcon="🗑️"
-              threshold={60}
-              style={{ marginBottom: 2 }}>
-              <View style={[
-                styles.itemContainer,
-                item.isChecked && styles.itemChecked,
-                list.isCompleted && styles.itemDisabled,
-              ]}>
-                <TouchableOpacity
-                  onPress={() => toggleItem(item.id)}
-                  disabled={list.isCompleted}
-                  activeOpacity={0.7}>
-                  <View style={[
-                    styles.checkboxView,
-                    item.isChecked && styles.checkboxViewChecked,
-                  ]}>
-                    {item.isChecked && (
-                      <Text style={styles.checkboxMark}>✓</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.itemInfo}
-                  onPress={() => !list.isCompleted && setEditingItem(item)}
-                  disabled={list.isCompleted}
-                  activeOpacity={list.isCompleted ? 1 : 0.6}>
-                  <Text style={[
-                    styles.itemName,
-                    item.isChecked && styles.itemNameChecked,
-                  ]}>
-                    {item.name}
-                  </Text>
-                  {item.unit !== TASK_UNIT && (
-                    <Text style={styles.itemQuantity}>{formatQuantity(item)}</Text>
+      {/* CONTEÚDO — itens. FlatList em vez de ScrollView+map: uma lista pode
+          chegar a centenas/milhares de itens (ver Fake user), e um ScrollView
+          monta todas as linhas de uma vez — vira trava de rolagem. */}
+      <FlatList
+        style={{ flex: 1 }}
+        contentContainerStyle={globalStyles.scrollContent}
+        data={list.items}
+        keyExtractor={item => String(item.id)}
+        ListEmptyComponent={
+          <Text style={globalStyles.emptyText}>{t.lists.noItems}</Text>
+        }
+        renderItem={({ item }) => (
+          <SwipeRow
+            disabled={list.isCompleted}
+            onSwipeRight={() => toggleItem(item.id)}
+            onSwipeLeft={() => removeItem(item.id)}
+            rightIcon="✓"
+            leftIcon="🗑️"
+            threshold={60}
+            style={{ marginBottom: 2 }}>
+            <View style={[
+              styles.itemContainer,
+              item.isChecked && styles.itemChecked,
+              list.isCompleted && styles.itemDisabled,
+            ]}>
+              <TouchableOpacity
+                onPress={() => toggleItem(item.id)}
+                disabled={list.isCompleted}
+                activeOpacity={0.7}>
+                <View style={[
+                  styles.checkboxView,
+                  item.isChecked && styles.checkboxViewChecked,
+                ]}>
+                  {item.isChecked && (
+                    <Text style={styles.checkboxMark}>✓</Text>
                   )}
-                </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
 
-                {item.price != null && (
-                  <View style={styles.itemPrice}>
-                    <TouchableOpacity
-                      onPress={() => !list.isCompleted && setEditingItem(item)}
-                      disabled={list.isCompleted}>
-                      <Text style={styles.priceText}>R$ {item.price.toFixed(2)}</Text>
-                    </TouchableOpacity>
-                  </View>
+              <TouchableOpacity
+                style={styles.itemInfo}
+                onPress={() => !list.isCompleted && setEditingItem(item)}
+                disabled={list.isCompleted}
+                activeOpacity={list.isCompleted ? 1 : 0.6}>
+                <Text style={[
+                  styles.itemName,
+                  item.isChecked && styles.itemNameChecked,
+                ]}>
+                  {item.name}
+                </Text>
+                {item.unit !== TASK_UNIT && (
+                  <Text style={styles.itemQuantity}>{formatQuantity(item)}</Text>
                 )}
-              </View>
-            </SwipeRow>
-          ))}
+              </TouchableOpacity>
 
-          {/* Calculadora — aparece sozinha ao haver item concluído com preço.
-              Soma só os itens CONCLUÍDOS. O aviso surge quando algum concluído
-              está sem preço. Falta de preço nunca impede concluir. */}
-          {hasPricedChecked && (
+              {item.price != null && (
+                <View style={styles.itemPrice}>
+                  <TouchableOpacity
+                    onPress={() => !list.isCompleted && setEditingItem(item)}
+                    disabled={list.isCompleted}>
+                    <Text style={styles.priceText}>R$ {item.price.toFixed(2)}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </SwipeRow>
+        )}
+        // Calculadora — aparece sozinha ao haver item concluído com preço.
+        // Soma só os itens CONCLUÍDOS. O aviso surge quando algum concluído
+        // está sem preço. Falta de preço nunca impede concluir.
+        ListFooterComponent={
+          hasPricedChecked ? (
             <View style={styles.calcWrap}>
               <Text style={styles.calcTotal}>
                 {t.calc.total}: R$ {total.toFixed(2).replace('.', ',')}
@@ -1243,8 +1247,9 @@ export function ShoppingListScreen({ list, onBack, onUpdate, onDelete, allLists 
                 <Text style={styles.calcWarn}>{t.calc.missingPrice}</Text>
               )}
             </View>
-          )}
-      </ScrollView>
+          ) : null
+        }
+      />
 
       {/* Barra inferior fixa: aberta → "Adicionar item"; concluída (e minha) →
           "Arquivar Lista". Convidado numa lista concluída não vê botão. */}
