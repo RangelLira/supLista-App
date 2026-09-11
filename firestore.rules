@@ -3,20 +3,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── Perfis de usuário ──────────────────────────────────────
-    // Qualquer usuário autenticado pode ler perfis (para buscar displayName).
+    // Qualquer usuário autenticado pode ler o perfil de um uid que já conhece
+    // (para buscar displayName). "get" (doc conhecido) é permitido; "list"
+    // (varrer a coleção inteira) é bloqueado — senão qualquer autenticado
+    // conseguiria enumerar uid+displayName de todo mundo numa query sem filtro.
     // Só o próprio usuário pode escrever no seu perfil.
     match /users/{userId} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     // ── Códigos de convite (one-time, 24h) ────────────────────
-    // Qualquer autenticado pode ler (para validar um código recebido).
+    // Qualquer autenticado pode ler um código específico que já recebeu (get),
+    // pra validar. "list" é bloqueado: o código funciona como uma senha de
+    // uso único — sem isso, qualquer autenticado poderia listar a coleção
+    // inteira e "roubar" convites pendentes de outras pessoas antes delas.
     // Só o dono pode criar.
     // update: só marcar used:true (nada mais muda) — feito por quem usa o código.
     // delete: só o dono, ou qualquer um se o código já expirou (limpeza).
     match /invites/{code} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
       allow create: if request.auth != null
                     && request.resource.data.ownerUid == request.auth.uid;
       allow update: if request.auth != null
